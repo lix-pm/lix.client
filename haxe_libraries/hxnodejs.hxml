@@ -1,4 +1,4 @@
-# @install: lix download haxelib:hxnodejs#6.9.0
+# @install: lix download https://github.com/HaxeFoundation/hxnodejs/archive/5257cb4a84e3c2d5447ec3386c66a249fce69be6.tar.gz
 -D hxnodejs=6.9.0
 -cp ${HAXESHIM_LIBCACHE}/hxnodejs/6.9.0/src
 -D nodejs
