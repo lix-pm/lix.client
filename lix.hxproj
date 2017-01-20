@@ -29,6 +29,9 @@
   <!-- haxelib libraries -->
   <haxelib>
     <library name="-lib switchx" />
+    <library name="-lib haxeshim" />
+    <library name="-lib hxnodejs" />
+    <library name="-lib tink_core" />
   </haxelib>
   <!-- Class files to compile (other referenced classes will automatically be included) -->
   <compileTargets>
