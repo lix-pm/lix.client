@@ -1,3 +1,0 @@
-# @install: lix download https://github.com/haxetink/tink_macro/archive/92f60cbe4f991787ddc8ce5c3ceea9e630a1d8a9.tar.gz
--D foobar=123
--cp ${HAXESHIM_LIBCACHE}/foobar/123/src
