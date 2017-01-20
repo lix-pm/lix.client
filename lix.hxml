@@ -1,0 +1,7 @@
+-lib switchx
+-lib haxeshim
+-lib hxnodejs
+-lib tink_core
+-cp src
+-js bin/lix.js
+-main lix.client.Cli
