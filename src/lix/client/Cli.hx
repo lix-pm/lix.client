@@ -27,6 +27,13 @@ abstract LibId(String) from String to String {
 
 abstract LibUrl(String) from String to String {
   
+  static inline var SEPARATOR = '#';
+  
+  public function new(id:LibId, version:Option<String>) 
+    this = id + switch version {
+      case Some(v): SEPARATOR + v;
+      case None: '';
+    }
   
   public var id(get, never):LibId;
     function get_id():LibId
@@ -39,7 +46,7 @@ abstract LibUrl(String) from String to String {
     function get_version()
       return switch this.indexOf('#') {
         case -1: None;
-        case v: switch this.substr(v + 1) {
+        case v: switch this.substr(v + SEPARATOR.length) {
           case '': None;
           case v: Some(v);
         }
@@ -48,24 +55,26 @@ abstract LibUrl(String) from String to String {
 
 abstract DownloadUrl(String) from String to String {
   
+  static inline var SEPARATOR = ' as ';
+  
   public function new(source:LibUrl, target:Option<LibUrl>)
     this = source + switch target {
-      case Some(v): '@' + v;
+      case Some(v): SEPARATOR + v;
       case None: '';
     }
     
   public var source(get, never):LibUrl;
     function get_source():LibUrl
-      return switch this.indexOf('@') {
+      return switch this.indexOf(SEPARATOR) {
         case -1: this;
         case v: this.substr(0, v);
       }
       
   public var target(get, never):Option<LibUrl>;
     function get_target():Option<LibUrl>
-      return switch this.indexOf('@') {
+      return switch this.indexOf(SEPARATOR) {
         case -1: None;
-        case v: switch this.substr(v + 1) {
+        case v: switch this.substr(v + SEPARATOR.length) {
           case '': None;
           case v: Some(v);
         }
@@ -159,23 +168,26 @@ class Cli {
     function githubArchive(repo, sha)
       return 'https://github.com/$repo/archive/$sha.tar.gz';
     
-    function resolveGithubVersion(url:LibUrl):Promise<String>
+    function resolveGithubSource(url:LibUrl):Promise<LibUrl>
+      return switch url.version {
+        case Some(sha) if (sha.length == 40):
+          githubArchive(url.id.payload, sha);
+        case Some(v):
+          grabGitHubCommit(url.id.payload, v).next(githubArchive.bind(url.id.payload, _));
+        case None:
+          grabGitHubCommit(url.id.payload, '').next(githubArchive.bind(url.id.payload, _));
+      }
+      
+    function resolveGithubVersion(url:DownloadUrl):Promise<DownloadUrl>
       return 
-        switch url.version {
-          case Some(sha) if (sha.length == 40):
-            githubArchive(url.id.payload, sha);
-          case Some(v):
-            grabGitHubCommit(url.id.payload, v).next(githubArchive.bind(url.id.payload, _));
-          case None:
-            grabGitHubCommit(url.id.payload, '').next(githubArchive.bind(url.id.payload, _));
-        }
+        resolveGithubSource(url.source).next(function (v) return new DownloadUrl(v, url.target));
     
     var downloaders:Map<String, SchemeHandler> = [
       'http' => fetch,
       'https' => fetch,
     ];
     
-    var resolvers:Map<String, LibUrl->Promise<LibUrl>> = [
+    var resolvers:Map<String, DownloadUrl->Promise<DownloadUrl>> = [
       'haxelib' => resolveHaxelibVersion,
       'gh' => resolveGithubVersion,
       'github' => resolveGithubVersion,
@@ -197,7 +209,7 @@ class Cli {
                       case Some(target):
                         switch target.id {
                           case '':
-                          case id: v.lib = id;
+                          case id: v.lib = id.payload;
                         }
                         switch target.version {
                           case Some(version): v.version = version;
@@ -223,48 +235,61 @@ class Cli {
             }
         }  
         
-    function resolve(url:LibUrl):Promise<LibUrl>
+    function resolve(url:DownloadUrl):Promise<DownloadUrl>
       return
-        switch resolvers[url.id.scheme] {
+        switch resolvers[url.source.id.scheme] {
           case null: url;
           case v:
             v(url).next(resolve);
         }
+        
+    function install(url:DownloadUrl)
+      return
+        resolve(url).next(
+          function (actual) {
+            return download(actual).next(function (v) {
+              var extra =
+                switch '${v.root}/extraParams.hxml' {
+                  case found if (found.exists()):
+                    found.getContent();
+                  default: '';
+                }
+                
+              switch actual.target {
+                case None:
+                  actual = new DownloadUrl(actual.source, Some(new LibUrl(v.lib, Some(v.version))));
+                default:
+              }
+                
+              var hxml = Resolver.libHxml(scope.scopeLibDir, v.lib);
+              
+              Fs.ensureDir(hxml);
+              
+              hxml.saveContent([
+                '# @install: lix download $actual',
+                '-D ${v.lib}=${v.version}',
+                '-cp $${HAXESHIM_LIBCACHE}/${v.lib}/${v.version}/src',
+                extra,
+              ].join('\n'));
+              
+              return Noise;
+            });
+          }
+        );        
     
     Command.dispatch(args, 'lix - Libraries for haXe', [
-      new Command('download', '<url>', 'download library from specified url', 
+      new Command('download', '<url> [as <lib[#version]>]', 'download library from specified url', 
         function (args) return switch args {
+          case [url, 'as', alias]: download(new DownloadUrl(url, Some(alias)));
           case [url]: download(url);
           case []: new Error('Missing url');
           case v: new Error('too many arguments');
         }
       ),
-      new Command('install', '<url>', 'install library from specified url',
+      new Command('install', '<url> [as <lib[#version]>]', 'install library from specified url',
         function (args) return switch args {
-          case [(_:DownloadUrl) => url]:
-            
-            resolve(url.source).next(
-              function (actual) {
-                return download(new DownloadUrl(actual, url.target)).next(function (v) {
-                  
-                  var extra =
-                    switch '${v.root}/extraParams.hxml' {
-                      case found if (found.exists()):
-                        found.getContent();
-                      default: '';
-                    }
-                    
-                  Resolver.libHxml(scope.scopeLibDir, v.lib).saveContent([
-                    '# @install: lix download $actual',
-                    '-D ${v.lib}=${v.version}',
-                    '-cp $${HAXESHIM_LIBCACHE}/${v.lib}/${v.version}/src',
-                    extra,
-                  ].join('\n'));
-                  
-                  return Noise;
-                });
-              }
-            );
+          case [url, 'as', alias]: install(new DownloadUrl(url, Some(alias)));
+          case [url]: install(url);
           case []: new Error('Missing url');
           case v: new Error('too many arguments');
         }
