@@ -1,1 +1,2 @@
-# lix
+# lix - the haxe package manager that rox ... ba-dum-tss ...
+

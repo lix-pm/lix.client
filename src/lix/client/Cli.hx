@@ -11,6 +11,68 @@ using sys.FileSystem;
 typedef SchemeHandler = { url:String, tmpLoc:String }->Promise<Downloaded>;
 typedef Downloaded = { lib:String, version:String, root:String, };
 
+abstract LibId(String) from String to String {
+  
+  public var scheme(get, never):String;
+    function get_scheme()
+      return switch this.indexOf(':') {
+        case -1: '';
+        case v: this.substr(0, v);
+      }  
+      
+  public var payload(get, never):String;
+    function get_payload()
+      return this.substr(this.indexOf(':') + 1);
+}
+
+abstract LibUrl(String) from String to String {
+  
+  
+  public var id(get, never):LibId;
+    function get_id():LibId
+      return switch this.indexOf('#') {
+        case -1: this;
+        case v: this.substr(0, v);
+      }
+      
+  public var version(get, never):Option<String>;
+    function get_version()
+      return switch this.indexOf('#') {
+        case -1: None;
+        case v: switch this.substr(v + 1) {
+          case '': None;
+          case v: Some(v);
+        }
+      }
+}
+
+abstract DownloadUrl(String) from String to String {
+  
+  public function new(source:LibUrl, target:Option<LibUrl>)
+    this = source + switch target {
+      case Some(v): '@' + v;
+      case None: '';
+    }
+    
+  public var source(get, never):LibUrl;
+    function get_source():LibUrl
+      return switch this.indexOf('@') {
+        case -1: this;
+        case v: this.substr(0, v);
+      }
+      
+  public var target(get, never):Option<LibUrl>;
+    function get_target():Option<LibUrl>
+      return switch this.indexOf('@') {
+        case -1: None;
+        case v: switch this.substr(v + 1) {
+          case '': None;
+          case v: Some(v);
+        }
+      }
+}
+
+
 class Cli {
 
   static function main() {
@@ -50,7 +112,7 @@ class Cli {
             }
           return  
             if (ret == null)
-              new Error('unable to determing library information from ');
+              new Error('unable to determing library information from $src');
             else
               ret;
       }
@@ -64,27 +126,6 @@ class Cli {
       return http(args.url, args.tmpLoc, null);
     }
         
-    //var fetchFromHaxelib:SchemeHandler = function (args) 
-      //return switch args.url.substr('haxelib:'.length).split('#') {
-        //case [name, version]:
-          //fetch({ url: 'https://lib.haxe.org/p/$name/$version/download/', tmpLoc: args.tmpLoc });
-        //case [name]:
-          //new Error('Missing version specification in ${args.url}');
-        //case v:
-          //new Error('Invalid haxelib download URL ${args.url}');
-      //}
-      
-    //var fetchFromGitHub:SchemeHandler = function (args) 
-      //return switch args.url.substr('github:'.length).split('/') {
-        //case [owner, repo, commit]:
-          //if (commit.length != 40)
-            //new Error('Invalid sha "$commit" in GitHub URL ${args.url}');
-            //
-          //
-        //default:
-          //new Error('GitHub URL not fully specified: ${args.url}');
-      //}
-    
     //{
       //var lib:Promise<{ lib:String, version: String }> = 
         //switch args.url.substr('haxelib:'.length).split('#') {
@@ -109,65 +150,82 @@ class Cli {
     function resolveHaxelibVersion(s:String):Promise<String>
       return new Error('not implemented');
       
-    function grabGitHubCommit(owner, repo, version) {
-      return Download.text('https://api.github.com/repos/$owner/$repo/commits?sha=$version').next(function (s):String {
+    function grabGitHubCommit(repo, version) {
+      return Download.text('https://api.github.com/repos/$repo/commits?sha=$version').next(function (s):String {
         return s.parse()[0].sha;
       });
     }
       
-    function githubArchive(owner, repo, sha)
-      return 'https://github.com/$owner/$repo/archive/$sha.tar.gz';
+    function githubArchive(repo, sha)
+      return 'https://github.com/$repo/archive/$sha.tar.gz';
     
-    function resolveGithubVersion(url:String):Promise<String>
-      return switch url.substr(url.indexOf(':') + 1).split('/') {
-        case [owner, repo, sha] if (sha.length == 40):
-          githubArchive(owner, repo, sha);
-        case [owner, repo, version]:
-          grabGitHubCommit(owner, repo, version).next(githubArchive.bind(owner, repo, _));
-        case [owner, repo]:
-          grabGitHubCommit(owner, repo, '').next(githubArchive.bind(owner, repo, _));
-        default:
-          new Error('Malformed GitHub URL $url');
-      }
+    function resolveGithubVersion(url:LibUrl):Promise<String>
+      return 
+        switch url.version {
+          case Some(sha) if (sha.length == 40):
+            githubArchive(url.id.payload, sha);
+          case Some(v):
+            grabGitHubCommit(url.id.payload, v).next(githubArchive.bind(url.id.payload, _));
+          case None:
+            grabGitHubCommit(url.id.payload, '').next(githubArchive.bind(url.id.payload, _));
+        }
     
     var downloaders:Map<String, SchemeHandler> = [
       'http' => fetch,
       'https' => fetch,
     ];
     
-    var resolvers:Map<String, String->Promise<String>> = [
+    var resolvers:Map<String, LibUrl->Promise<LibUrl>> = [
       'haxelib' => resolveHaxelibVersion,
       'gh' => resolveGithubVersion,
       'github' => resolveGithubVersion,
     ];
     
-    function download(url:String):Promise<Downloaded> 
+    function download(url:DownloadUrl):Promise<Downloaded> 
       return 
-        switch downloaders[url.split(':')[0]] {
+        switch downloaders[url.source.id.scheme] {
           case null:
             new Error('Unknown scheme in url $url');
           case v:
-            v({ url: url, tmpLoc: Sys.getCwd() + '/downloads/' + Date.now().getTime() }).next(
-              function (v):Promise<Downloaded> {
-                var target = scope.libCache + '/' + v.lib + '/' + v.version;
-                try {
-                  Fs.ensureDir(target);
-                  if (target.exists())
-                    target.rename('$target-archived@' + Date.now().getTime());
-                  v.root.rename(target);
-                  v.root = target;
-                  return v;
-                }
-                catch (e:Dynamic) {
-                  return new Error('Failed to move downloaded library to its final destination: $target because $e');
-                }
-              }
-            );
+            switch url.source.version {
+              case Some(v):
+                new Error('Unresolved version fragment in url ${url.source}');
+              case None:
+                v({ url: url.source, tmpLoc: Sys.getCwd() + '/downloads/' + Date.now().getTime() }).next(
+                  function (v:Downloaded):Promise<Downloaded> {
+                    switch url.target {
+                      case Some(target):
+                        switch target.id {
+                          case '':
+                          case id: v.lib = id;
+                        }
+                        switch target.version {
+                          case Some(version): v.version = version;
+                          case None:
+                        }
+                      case None:
+                    }
+                    
+                    var target = scope.libCache + '/' + v.lib + '/' + v.version;
+                    try {
+                      Fs.ensureDir(target);
+                      if (target.exists())
+                        target.rename('$target-archived@' + Date.now().getTime());
+                      v.root.rename(target);
+                      v.root = target;
+                      return v;
+                    }
+                    catch (e:Dynamic) {
+                      return new Error('Failed to move downloaded library to its final destination: $target because $e');
+                    }
+                  }
+                );
+            }
         }  
         
-    function resolve(url:String):Promise<String>
+    function resolve(url:LibUrl):Promise<LibUrl>
       return
-        switch resolvers[url.split(':')[0]] {
+        switch resolvers[url.id.scheme] {
           case null: url;
           case v:
             v(url).next(resolve);
@@ -183,11 +241,11 @@ class Cli {
       ),
       new Command('install', '<url>', 'install library from specified url',
         function (args) return switch args {
-          case [url]:
+          case [(_:DownloadUrl) => url]:
             
-            resolve(url).next(
+            resolve(url.source).next(
               function (actual) {
-                return download(actual).next(function (v) {
+                return download(new DownloadUrl(actual, url.target)).next(function (v) {
                   
                   var extra =
                     switch '${v.root}/extraParams.hxml' {
