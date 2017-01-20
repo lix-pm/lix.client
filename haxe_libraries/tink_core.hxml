@@ -1,3 +1,3 @@
-# @install: lix download https://github.com/haxetink/tink_core/archive/e80a9a38b1dab120f3aac5ce907410972a9e9668.zip
+# @install: lix download https://github.com/haxetink/tink_core/archive/73295458a12fa8dae56cefb52435e2140b2fee77.tar.gz
 -D tink_core=1.6.1
 -cp ${HAXESHIM_LIBCACHE}/tink_core/1.6.1/src

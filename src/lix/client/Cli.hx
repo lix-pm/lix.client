@@ -64,15 +64,26 @@ class Cli {
       return http(args.url, args.tmpLoc, null);
     }
         
-    var fetchFromHaxelib:SchemeHandler = function (args) 
-      return switch args.url.substr('haxelib:'.length).split('#') {
-        case [name, version]:
-          fetch({ url: 'https://lib.haxe.org/p/$name/$version/download/', tmpLoc: args.tmpLoc });
-        case [name]:
-          new Error('Missing version specification in ${args.url}');
-        case v:
-          new Error('Invalid haxelib download url ${args.url}');
-      }
+    //var fetchFromHaxelib:SchemeHandler = function (args) 
+      //return switch args.url.substr('haxelib:'.length).split('#') {
+        //case [name, version]:
+          //fetch({ url: 'https://lib.haxe.org/p/$name/$version/download/', tmpLoc: args.tmpLoc });
+        //case [name]:
+          //new Error('Missing version specification in ${args.url}');
+        //case v:
+          //new Error('Invalid haxelib download URL ${args.url}');
+      //}
+      
+    //var fetchFromGitHub:SchemeHandler = function (args) 
+      //return switch args.url.substr('github:'.length).split('/') {
+        //case [owner, repo, commit]:
+          //if (commit.length != 40)
+            //new Error('Invalid sha "$commit" in GitHub URL ${args.url}');
+            //
+          //
+        //default:
+          //new Error('GitHub URL not fully specified: ${args.url}');
+      //}
     
     //{
       //var lib:Promise<{ lib:String, version: String }> = 
@@ -95,13 +106,40 @@ class Cli {
       //});
     //}  
     
+    function resolveHaxelibVersion(s:String):Promise<String>
+      return new Error('not implemented');
+      
+    function grabGitHubCommit(owner, repo, version) {
+      return Download.text('https://api.github.com/repos/$owner/$repo/commits?sha=$version').next(function (s):String {
+        return s.parse()[0].sha;
+      });
+    }
+      
+    function githubArchive(owner, repo, sha)
+      return 'https://github.com/$owner/$repo/archive/$sha.tar.gz';
+    
+    function resolveGithubVersion(url:String):Promise<String>
+      return switch url.substr(url.indexOf(':') + 1).split('/') {
+        case [owner, repo, sha] if (sha.length == 40):
+          githubArchive(owner, repo, sha);
+        case [owner, repo, version]:
+          grabGitHubCommit(owner, repo, version).next(githubArchive.bind(owner, repo, _));
+        case [owner, repo]:
+          grabGitHubCommit(owner, repo, '').next(githubArchive.bind(owner, repo, _));
+        default:
+          new Error('Malformed GitHub URL $url');
+      }
+    
     var downloaders:Map<String, SchemeHandler> = [
       'http' => fetch,
       'https' => fetch,
-      'haxelib' => fetchFromHaxelib,
     ];
     
-    
+    var resolvers:Map<String, String->Promise<String>> = [
+      'haxelib' => resolveHaxelibVersion,
+      'gh' => resolveGithubVersion,
+      'github' => resolveGithubVersion,
+    ];
     
     function download(url:String):Promise<Downloaded> 
       return 
@@ -126,6 +164,14 @@ class Cli {
               }
             );
         }  
+        
+    function resolve(url:String):Promise<String>
+      return
+        switch resolvers[url.split(':')[0]] {
+          case null: url;
+          case v:
+            v(url).next(resolve);
+        }
     
     Command.dispatch(args, 'lix - Libraries for haXe', [
       new Command('download', '<url>', 'download library from specified url', 
@@ -138,21 +184,29 @@ class Cli {
       new Command('install', '<url>', 'install library from specified url',
         function (args) return switch args {
           case [url]:
-            download(url).next(function (v) {
-              var extra =
-                switch '${v.root}/extraParams.hxml' {
-                  case found if (found.exists()):
-                    found.getContent();
-                  default: '';
-                }
-              Resolver.libHxml(scope.scopeLibDir, v.lib).saveContent([
-                '# @install: lix download $url',
-                '-D ${v.lib}=${v.version}',
-                '-cp $${HAXESHIM_LIBCACHE}/${v.lib}/${v.version}/src',
-                extra,
-              ].join('\n'));
-              return Noise;
-            });
+            
+            resolve(url).next(
+              function (actual) {
+                return download(actual).next(function (v) {
+                  
+                  var extra =
+                    switch '${v.root}/extraParams.hxml' {
+                      case found if (found.exists()):
+                        found.getContent();
+                      default: '';
+                    }
+                    
+                  Resolver.libHxml(scope.scopeLibDir, v.lib).saveContent([
+                    '# @install: lix download $actual',
+                    '-D ${v.lib}=${v.version}',
+                    '-cp $${HAXESHIM_LIBCACHE}/${v.lib}/${v.version}/src',
+                    extra,
+                  ].join('\n'));
+                  
+                  return Noise;
+                });
+              }
+            );
           case []: new Error('Missing url');
           case v: new Error('too many arguments');
         }
