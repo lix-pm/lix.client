@@ -1,0 +1,6 @@
+# @install: lix download haxelib:hxnodejs#4.0.9
+-D hxnodejs=4.0.9
+-cp ${HAXESHIM_LIBCACHE}/hxnodejs/4.0.9/src
+-D nodejs
+--macro allowPackage('sys')
+--macro _hxnodejs.VersionWarning.include()

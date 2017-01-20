@@ -1,0 +1,4 @@
+# @install: lix download https://github.com/lix-pm/haxeshim/archive/master.zip
+-D haxeshim=0.1.1
+-cp ${HAXESHIM_LIBCACHE}/haxeshim/0.1.1/src
+-lib tink_core

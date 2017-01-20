@@ -1,0 +1,3 @@
+[submodule "haxe_libraries/switchx"]
+	path = haxe_libraries/switchx
+	url = https://github.com/lix-pm/switchx
