@@ -1,92 +1,55 @@
 package lix.client;
 
-import haxeshim.*;
-import switchx.*;
-
-using tink.CoreApi;
 using sys.io.File;
 using haxe.Json;
 using sys.FileSystem;
 
-typedef SchemeHandler = { url:String, tmpLoc:String }->Promise<Downloaded>;
-typedef Downloaded = { lib:String, version:String, root:String, };
-
-abstract LibId(String) from String to String {
-  
-  public var scheme(get, never):String;
-    function get_scheme()
-      return switch this.indexOf(':') {
-        case -1: '';
-        case v: this.substr(0, v);
-      }  
-      
-  public var payload(get, never):String;
-    function get_payload()
-      return this.substr(this.indexOf(':') + 1);
-}
-
-abstract LibUrl(String) from String to String {
-  
-  static inline var SEPARATOR = '#';
-  
-  public function new(id:LibId, version:Option<String>) 
-    this = id + switch version {
-      case Some(v): SEPARATOR + v;
-      case None: '';
-    }
-  
-  public var id(get, never):LibId;
-    function get_id():LibId
-      return switch this.indexOf('#') {
-        case -1: this;
-        case v: this.substr(0, v);
-      }
-      
-  public var version(get, never):Option<String>;
-    function get_version()
-      return switch this.indexOf('#') {
-        case -1: None;
-        case v: switch this.substr(v + SEPARATOR.length) {
-          case '': None;
-          case v: Some(v);
-        }
-      }
-}
-
-abstract DownloadUrl(String) from String to String {
-  
-  static inline var SEPARATOR = ' as ';
-  
-  public function new(source:LibUrl, target:Option<LibUrl>)
-    this = source + switch target {
-      case Some(v): SEPARATOR + v;
-      case None: '';
-    }
-    
-  public var source(get, never):LibUrl;
-    function get_source():LibUrl
-      return switch this.indexOf(SEPARATOR) {
-        case -1: this;
-        case v: this.substr(0, v);
-      }
-      
-  public var target(get, never):Option<LibUrl>;
-    function get_target():Option<LibUrl>
-      return switch this.indexOf(SEPARATOR) {
-        case -1: None;
-        case v: switch this.substr(v + SEPARATOR.length) {
-          case '': None;
-          case v: Some(v);
-        }
-      }
-}
-
 
 class Cli {
 
-  static function main() {
+  static function main()
     dispatch(Sys.args());    
-  }
+  
+  static function detectLib(src:String, path:String, ?target:LibUrl):Promise<Downloaded>
+    return switch path.readDirectory() {
+      case [v]:
+        
+        detectLib(src, '$path/$v', target);
+      
+      case files:
+        
+        switch target {
+          case null | { version: None }:
+            var ret:Downloaded = null;
+            
+            for (f in files) 
+              switch f {
+                case 'haxelib.json' | 'package.json': 
+                  var o:{ name: String, version:String } = '$path/$f'.getContent().parse();
+                  ret = {
+                    lib: switch target {
+                      case null: o.name;
+                      case v: v.id.payload;
+                    },
+                    version: o.version,
+                    root: path,
+                  }
+                  break;
+                default:
+              }
+            return  
+              if (ret == null)
+                new Error('unable to determine library information from $src');
+              else
+                ret;
+          case { id: { payload: name }, version: Some(version) } :
+            {
+              lib: name,
+              version: version,
+              root: path,
+            }
+        }
+    }
   
   static function dispatch(args:Array<String>) {
     
@@ -94,45 +57,13 @@ class Cli {
         global = args.remove('--global');
         
     var scope = Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
-        
-    function detectLib(src:String, path:String, ?version:String):Promise<Downloaded> {
-      return switch path.readDirectory() {
-        case [v]:
-          
-          detectLib(src, '$path/$v', version);
-          
-        case files:
-          var ret:Downloaded = null;
-          
-          for (f in files) 
-            switch f {
-              case 'haxelib.json' | 'package.json': 
-                var o:{ name: String, version:String } = '$path/$f'.getContent().parse();
-                ret = {
-                  lib: o.name,
-                  version: switch version {
-                    case null: o.version;
-                    case v: v;
-                  },
-                  root: path,
-                }
-                break;
-              default:
-            }
-          return  
-            if (ret == null)
-              new Error('unable to determing library information from $src');
-            else
-              ret;
-      }
-    }
     
-    function http(url, into, version) {
-      return Download.archive(url, 0, into).next(detectLib.bind(url, _, version));
+    function http(url, into, target) {
+      return Download.archive(url, 0, into).next(detectLib.bind(url, _, target));
     }
     
     var fetch:SchemeHandler = function (args) {
-      return http(args.url, args.tmpLoc, null);
+      return http(args.url, args.tmpLoc, args.target);
     }
         
     //{
@@ -156,7 +87,7 @@ class Cli {
       //});
     //}  
     
-    function resolveHaxelibVersion(s:String):Promise<String>
+    function resolveHaxelibVersion(url:DownloadJob):Promise<DownloadJob>
       return new Error('not implemented');
       
     function grabGitHubCommit(repo, version) {
@@ -178,22 +109,25 @@ class Cli {
           grabGitHubCommit(url.id.payload, '').next(githubArchive.bind(url.id.payload, _));
       }
       
-    function resolveGithubVersion(url:DownloadUrl):Promise<DownloadUrl>
+    function resolveGithubVersion(url:DownloadJob):Promise<DownloadJob>
       return 
-        resolveGithubSource(url.source).next(function (v) return new DownloadUrl(v, url.target));
+        resolveGithubSource(url.source).next(function (v):DownloadJob return {
+          source: v,
+          target: url.target,
+        });
     
     var downloaders:Map<String, SchemeHandler> = [
       'http' => fetch,
       'https' => fetch,
     ];
     
-    var resolvers:Map<String, DownloadUrl->Promise<DownloadUrl>> = [
+    var resolvers:Map<String, DownloadJob->Promise<DownloadJob>> = [
       'haxelib' => resolveHaxelibVersion,
       'gh' => resolveGithubVersion,
       'github' => resolveGithubVersion,
     ];
     
-    function download(url:DownloadUrl):Promise<Downloaded> 
+    function download(url:DownloadJob):Promise<Downloaded> 
       return 
         switch downloaders[url.source.id.scheme] {
           case null:
@@ -203,10 +137,11 @@ class Cli {
               case Some(v):
                 new Error('Unresolved version fragment in url ${url.source}');
               case None:
-                v({ url: url.source, tmpLoc: Sys.getCwd() + '/downloads/' + Date.now().getTime() }).next(
+                v({ url: url.source, tmpLoc: Sys.getCwd() + '/downloads/' + Date.now().getTime(), target: url.target }).next(
                   function (v:Downloaded):Promise<Downloaded> {
                     switch url.target {
-                      case Some(target):
+                      case null:
+                      case target:                        
                         switch target.id {
                           case '':
                           case id: v.lib = id.payload;
@@ -215,7 +150,6 @@ class Cli {
                           case Some(version): v.version = version;
                           case None:
                         }
-                      case None:
                     }
                     
                     var target = scope.libCache + '/' + v.lib + '/' + v.version;
@@ -235,7 +169,7 @@ class Cli {
             }
         }  
         
-    function resolve(url:DownloadUrl):Promise<DownloadUrl>
+    function resolve(url:DownloadJob):Promise<DownloadJob>
       return
         switch resolvers[url.source.id.scheme] {
           case null: url;
@@ -243,11 +177,12 @@ class Cli {
             v(url).next(resolve);
         }
         
-    function install(url:DownloadUrl)
+    function install(url:DownloadJob)
       return
         resolve(url).next(
           function (actual) {
             return download(actual).next(function (v) {
+              
               var extra =
                 switch '${v.root}/extraParams.hxml' {
                   case found if (found.exists()):
@@ -256,8 +191,11 @@ class Cli {
                 }
                 
               switch actual.target {
-                case None:
-                  actual = new DownloadUrl(actual.source, Some(new LibUrl(v.lib, Some(v.version))));
+                case null:
+                  actual = {
+                    source: actual.source, 
+                    target: new LibUrl(v.lib, Some(v.version)),
+                  }
                 default:
               }
                 
@@ -278,22 +216,25 @@ class Cli {
         );        
     
     Command.dispatch(args, 'lix - Libraries for haXe', [
-      new Command('download', '<url> [as <lib[#version]>]', 'download library from specified url', 
+    
+      new Command('download', '[<url> [as <lib[#version]>]]', 'download library from url if specified,\notherwise download missing libraries', 
         function (args) return switch args {
-          case [url, 'as', alias]: download(new DownloadUrl(url, Some(alias)));
-          case [url]: download(url);
-          case []: new Error('Missing url');
+          case [url, 'as', alias]: download({ source: url, target: alias });
+          case [url]: download({ source: url });
+          case []: Exec.shell('haxe --run install-libs', Sys.getCwd()).map(function (_) return Noise);
           case v: new Error('too many arguments');
         }
       ),
+      
       new Command('install', '<url> [as <lib[#version]>]', 'install library from specified url',
         function (args) return switch args {
-          case [url, 'as', alias]: install(new DownloadUrl(url, Some(alias)));
-          case [url]: install(url);
+          case [url, 'as', alias]: install({ source: url, target: alias });
+          case [url]: install({ source: url });
           case []: new Error('Missing url');
           case v: new Error('too many arguments');
         }
       ),
+      
     ], []).handle(Command.reportError);
   }
   

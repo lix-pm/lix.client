@@ -1,6 +1,6 @@
-# @install: lix download https://github.com/HaxeFoundation/hxnodejs/archive/5257cb4a84e3c2d5447ec3386c66a249fce69be6.tar.gz
--D hxnodejs=6.9.0
--cp ${HAXESHIM_LIBCACHE}/hxnodejs/6.9.0/src
+# @install: lix download https://github.com/HaxeFoundation/hxnodejs/archive/4cbe1b3385e319b4cabcf95d27602bf8bbe3522a.tar.gz as hxnodejs#4.0.9
+-D hxnodejs=4.0.9
+-cp ${HAXESHIM_LIBCACHE}/hxnodejs/4.0.9/src
 -D nodejs
 --macro allowPackage('sys')
 --macro _hxnodejs.VersionWarning.include()
