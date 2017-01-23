@@ -3,7 +3,6 @@
 -lib hxnodejs
 -lib tink_core
 -lib tink_url
--lib tink_stringly
 -cp src
 -js bin/lix.js
 -main lix.client.Cli

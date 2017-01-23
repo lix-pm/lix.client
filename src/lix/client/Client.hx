@@ -1,5 +1,6 @@
 package lix.client;
 
+import haxe.DynamicAccess;
 import lix.client.Archives;
 
 using sys.FileSystem;
@@ -49,12 +50,20 @@ class Client {
         case None: '';
       }
       
+      var deps = 
+        switch '${a.absRoot}/haxelib.json' {
+          case found if (found.exists()):
+            var ret:DynamicAccess<String> = found.getContent().parse().dependencies;
+            [for (key in ret.keys()) '-lib $key'];
+          default: [];
+        }
+      
       hxml.saveContent([
         '# @install: lix download ${a.source.toString()} $target',
         '-D ${a.infos.name}=${a.infos.version}',
         '-cp $${HAXESHIM_LIBCACHE}/${a.relRoot}/${a.infos.classPath}',
         extra,
-      ].join('\n'));
+      ].concat(deps).join('\n'));
       return Noise;
     });
     

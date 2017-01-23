@@ -33,7 +33,6 @@
     <library name="-lib hxnodejs" />
     <library name="-lib tink_core" />
     <library name="-lib tink_url" />
-    <library name="-lib tink_stringly" />
   </haxelib>
   <!-- Class files to compile (other referenced classes will automatically be included) -->
   <compileTargets>
