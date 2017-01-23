@@ -8,3 +8,4 @@
 -js bin/lix.js
 -main lix.client.Cli
 --macro haxeshim.Build.postprocess()
+-dce full

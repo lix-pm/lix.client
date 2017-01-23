@@ -24,7 +24,7 @@
     <option noInlineOnDebug="False" />
     <option mainClass="lix.client.Cli" />
     <option enabledebug="False" />
-    <option additional="--macro haxeshim.Build.postprocess()" />
+    <option additional="--macro haxeshim.Build.postprocess()&#xA;-dce full" />
   </build>
   <!-- haxelib libraries -->
   <haxelib>
