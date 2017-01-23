@@ -5,10 +5,22 @@ package lix.client;
   public var name(default, null):Option<String>;
   public var versionNumber(default, null):Option<String>;
   public var versionId(default, null):Option<String>;
+  
+  function or(a:Option<String>, b:Option<String>) 
+    return switch a {
+      case Some(_): a;
+      default: b;
+    }
+  
+  public function merge(as:LibVersion):LibVersion {
+    if (as == null) return this;
+    return {
+      name: or(as.name, this.name),
+      versionNumber: or(as.versionNumber, this.versionNumber),
+      versionId: or(as.versionId, this.versionId),
+    }
+  }
 
-  //public function toString() {
-    //var ret = 
-  //}
   
   static public var AUTO(default, null):LibVersion = {
     name: None,
@@ -16,7 +28,7 @@ package lix.client;
     versionId: None
   };
   
-  static public function parse(s:String, versionId:Null<String>, ?pos):LibVersion {
+  static public function parse(s:String, ?versionId:Null<String>):LibVersion {
     var versionId = switch versionId {
       case null: None;
       case v: Some(v);
