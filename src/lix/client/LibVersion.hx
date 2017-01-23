@@ -11,6 +11,20 @@ package lix.client;
       case Some(_): a;
       default: b;
     }
+    
+  public function toString() 
+    return switch name {
+      case None: '';
+      case Some(v):
+        v + switch versionNumber {
+          case Some(v):
+            '#$v' + switch versionId {
+              case Some(v): '/$v';
+              case None: '';
+            }
+          case None: '';
+        }
+    }
   
   public function merge(as:LibVersion):LibVersion {
     if (as == null) return this;
@@ -20,32 +34,32 @@ package lix.client;
       versionId: or(as.versionId, this.versionId),
     }
   }
-
   
-  static public var AUTO(default, null):LibVersion = {
-    name: None,
-    versionNumber: None,
-    versionId: None
-  };
-  
-  static public function parse(s:String, ?versionId:Null<String>):LibVersion {
-    var versionId = switch versionId {
-      case null: None;
-      case v: Some(v);
+  static public function parse(s:String):Outcome<LibVersion, Error> {
+    function make(name:String, version:String):Outcome<LibVersion, Error> { 
+      var ret:LibVersion = {
+        name: Some(name),
+        versionNumber: None,
+        versionId: None
+      }
+      switch version.split('/') {
+        case ['']:
+        case [v]:
+          ret.versionNumber = Some(v);
+        case [num, id]:
+          ret.versionNumber = Some(num);
+          ret.versionId = Some(id);
+        default: 
+          return Failure(new Error(422, 'invalid alias version $s'));
+      }
+      return Success(ret);
     }
+    
     return switch s.indexOf('#') {
       case -1:
-        {
-          name: Some(s),
-          versionNumber: None,
-          versionId: versionId,
-        }
+        make(s, '');
       case v:
-        {
-          name: Some(s.substring(0, v)),
-          versionNumber: Some(s.substring(v + 1)),
-          versionId: versionId,
-        }
+        make(s.substring(0, v), s.substring(v + 1));
     }
   }
 }

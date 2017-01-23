@@ -1,0 +1,3 @@
+# @install: lix download https://github.com/haxetink/tink_stringly/archive/7adfb4c1566b065230e09189e2b876084c247349.tar.gz as tink_stringly#0.1.0
+-D tink_stringly=0.1.0
+-cp ${HAXESHIM_LIBCACHE}/tink_stringly/0.1.0/src

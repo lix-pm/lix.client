@@ -2,6 +2,9 @@ package lix.client;
 
 import lix.client.Archives;
 
+using sys.FileSystem;
+using sys.io.File;
+
 using haxe.Json;
 
 class Client {
@@ -28,56 +31,31 @@ class Client {
       })      
     );
     
-  static public function webArchive(url:Url):ArchiveJob {
-    return {
-      url: url,
-      lib: { name: None, versionNumber: None, versionId: None },
-    }
-  }
-    
-  static public function haxelibArchive(name:String, ?version:String):Promise<ArchiveJob>
-    return 
-      switch version {
-        case null:
-          resolveHaxelibVersion(name).next(haxelibArchive.bind(name, _));
-        case v:
-          ({
-            url: 'https://lib.haxe.org/p/$name/$version/download/',
-            kind: Zip,
-            lib: { name: Some(name), versionNumber: Some(version), versionId: Some('haxelib'), }
-          } : ArchiveJob);
-      }
-    
-  static function grabGitHubCommit(owner, project, version) 
-    return Download.text('https://api.github.com/repos/$owner/$project/commits?sha=$version')
-      .next(function (s)          
-        try 
-          return(s.parse()[0].sha:String)
-        catch (e:Dynamic) {
-          
-          var s = switch version {
-            case null | '': '';
-            case v: '#$v';
-          }
-          
-          return new Error('Failed to lookup sha for github:$owner/$project#$s');
+  public function install(a:Promise<ArchiveJob>, ?as:LibVersion) 
+    return download(a, as).next(function (a) {
+      var extra =
+        switch '${a.absRoot}/extraParams.hxml' {
+          case found if (found.exists()):
+            found.getContent();
+          default: '';
         }
-      );
-  
-  static public function githubArchive(owner:String, project:String, ?commitish:String):Promise<ArchiveJob> 
-    return switch commitish {
-      case null: 
-        grabGitHubCommit(owner, project, '').next(githubArchive.bind(owner, project, _));
-      case sha if (sha.length == 40):
-        return ({
-          url: 'https://github.com/$owner/$project/archive/$sha.tar.gz',
-          lib: { name: Some(project), versionNumber: None, versionId: Some(sha) }, 
-        } : ArchiveJob);
-      case v:
-        grabGitHubCommit(owner, project, v).next(githubArchive.bind(owner, project, _));
-    }
+        
+      var hxml = Resolver.libHxml(scope.scopeLibDir, a.infos.name);
       
-  static public function resolveHaxelibVersion(name:String):Promise<String> 
-    return Download.text('https://lib.haxe.org/p/$name').next(function (s) return s.split(')</title>')[0].split('(').pop());
+      Fs.ensureDir(hxml);
       
+      var target = switch a.savedAs {
+        case Some(v): 'as ' + v.toString();
+        case None: '';
+      }
+      
+      hxml.saveContent([
+        '# @install: lix download ${a.source.toString()} $target',
+        '-D ${a.infos.name}=${a.infos.version}',
+        '-cp $${HAXESHIM_LIBCACHE}/${a.relRoot}/${a.infos.classPath}',
+        extra,
+      ].join('\n'));
+      return Noise;
+    });
+    
 }
