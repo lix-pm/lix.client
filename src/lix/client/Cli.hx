@@ -1,4 +1,5 @@
 package lix.client;
+import haxe.crypto.Md5;
 
 using sys.io.File;
 using haxe.Json;
@@ -137,8 +138,8 @@ class Cli {
               case Some(v):
                 new Error('Unresolved version fragment in url ${url.source}');
               case None:
-                v({ url: url.source, tmpLoc: Sys.getCwd() + '/downloads/' + Date.now().getTime(), target: url.target }).next(
-                  function (v:Downloaded):Promise<Downloaded> {
+                v({ url: url.source.id, tmpLoc: scope.haxeshimRoot + '/downloads/' + Date.now().getTime(), target: url.target }).next(
+                  function (v:Downloaded) {
                     switch url.target {
                       case null:
                       case target:                        
@@ -152,13 +153,16 @@ class Cli {
                         }
                     }
                     
-                    var target = scope.libCache + '/' + v.lib + '/' + v.version;
+                    var savedTo = v.lib + '/' + v.version + '/' + Md5.encode(url.source.id);
+                    var target = scope.libCache + '/$savedTo';
+                    
                     try {
                       Fs.ensureDir(target);
                       if (target.exists())
                         target.rename('$target-archived@' + Date.now().getTime());
                       v.root.rename(target);
                       v.root = target;
+                      v.savedTo = savedTo;//this is really ugly
                       return v;
                     }
                     catch (e:Dynamic) {
@@ -203,10 +207,21 @@ class Cli {
               
               Fs.ensureDir(hxml);
               
+              var contents = v.root.readDirectory();
+              
+              var cp:String = 
+                if (contents.remove('haxelib.json'))
+                  '${v.root}/haxelib.json'.getContent().parse().classPath;
+                else if (contents.remove('src')) 'src';
+                else null;
+                
+              if (cp == null)
+                cp = '';
+                
               hxml.saveContent([
                 '# @install: lix download $actual',
                 '-D ${v.lib}=${v.version}',
-                '-cp $${HAXESHIM_LIBCACHE}/${v.lib}/${v.version}/src',
+                '-cp $${HAXESHIM_LIBCACHE}/${v.savedTo}/$cp',
                 extra,
               ].join('\n'));
               
@@ -217,16 +232,18 @@ class Cli {
     
     Command.dispatch(args, 'lix - Libraries for haXe', [
     
-      new Command('download', '[<url> [as <lib[#version]>]]', 'download library from url if specified,\notherwise download missing libraries', 
+      new Command('download', '[<url> [as <lib[#ver]>]]', 'download lib from url if specified,\notherwise download missing libs', 
         function (args) return switch args {
           case [url, 'as', alias]: download({ source: url, target: alias });
           case [url]: download({ source: url });
-          case []: Exec.shell('haxe --run install-libs', Sys.getCwd()).map(function (_) return Noise);
+          case []: 
+            new HaxeCli(scope).installLibs();
+            Noise;
           case v: new Error('too many arguments');
         }
       ),
       
-      new Command('install', '<url> [as <lib[#version]>]', 'install library from specified url',
+      new Command('install', '<url> [as <lib[#ver]>]', 'install lib from specified url',
         function (args) return switch args {
           case [url, 'as', alias]: install({ source: url, target: alias });
           case [url]: install({ source: url });
