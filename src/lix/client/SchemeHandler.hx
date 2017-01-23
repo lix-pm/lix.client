@@ -1,3 +1,3 @@
 package lix.client;
 
-typedef SchemeHandler = { url:String, tmpLoc:String, target:LibUrl }->Promise<Downloaded>;
+typedef SchemeHandler = { tmpLoc:String, job:DownloadJob }->Promise<Downloaded>;

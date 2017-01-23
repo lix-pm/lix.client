@@ -4,5 +4,5 @@ typedef Downloaded = {
   lib:String, 
   version:String, 
   root:String, 
-  ?savedTo:String,
+  ?guid:String,
 };
