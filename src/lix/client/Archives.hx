@@ -78,7 +78,7 @@ class DownloadedArchive {
       case None: infos.version;
       case Some(v): v;
     }
-    
+        
     var versionId = switch v.versionId {
       case None: 'http/'+ Md5.encode(source);
       case Some(v): v;
@@ -93,14 +93,20 @@ class DownloadedArchive {
     var path = '$name/$versionNumber/$versionId';
     
     var target = '$storageRoot/$path';
+    
     if (target.exists())
       target.rename('$target-archived@${Date.now().getTime()}');
+      
     Fs.ensureDir(target);  
     absRoot.rename(target);
     location = storageRoot;
     relRoot = path;
     
-    this.savedAs = Some(v);
+    this.savedAs = Some(({
+      name: Some(name),
+      versionNumber: Some(versionNumber),
+      versionId: Some(versionId),
+    }:LibVersion));
     
     return this;
   }
