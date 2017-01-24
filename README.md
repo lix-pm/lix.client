@@ -2,7 +2,7 @@
 
 In a nutshell, lix is an attempt to get dependency management right, building on lessons learnt from looking at NPM, Cargo and failure to move haxelib forward.
 
-The core proposition of Lix is that dependencies should be fully locked down and versioned, so that every state can be reliably replicated. To do this, it leverages [haxeshim](https://github.com/lix-pm/haxeshim), while creating the necessary directives for a reinstallation. This is (to the best of my understanding) pretty similar to how Rust's Cargo works.
+The core proposition of lix is that dependencies should be fully locked down and versioned, so that every state can be reliably replicated. To do this, it leverages [haxeshim](https://github.com/lix-pm/haxeshim), while creating the necessary directives for a reinstallation. This is (to the best of my understanding) pretty similar to how Rust's Cargo works.
   
 Currently lix misses many features that you would expect in a package manager, because its development is still in a very early stage. Most notably, after installing a library, it does not install its dependencies automatically. There are two reasons for that:
   
