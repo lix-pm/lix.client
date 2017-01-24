@@ -1,6 +1,6 @@
 # lix - the haxe package manager that rox ... ba-dum-tss ...
 
-In a nutshell, lix is an attempt to get dependency management right, build on lessons learnt from looking at NPM, Cargo and failure to move haxelib forward.
+In a nutshell, lix is an attempt to get dependency management right, building on lessons learnt from looking at NPM, Cargo and failure to move haxelib forward.
 
 The core proposition of Lix is that dependencies should be fully locked down and versioned, so that every state can be reliably replicated. To do this, it leverages [haxeshim](https://github.com/lix-pm/haxeshim), while creating the necessary directives for a reinstallation. This is (to the best of my understanding) pretty similar to how Rust's Cargo works.
   
@@ -22,6 +22,7 @@ A simple setup using npm:
 ```
 npm i haxeshim -g
 npm i switchx -g
+switchx install latest
 npm i lix -g
 ```
 
