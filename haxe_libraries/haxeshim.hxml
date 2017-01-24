@@ -1,3 +1,3 @@
-# @install: lix download https://github.com/lix-pm/haxeshim/archive/46d656e82303b4f4fc8fc9ee57e3151909112d3d.tar.gz as haxeshim#0.4.0/46d656e82303b4f4fc8fc9ee57e3151909112d3d
--D haxeshim=0.4.0
--cp ${HAXESHIM_LIBCACHE}/haxeshim/0.4.0/46d656e82303b4f4fc8fc9ee57e3151909112d3d/src
+# @install: lix download https://github.com/lix-pm/haxeshim/archive/3a759cd800e3f56369f1a6b2cf2f2b55264fab44.tar.gz as haxeshim#0.5.0/3a759cd800e3f56369f1a6b2cf2f2b55264fab44
+-D haxeshim=0.5.0
+-cp ${HAXESHIM_LIBCACHE}/haxeshim/0.5.0/3a759cd800e3f56369f1a6b2cf2f2b55264fab44/src
