@@ -2,7 +2,7 @@ package lix.client.sources;
 
 class Haxelib {
 
-  static public function parseUrl(url:Url):Promise<ArchiveJob> 
+  static public function processUrl(url:Url):Promise<ArchiveJob> 
     return switch url.path {
       case null: new Error('invalid haxelib url $url');
       case _.parts() => [v]: getArchive(v, url.hash);

@@ -1,9 +1,7 @@
 package lix.client;
 
 import lix.client.Archives;
-import lix.client.sources.Haxelib;
-import lix.client.sources.GitHub;
-import lix.client.sources.Web;
+import lix.client.sources.*;
 
 using sys.io.File;
 using haxe.Json;
@@ -23,12 +21,19 @@ class Cli {
         
     var scope = Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
     
-    var resolvers:Map<String, Url->Promise<ArchiveJob>> = [
-      'http' => Web.getArchive,
-      'https' => Web.getArchive,
-      'haxelib' => Haxelib.parseUrl,
-      'gh' => GitHub.parseUrl,
-      'github' => GitHub.parseUrl,
+    var github = new GitHub(switch args.indexOf('--gh-credentials') {
+      case -1:
+        null;
+      case v:
+        args.splice(v, 2)[1];
+    });
+    
+    var resolvers:Map<String, ArchiveSource> = [
+      'http' => Web,
+      'https' => Web,
+      'haxelib' => Haxelib,
+      'gh' => github,
+      'github' => github,
     ];
     
     var client = new Client(scope);
@@ -38,20 +43,18 @@ class Cli {
         case null:
           new Error('Unknown scheme in url $url');
         case v:
-          v(url);
+          v.processUrl(url);
       }
     Command.dispatch(args, 'lix - Libraries for haXe', [
     
       new Command('download', '[<url> [as <lib[#ver]>]]', 'download lib from url if specified,\notherwise download missing libs', 
         function (args) return switch args {
           case [url, 'as', alias]: 
-            Promise.lift(LibVersion.parse(alias)).next(
-              client.download.bind(resolve(url), _)
-            );
+            client.download(resolve(url), LibVersion.parse(alias));
           case [url]: 
             client.download(resolve(url));
           case []: 
-            new HaxeCli(scope).installLibs();
+            new HaxeCli(scope).installLibs(silent);
             Noise;
           case v: new Error('too many arguments');
         }
@@ -60,9 +63,7 @@ class Cli {
       new Command('install', '<url> [as <lib[#ver]>]', 'install lib from specified url',
         function (args) return switch args {
           case [url, 'as', alias]: 
-            Promise.lift(LibVersion.parse(alias)).next(
-              client.install.bind(resolve(url), _)
-            );
+            client.install(resolve(url), LibVersion.parse(alias));
           case [url]: 
             client.install(resolve(url));
           case []: new Error('Missing url');

@@ -10,7 +10,7 @@ using haxe.Json;
 
 class Client {
   
-  var scope:Scope;
+  public var scope(default, null):Scope;
   
   public function new(scope) {
     this.scope = scope;

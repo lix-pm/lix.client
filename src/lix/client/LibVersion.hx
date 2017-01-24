@@ -35,24 +35,21 @@ package lix.client;
     }
   }
   
-  static public function parse(s:String):Outcome<LibVersion, Error> {
-    function make(name:String, version:String):Outcome<LibVersion, Error> { 
+  static public function parse(s:String):LibVersion {
+    function make(name:String, version:String):LibVersion { 
       var ret:LibVersion = {
         name: Some(name),
         versionNumber: None,
         versionId: None
       }
-      switch version.split('/') {
-        case ['']:
-        case [v]:
-          ret.versionNumber = Some(v);
-        case [num, id]:
-          ret.versionNumber = Some(num);
-          ret.versionId = Some(id);
-        default: 
-          return Failure(new Error(422, 'invalid alias version $s'));
+      switch version.indexOf('/') {
+        case -1:
+          ret.versionNumber = Some(version);
+        case v:
+          ret.versionNumber = Some(version.substr(0, v));
+          ret.versionId = Some(version.substr(v+1));
       }
-      return Success(ret);
+      return ret;
     }
     
     return switch s.indexOf('#') {
