@@ -9,7 +9,7 @@ Currently lix misses many features that you would expect in a package manager, b
 1. This is not particularly hard to do *somehow* but getting it *right* is a different matter.
 2. It's actually just a nice comfort feature. Installing missing libraries is super boring, yes, but it's not hard in any way. Making sure that your whole team and the CI server has the exact same versions is a bit more of a challenge. This is what lix really focuses on.
 
-In fact lix's dependencies were installed with lix. The result are the `*.hxml` files found in the [haxe_libaries](https://github.com/lix-pm/lix/tree/master/haxe_libraries) folder. You can look at the history of every file individually, for example the dependency on [haxeshim](https://github.com/lix-pm/lix/commits/master/haxe_libraries/haxeshim.hxml).
+In fact lix's dependencies were installed with lix. The result are the `*.hxml` files found in the [haxe_libaries](https://github.com/lix-pm/lix/tree/master/haxe_libraries) folder. You can look at the history of every file individually, for example the [dependency on haxeshim](https://github.com/lix-pm/lix/commits/master/haxe_libraries/haxeshim.hxml).
 
 What this means is that for every single commit, your dependencies are entirely locked down. Switch branches and you have the dependencies configured there. Assuming you have already installed them, you're good to go. Otherwise you will need to either `lix download` or `haxe --run install-libs` (which both do *exactly* the same) to grab the files. If the dependencies were installed through lix, then it left enough information behind to download missing sources.
 
