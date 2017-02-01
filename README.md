@@ -23,7 +23,7 @@ A simple setup using npm:
 npm i haxeshim -g
 npm i switchx -g
 switchx install latest
-npm i lix -g
+npm i lix.pm -g
 ```
 
 When installing haxeshim on Windows, please make sure that no haxe processes are currently running. When installing on other platforms, please make sure that the `haxe` command installed by haxeshim has precedence over other commands you may have installed.
