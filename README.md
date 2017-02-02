@@ -1,15 +1,15 @@
 # lix - the haxe package manager that rox ... ba-dum-tss ...
 
-In a nutshell, lix is an attempt to get dependency management right, build on lessons learnt from looking at NPM, Cargo and failure to move haxelib forward.
+In a nutshell, lix is an attempt to get dependency management right, building on lessons learnt from looking at NPM, Cargo and failure to move haxelib forward.
 
-The core proposition of Lix is that dependencies should be fully locked down and versioned, so that every state can be reliably replicated. To do this, it leverages [haxeshim](https://github.com/lix-pm/haxeshim), while creating the necessary directives for a reinstallation. This is (to the best of my understanding) pretty similar to how Rust's Cargo works.
+The core proposition of lix is that dependencies should be fully locked down and versioned, so that every state can be reliably replicated. To do this, it leverages [haxeshim](https://github.com/lix-pm/haxeshim), while creating the necessary directives for a reinstallation. This is (to the best of my understanding) pretty similar to how Rust's Cargo works.
   
 Currently lix misses many features that you would expect in a package manager, because its development is still in a very early stage. Most notably, after installing a library, it does not install its dependencies automatically. There are two reasons for that:
   
 1. This is not particularly hard to do *somehow* but getting it *right* is a different matter.
 2. It's actually just a nice comfort feature. Installing missing libraries is super boring, yes, but it's not hard in any way. Making sure that your whole team and the CI server has the exact same versions is a bit more of a challenge. This is what lix really focuses on.
 
-In fact lix's dependencies were installed with lix. The result are the `*.hxml` files found in the [haxe_libaries](https://github.com/lix-pm/lix/tree/master/haxe_libraries) folder. You can look at the history of every file individually, for example the dependency on [haxeshim](https://github.com/lix-pm/lix/commits/master/haxe_libraries/haxeshim.hxml).
+In fact lix's dependencies were installed with lix. The result are the `*.hxml` files found in the [haxe_libaries](https://github.com/lix-pm/lix/tree/master/haxe_libraries) folder. You can look at the history of every file individually, for example the [dependency on haxeshim](https://github.com/lix-pm/lix/commits/master/haxe_libraries/haxeshim.hxml).
 
 What this means is that for every single commit, your dependencies are entirely locked down. Switch branches and you have the dependencies configured there. Assuming you have already installed them, you're good to go. Otherwise you will need to either `lix download` or `haxe --run install-libs` (which both do *exactly* the same) to grab the files. If the dependencies were installed through lix, then it left enough information behind to download missing sources.
 
@@ -22,7 +22,8 @@ A simple setup using npm:
 ```
 npm i haxeshim -g
 npm i switchx -g
-npm i lix -g
+switchx install latest
+npm i lix.pm -g
 ```
 
 When installing haxeshim on Windows, please make sure that no haxe processes are currently running. When installing on other platforms, please make sure that the `haxe` command installed by haxeshim has precedence over other commands you may have installed.
