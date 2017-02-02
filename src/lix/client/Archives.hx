@@ -2,6 +2,7 @@ package lix.client;
 
 import haxe.crypto.Md5;
 
+using haxe.io.Path;
 using sys.FileSystem;
 using sys.io.File;
 using haxe.Json;
@@ -43,7 +44,7 @@ class DownloadedArchive {
    */
   public var absRoot(get, never):String;
     inline function get_absRoot()
-      return '$location/$relRoot';
+      return '$location/$relRoot'.removeTrailingSlashes();
      
   public var infos(default, null):ArchiveInfos;
   

@@ -1,7 +1,7 @@
 {
     "version": "0.1.0",
     "command": "haxe",
-    "args": ["lix.hxml"],
+    "args": ["lix.client.hxml"],
     "problemMatcher": {
         "owner": "haxe",
         "pattern": {
