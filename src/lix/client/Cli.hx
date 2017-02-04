@@ -3,11 +3,6 @@ package lix.client;
 import lix.client.Archives;
 import lix.client.sources.*;
 
-using sys.io.File;
-using haxe.Json;
-using sys.FileSystem;
-
-
 class Cli {
   
   static function main()
