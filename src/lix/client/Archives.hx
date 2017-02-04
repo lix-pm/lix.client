@@ -36,7 +36,7 @@ class DownloadedArchive {
    */
   public var location(default, null):String;
   /**
-   * The root directory of this archive, relative to `tmpLoc`
+   * The root directory of this archive, relative to `location`
    */
   public var relRoot(default, null):String;
   /**
