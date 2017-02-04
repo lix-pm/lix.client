@@ -7,7 +7,6 @@ class Cli {
   
   static function main()
     dispatch(Sys.args());    
-
   
   static function dispatch(args:Array<String>) {
     
@@ -50,7 +49,7 @@ class Cli {
             client.download(resolve(url));
           case []: 
             new HaxeCli(scope).installLibs(silent);
-            Noise;
+            Noise;//actually the above just exits
           case v: new Error('too many arguments');
         }
       ),
