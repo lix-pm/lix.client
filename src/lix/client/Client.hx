@@ -1,5 +1,6 @@
 package lix.client;
 
+import lix.client.sources.Haxelib;
 import haxe.DynamicAccess;
 import lix.client.Archives;
 
@@ -32,7 +33,7 @@ class Client {
       })      
     );
     
-  public function install(a:Promise<ArchiveJob>, ?as:LibVersion) 
+  public function install(a:Promise<ArchiveJob>, ?as:LibVersion):Promise<Noise> 
     return download(a, as).next(function (a) {
       var extra =
         switch '${a.absRoot}/extraParams.hxml' {
@@ -50,11 +51,13 @@ class Client {
         case None: '';
       }
       
+      var haxelibs:DynamicAccess<String> = null;
+
       var deps = 
         switch '${a.absRoot}/haxelib.json' {
           case found if (found.exists()):
-            var ret:DynamicAccess<String> = found.getContent().parse().dependencies;
-            [for (key in ret.keys()) '-lib $key'];
+            haxelibs = found.getContent().parse().dependencies;
+            [for (name in haxelibs.keys()) '-lib $name'];
           default: [];
         }
       
@@ -64,7 +67,51 @@ class Client {
         '-cp $${HAXESHIM_LIBCACHE}/${a.relRoot}/${a.infos.classPath}',
         extra,
       ].concat(deps).join('\n'));
-      return Noise;
+      
+      if (haxelibs == null)
+        return Noise;
+
+      for (file in scope.scopeLibDir.readDirectory())
+        if (file.endsWith('.hxml')) 
+          haxelibs.remove(file.substr(0, file.length - 5));
+
+      var ret:Array<Promise<Noise>> = [
+        for (name in haxelibs.keys()) {
+          var version:Url = haxelibs[name];
+          switch version.scheme {
+            case 'git':
+              new Error(NotImplemented, 'git dependencies not implemented');
+            case 'http' | 'https':
+              new Error(NotImplemented, 'http dependencies not implemented');
+            case null:
+              install(Haxelib.getArchive(name, switch version.payload {
+                case '' | '*': null;
+                case v: v;
+              }));
+            case v:
+              new Error(NotFound, 'Unknown dependency previx $v:');
+          }
+          Noise;
+        }
+      ];
+
+      return Future.ofMany(ret).map(function (results) {
+
+        var errors = [];
+        
+        for (r in results) switch r {
+          case Failure(e):
+            errors.push(e);
+          default:
+        }
+
+        return switch errors {
+          case []: 
+            Success(Noise);
+          case v:
+            Failure(Error.withData('Failed to install dependencies:\n  ' + errors.map(function (e) return e.message).join('\n  '), errors));
+        }
+      });
     });
     
 }
