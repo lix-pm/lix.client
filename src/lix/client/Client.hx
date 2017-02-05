@@ -84,45 +84,17 @@ class Client {
         extra,
       ].concat(deps).join('\n'));
       
-      if (haxelibs == null)
-        return Noise;
-
-      for (file in scope.scopeLibDir.readDirectory())
-        if (file.endsWith('.hxml')) 
-          haxelibs.remove(file.substr(0, file.length - 5));
-      
-      var ret:Array<Promise<Noise>> = [
-        for (name in haxelibs.keys()) {
-          var version:Url = haxelibs[name];
-          switch version.scheme {
-            case null:
-              install(Haxelib.getArchive(name, switch version.payload {
-                case '' | '*': null;
-                case v: v;
-              }));
-            case v:
-              installUrl(version);
-          }
-        }
-      ];
-
-      return Future.ofMany(ret).map(function (results) {
-
-        var errors = [];
-        
-        for (r in results) switch r {
-          case Failure(e):
-            errors.push(e);
+      return 
+        switch haxelibs {
+          case null: Noise;
           default:
-        }
 
-        return switch errors {
-          case []: 
-            Success(Noise);
-          case v:
-            Failure(Error.withData('Failed to install dependencies:\n  ' + errors.map(function (e) return e.message).join('\n  '), errors));
+            for (file in scope.scopeLibDir.readDirectory())
+              if (file.endsWith('.hxml')) 
+                haxelibs.remove(file.substr(0, file.length - 5));
+
+            Haxelib.installDependencies(haxelibs, this);
         }
-      });
     });
-    
+  
 }
