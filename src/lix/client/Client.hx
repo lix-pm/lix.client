@@ -1,6 +1,6 @@
 package lix.client;
 
-import lix.client.sources.Haxelib;
+import lix.client.sources.*;
 import haxe.DynamicAccess;
 import lix.client.Archives;
 
@@ -13,8 +13,11 @@ class Client {
   
   public var scope(default, null):Scope;
   
-  public function new(scope) {
+  var urlToJob:Url->Promise<ArchiveJob>;
+
+  public function new(scope, urlToJob) {
     this.scope = scope;
+    this.urlToJob = urlToJob;
   }
   
   static public function downloadArchiveInto(?kind:ArchiveKind, url:Url, tmpLoc:String):Promise<DownloadedArchive> 
@@ -25,6 +28,9 @@ class Client {
     }).next(function (dir:String) {
       return new DownloadedArchive(url, dir);
     });
+
+  public function downloadUrl(url:Url, ?as:LibVersion) 
+    return download(urlToJob(url), as);
     
   public function download(a:Promise<ArchiveJob>, ?as:LibVersion) 
     return a.next(
@@ -32,6 +38,9 @@ class Client {
         return res.saveAs(scope.libCache, a.lib.merge(as));
       })      
     );
+
+  public function installUrl(url:Url, ?as:LibVersion)
+    return install(urlToJob(url), as);
     
   public function install(a:Promise<ArchiveJob>, ?as:LibVersion):Promise<Noise> 
     return download(a, as).next(function (a) {
@@ -82,7 +91,7 @@ class Client {
             case 'git':
               new Error(NotImplemented, 'git dependencies not implemented');
             case 'http' | 'https':
-              new Error(NotImplemented, 'http dependencies not implemented');
+              install(Web.processUrl(version));
             case null:
               install(Haxelib.getArchive(name, switch version.payload {
                 case '' | '*': null;

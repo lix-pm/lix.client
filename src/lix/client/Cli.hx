@@ -29,9 +29,7 @@ class Cli {
       'gh' => github,
       'github' => github,
     ];
-    
-    var client = new Client(scope);
-    
+
     function resolve(url:Url):Promise<ArchiveJob>
       return switch resolvers[url.scheme] {
         case null:
@@ -39,14 +37,17 @@ class Cli {
         case v:
           v.processUrl(url);
       }
+    
+    var client = new Client(scope, resolve);
+    
     Command.dispatch(args, 'lix - Libraries for haXe', [
     
       new Command('download', '[<url> [as <lib[#ver]>]]', 'download lib from url if specified,\notherwise download missing libs', 
         function (args) return switch args {
           case [url, 'as', alias]: 
-            client.download(resolve(url), LibVersion.parse(alias));
+            client.downloadUrl(url, LibVersion.parse(alias));
           case [url]: 
-            client.download(resolve(url));
+            client.downloadUrl(url);
           case []: 
             new HaxeCli(scope).installLibs(silent);
             Noise;//actually the above just exits
@@ -57,9 +58,9 @@ class Cli {
       new Command('install', '<url> [as <lib[#ver]>]', 'install lib from specified url',
         function (args) return switch args {
           case [url, 'as', alias]: 
-            client.install(resolve(url), LibVersion.parse(alias));
+            client.installUrl(url, LibVersion.parse(alias));
           case [url]: 
-            client.install(resolve(url));
+            client.installUrl(url);
           case []: new Error('Missing url');
           case v: new Error('too many arguments');
         }
