@@ -88,17 +88,13 @@ class Client {
         for (name in haxelibs.keys()) {
           var version:Url = haxelibs[name];
           switch version.scheme {
-            case 'git':
-              new Error(NotImplemented, 'git dependencies not implemented');
-            case 'http' | 'https':
-              install(Web.processUrl(version));
             case null:
               install(Haxelib.getArchive(name, switch version.payload {
                 case '' | '*': null;
                 case v: v;
               }));
             case v:
-              new Error(NotFound, 'Unknown dependency previx $v:');
+              installUrl(version);
           }
         }
       ];
