@@ -39,8 +39,15 @@ class Client {
       })      
     );
 
-  public function installUrl(url:Url, ?as:LibVersion)
-    return install(urlToJob(url), as);
+  public function git(url:Url, ?as:LibVersion):Promise<Noise>
+    return new Error(NotImplemented, 'git dependencies not implemented');
+
+  public function installUrl(url:Url, ?as:LibVersion):Promise<Noise>
+    return 
+      switch url.scheme {
+        case 'git': git(url, as);
+        default: install(urlToJob(url), as);
+      }
     
   public function install(a:Promise<ArchiveJob>, ?as:LibVersion):Promise<Noise> 
     return download(a, as).next(function (a) {
