@@ -74,7 +74,7 @@ class Client {
       for (file in scope.scopeLibDir.readDirectory())
         if (file.endsWith('.hxml')) 
           haxelibs.remove(file.substr(0, file.length - 5));
-
+      
       var ret:Array<Promise<Noise>> = [
         for (name in haxelibs.keys()) {
           var version:Url = haxelibs[name];
@@ -91,7 +91,6 @@ class Client {
             case v:
               new Error(NotFound, 'Unknown dependency previx $v:');
           }
-          Noise;
         }
       ];
 
