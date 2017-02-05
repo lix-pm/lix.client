@@ -56,14 +56,19 @@ class Cli {
       ),
       
       new Command('install', '<url> [as <lib[#ver]>]', 'install lib from specified url',
-        function (args) return switch args {
-          case [url, 'as', alias]: 
-            client.installUrl(url, LibVersion.parse(alias));
-          case [url]: 
-            client.installUrl(url);
-          case []: new Error('Missing url');
-          case v: new Error('too many arguments');
-        }
+        function (args) 
+          return 
+            if (scope.isGlobal && !global)
+              new Error('Current scope is global. Please use --global if you intend to install globally, or create a local scope.');
+            else
+              switch args {
+                case [url, 'as', alias]: 
+                  client.installUrl(url, LibVersion.parse(alias));
+                case [url]: 
+                  client.installUrl(url);
+                case []: new Error('Missing url');
+                case v: new Error('too many arguments');
+              }
       ),
       
     ], []).handle(Command.reportError);
