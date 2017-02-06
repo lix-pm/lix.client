@@ -101,11 +101,16 @@ class DownloadedArchive {
     
     var target = '$storageRoot/$path';
     
+    var archive = null;
     if (target.exists())
-      target.rename('$target-archived@${Date.now().getTime()}');
+      target.rename(archive = '$target-archived@${Date.now().getTime()}');
       
     Fs.ensureDir(target);  
     absRoot.rename(target);
+    
+    if (archive != null)
+      Fs.delete(archive);
+
     location = storageRoot;
     relRoot = path;
     
