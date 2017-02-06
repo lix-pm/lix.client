@@ -11,7 +11,7 @@ class Cli {
   static function dispatch(args:Array<String>) {
     
     var silent = args.remove('--silent'),
-        global = args.remove('--global');
+        global = args.remove('--global') || args.remove('-g');
         
     var scope = Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
     
@@ -49,8 +49,15 @@ class Cli {
           case [url]: 
             client.downloadUrl(url);
           case []: 
-            new HaxeCli(scope).installLibs(silent);
-            Noise;//actually the above just exits
+
+            var s = new switchx.Switchx(scope);
+            
+            s.resolveOnline(scope.config.version)
+              .next(s.download.bind(_, { force: false }))
+              .next(function (_) {
+                new HaxeCli(scope).installLibs(silent);
+                return Noise;//actually the above just exits
+              });
           case v: new Error('too many arguments');
         }
       ),
