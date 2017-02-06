@@ -21,6 +21,8 @@ class Cli {
       case v:
         args.splice(v, 2)[1];
     });
+
+    var git = new Git(github);
     
     var resolvers:Map<String, ArchiveSource> = [
       'http' => Web,
@@ -28,6 +30,7 @@ class Cli {
       'haxelib' => Haxelib,
       'gh' => github,
       'github' => github,
+      'git' => git,
     ];
 
     function resolve(url:Url):Promise<ArchiveJob>
@@ -38,7 +41,7 @@ class Cli {
           v.processUrl(url);
       }
     
-    var client = new Client(scope, resolve);
+    var client = new Client(scope, resolve, if (silent) function (_) {} else Sys.println);
     
     Command.dispatch(args, 'lix - Libraries for haXe', [
     

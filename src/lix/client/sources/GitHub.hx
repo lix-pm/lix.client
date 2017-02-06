@@ -15,7 +15,6 @@ class GitHub {
         try 
           return(s.parse()[0].sha:String)
         catch (e:Dynamic) {
-          
           var s = switch version {
             case null | '': '';
             case v: '#$v';

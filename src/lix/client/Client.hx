@@ -14,10 +14,12 @@ class Client {
   public var scope(default, null):Scope;
   
   var urlToJob:Url->Promise<ArchiveJob>;
+  public var log(default, null):String->Void;
 
-  public function new(scope, urlToJob) {
+  public function new(scope, urlToJob, log) {
     this.scope = scope;
     this.urlToJob = urlToJob;
+    this.log = log;
   }
   
   static public function downloadArchiveInto(?kind:ArchiveKind, url:Url, tmpLoc:String):Promise<DownloadedArchive> 
@@ -34,20 +36,16 @@ class Client {
     
   public function download(a:Promise<ArchiveJob>, ?as:LibVersion) 
     return a.next(
-      function (a) return downloadArchiveInto(a.kind, a.url, scope.haxeshimRoot + '/downloads/download@'+Date.now().getTime()).next(function (res) {
-        return res.saveAs(scope.libCache, a.lib.merge(as));
-      })      
-    );
-
-  public function git(url:Url, ?as:LibVersion):Promise<Noise>
-    return new Error(NotImplemented, 'git dependencies not implemented');
+      function (a) {
+        log('downloading ${a.url}');
+        return downloadArchiveInto(a.kind, a.url, scope.haxeshimRoot + '/downloads/download@'+Date.now().getTime())
+          .next(function (res) {
+            return res.saveAs(scope.libCache, a.lib, as);
+          });      
+      });
 
   public function installUrl(url:Url, ?as:LibVersion):Promise<Noise>
-    return 
-      switch url.scheme {
-        case 'git': git(url, as);
-        default: install(urlToJob(url), as);
-      }
+    return install(urlToJob(url), as);
     
   public function install(a:Promise<ArchiveJob>, ?as:LibVersion):Promise<Noise> 
     return download(a, as).next(function (a) {
@@ -64,8 +62,10 @@ class Client {
       
       var target = switch a.savedAs {
         case Some(v): 'as ' + v.toString();
-        case None: '';
+        case None: '';//not sure this should ever happen
       }
+
+      log('mounting as $target');  
       
       var haxelibs:DynamicAccess<String> = null;
 
@@ -88,12 +88,7 @@ class Client {
         switch haxelibs {
           case null: Noise;
           default:
-
-            for (file in scope.scopeLibDir.readDirectory())
-              if (file.endsWith('.hxml')) 
-                haxelibs.remove(file.substr(0, file.length - 5));
-
-            Haxelib.installDependencies(haxelibs, this);
+            Haxelib.installDependencies(haxelibs, this, function (s) return '${scope.scopeLibDir}/$s.hxml'.exists());
         }
     });
   

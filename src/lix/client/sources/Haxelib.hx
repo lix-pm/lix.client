@@ -25,21 +25,26 @@ class Haxelib {
   static public function resolveVersion(name:String):Promise<String> 
     return Download.text('https://lib.haxe.org/p/$name').next(function (s) return s.split(')</title>')[0].split('(').pop());
 
-  static public function installDependencies(haxelibs:haxe.DynamicAccess<String>, client:Client) {
+  static public function installDependencies(haxelibs:haxe.DynamicAccess<String>, client:Client, skip:String->Bool) {
     
     var ret:Array<Promise<Noise>> = [
-      for (name in haxelibs.keys()) {
+      for (name in haxelibs.keys()) Future.async(function (cb) {
+        if (skip(name)) {
+          cb(Success(Noise));
+          return;
+        }
         var version:Url = haxelibs[name];
-        switch version.scheme {
+        client.log('Installing dependency $name');
+        (switch version.scheme {
           case null:
             client.install(Haxelib.getArchive(name, switch version.payload {
               case '' | '*': null;
               case v: v;
             }));
           case v:
-            client.installUrl(version);
-        }
-      }
+            client.installUrl(version, { name: Some(name), versionNumber: None, versionId: None });
+        }).handle(cb);
+      }, true)
     ];
 
     return Future.ofMany(ret).map(function (results) {
