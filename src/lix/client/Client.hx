@@ -31,16 +31,23 @@ class Client {
       return new DownloadedArchive(url, dir);
     });
 
-  public function downloadUrl(url:Url, ?as:LibVersion) 
-    return download(urlToJob(url), as);
+  public function downloadUrl(url:Url, ?into:String, ?as:LibVersion) 
+    return download(urlToJob(url), into, as);
     
-  public function download(a:Promise<ArchiveJob>, ?as:LibVersion) 
+  public function download(a:Promise<ArchiveJob>, ?into:String, ?as:LibVersion) 
     return a.next(
       function (a) {
         log('downloading ${a.url}');
         return downloadArchiveInto(a.kind, a.url, scope.haxeshimRoot + '/downloads/download@'+Date.now().getTime())
           .next(function (res) {
-            return res.saveAs(scope.libCache, a.lib, as);
+            return res.saveAs(scope.libCache, switch into {
+              case null: 
+                switch a.dest {
+                  case Some(v): v;
+                  default: null;
+                }
+              case v: v;
+            }, as);
           });      
       });
 
@@ -48,7 +55,7 @@ class Client {
     return install(urlToJob(url), as);
     
   public function install(a:Promise<ArchiveJob>, ?as:LibVersion):Promise<Noise> 
-    return download(a, as).next(function (a) {
+    return download(a).next(function (a) {
       var extra =
         switch '${a.absRoot}/extraParams.hxml' {
           case found if (found.exists()):
@@ -60,13 +67,13 @@ class Client {
       
       Fs.ensureDir(hxml);
       
-      var target = '';
+      // var target = '';
       // switch a.savedAs {
       //   case Some(v): 'as ' + v.toString();
       //   case None: '';
       // }
 
-      log('mounting as $target');  
+      // log('mounting as $target');  
       
       var haxelibs:DynamicAccess<String> = null;
 
@@ -79,7 +86,7 @@ class Client {
         }
       
       hxml.saveContent([
-        '# @install: lix download ${a.source.toString()} $target',
+        '# @install: lix download ${a.source.toString()} into ${a.location}',
         '-D ${a.infos.name}=${a.infos.version}',
         '-cp $${HAXESHIM_LIBCACHE}/${a.relRoot}/${a.infos.classPath}',
         extra,

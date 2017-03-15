@@ -7,8 +7,9 @@ class Web {
   static public function processUrl(url:Url):Promise<ArchiveJob> 
     return ({
       url: url,
+      dest: None,
       normalized: url,
-      lib: { name: None, versionNumber: None, versionId: None },
+      lib: { name: None, version: None },
     } : ArchiveJob);
 
 }

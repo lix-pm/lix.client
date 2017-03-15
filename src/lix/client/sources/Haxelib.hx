@@ -20,8 +20,9 @@ class Haxelib {
           ({
             url: 'https://lib.haxe.org/p/$name/$version/download/',
             normalized: 'haxelib:$name#$version',
+            dest: Some('$name/haxelib/$version'),
             kind: Zip,
-            lib: { name: Some(name), versionNumber: Some(version), versionId: Some('haxelib'), }
+            lib: { name: Some(name), version: Some(version) }
           } : ArchiveJob);
       }    
       
@@ -45,7 +46,7 @@ class Haxelib {
               case v: v;
             }));
           case v:
-            client.installUrl(version, { name: Some(name), versionNumber: None, versionId: None });
+            client.installUrl(version, { name: Some(name), version: None });
         }).handle(cb);
       }, true)
     ];

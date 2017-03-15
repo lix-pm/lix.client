@@ -35,8 +35,9 @@ class GitHub {
       case sha if (sha.length == 40):
         return ({
           normalized: 'github:$owner/$project#$sha',
+          dest: Some('$project/github/$sha'),
           url: 'https://${credentials}github.com/$owner/$project/archive/$sha.tar.gz',
-          lib: { name: Some(project), versionNumber: None, versionId: Some(sha) }, 
+          lib: { name: Some(project), version: None }, 
         } : ArchiveJob);
       case v:
         grabCommit(owner, project, v).next(getArchive.bind(owner, project, _));

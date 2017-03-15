@@ -3,8 +3,7 @@ package lix.client;
 @:structInit class LibVersion {
   
   public var name(default, null):Option<String>;
-  public var versionNumber(default, null):Option<String>;
-  public var versionId(default, null):Option<String>;
+  public var version(default, null):Option<String>;
   
   function or(a:Option<String>, b:Option<String>) 
     return switch a {
@@ -16,47 +15,27 @@ package lix.client;
     return switch name {
       case None: '';
       case Some(v):
-        v + switch versionNumber {
-          case Some(v):
-            '#$v' + switch versionId {
-              case Some(v): '/$v';
-              case None: '';
-            }
+        v + switch version {
+          case Some(v): '#$v';
           case None: '';
         }
     }
-  
+
   public function merge(as:LibVersion):LibVersion {
     if (as == null) return this;
     return {
       name: or(as.name, this.name),
-      versionNumber: or(as.versionNumber, this.versionNumber),
-      versionId: or(as.versionId, this.versionId),
+      version: or(as.version, this.version),
     }
-  }
-  
-  static public function parse(s:String):LibVersion {
-    function make(name:String, version:String):LibVersion { 
-      var ret:LibVersion = {
-        name: Some(name),
-        versionNumber: None,
-        versionId: None
-      }
-      switch version.indexOf('/') {
+  }    
+
+  static public function parse(s:String):LibVersion 
+    return 
+      if (s == null) null;
+      else switch s.indexOf('#') {
         case -1:
-          ret.versionNumber = Some(version);
+          { name: Some(s), version: None };
         case v:
-          ret.versionNumber = Some(version.substr(0, v));
-          ret.versionId = Some(version.substr(v+1));
+          { name: Some(s.substring(0, v)), version: Some(s.substring(v + 1)) };
       }
-      return ret;
-    }
-    
-    return switch s.indexOf('#') {
-      case -1:
-        make(s, '');
-      case v:
-        make(s.substring(0, v), s.substring(v + 1));
-    }
-  }
 }

@@ -13,9 +13,12 @@ enum ArchiveKind {
 }
 
 typedef ArchiveJob = {
+  
   var normalized(default, null):Url;
   var url(default, null):Url;
   var lib(default, null):LibVersion;
+  var dest(default, null):Option<String>;
+
   @:optional var kind(default, null):Null<ArchiveKind>;
 }
 
@@ -64,41 +67,34 @@ class DownloadedArchive {
         '';
     }
     
-  public function saveAs(storageRoot:String, implicit:LibVersion, ?explicit:LibVersion):Promise<DownloadedArchive> {
+  public function saveAs(storageRoot:String, ?path:String, ?alias:LibVersion):Promise<DownloadedArchive> {
     
-    var found:LibVersion = {
-      name: Some(infos.name),
-      versionNumber: Some(infos.version.urlEncode()),
-      versionId: None,
+    var name = infos.name,
+        version = infos.version;
+
+    if (alias != null) {
+      switch alias.name {
+        case Some(v): name = v;
+        default:
+      }
+      switch alias.version {
+        case Some(v): version = v;
+        default:
+      }
     }
 
-    var final = implicit.merge(found).merge(explicit);
+    if (name == null)
+      return new Error('No name explicitly chosen for or defined within the library loaded from $source');
 
-    var name = switch final.name {
-      case None:
-        return new Error('unable to determine library name of $source');
-      case Some(v):
-        v;
-    }
-    
-    var versionNumber = switch final.versionNumber {
-      case None: throw "unreachable";//unless proven otherwise
-      case Some(v): v;
-    }
-        
-    var versionId = switch final.versionId {
-      case None: 'http/'+ Md5.encode(source);
-      case Some(v): v;
-    }
-    
+    if (path == null)
+      path = '$name/${source.urlEncode()}';
+
     this.infos = {
       name: name,
-      version: versionNumber,
-      classPath: infos.classPath,
+      version: version,
+      classPath: this.infos.classPath,
     }
-    
-    var path = '$name/$versionNumber/$versionId';
-    
+
     var target = '$storageRoot/$path';
     
     var archive = null;
@@ -113,12 +109,6 @@ class DownloadedArchive {
 
     location = storageRoot;
     relRoot = path;
-    
-    this.savedAs = Some(({
-      name: Some(name),
-      versionNumber: Some(versionNumber),
-      versionId: Some(versionId),
-    }:LibVersion));
     
     return this;
   }
