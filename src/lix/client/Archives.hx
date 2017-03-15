@@ -12,6 +12,7 @@ enum ArchiveKind {
 }
 
 typedef ArchiveJob = {
+  var normalized(default, null):Url;
   var url(default, null):Url;
   var lib(default, null):LibVersion;
   @:optional var kind(default, null):Null<ArchiveKind>;

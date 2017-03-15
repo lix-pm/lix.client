@@ -1,6 +1,10 @@
 package lix.client.sources;
 
 class GitHub {
+
+  public function schemes()
+    return ['github', 'gh'];
+
   var credentials:String;
   public function new(?credentials:String = '') {
     this.credentials = switch credentials.trim() {
@@ -31,6 +35,7 @@ class GitHub {
         grabCommit(owner, project, '').next(getArchive.bind(owner, project, _));
       case sha if (sha.length == 40):
         return ({
+          normalized: 'github:$owner/$project#$sha',
           url: 'https://${credentials}github.com/$owner/$project/archive/$sha.tar.gz',
           lib: { name: Some(project), versionNumber: None, versionId: Some(sha) }, 
         } : ArchiveJob);

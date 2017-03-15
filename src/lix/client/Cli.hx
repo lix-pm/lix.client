@@ -23,13 +23,8 @@ class Cli {
         args.splice(v, 2)[1];
     });
     
-    var resolvers:Map<String, ArchiveSource> = [
-      'http' => Web,
-      'https' => Web,
-      'haxelib' => Haxelib,
-      'gh' => github,
-      'github' => github,
-    ];
+    var sources:Array<ArchiveSource> = [Web, Haxelib, github];
+    var resolvers:Map<String, ArchiveSource> = [for (s in sources) for (scheme in s.schemes()) scheme => s];
     
     var client = new Client(scope);
     
@@ -66,7 +61,7 @@ class Cli {
         }
       ),
       
-    ], []).handle(Command.reportError);
+    ], []).handle(Command.reportOutcome);
   }
   
 }

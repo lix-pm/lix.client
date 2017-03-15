@@ -7,5 +7,4 @@
     "haxe.displayConfigurations": [
         ["lix.client.hxml"]
     ],
-    "haxe.displayPort": 6000
 }

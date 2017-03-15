@@ -1,6 +1,8 @@
 package lix.client.sources;
 
 class Haxelib {
+  static public function schemes():Array<String>
+    return ['haxelib'];
 
   static public function processUrl(url:Url):Promise<ArchiveJob> 
     return switch url.path {
@@ -17,6 +19,7 @@ class Haxelib {
         case v:
           ({
             url: 'https://lib.haxe.org/p/$name/$version/download/',
+            normalized: 'haxelib:$name#$version',
             kind: Zip,
             lib: { name: Some(name), versionNumber: Some(version), versionId: Some('haxelib'), }
           } : ArchiveJob);

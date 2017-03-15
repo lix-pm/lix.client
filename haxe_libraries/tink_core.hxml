@@ -1,3 +1,3 @@
-# @install: lix download https://github.com/haxetink/tink_core/archive/73295458a12fa8dae56cefb52435e2140b2fee77.tar.gz as tink_core#1.6.1/73295458a12fa8dae56cefb52435e2140b2fee77
--D tink_core=1.6.1
--cp ${HAXESHIM_LIBCACHE}/tink_core/1.6.1/73295458a12fa8dae56cefb52435e2140b2fee77/src
+# @install: lix download https://lib.haxe.org/p/tink_core/1.8.1/download/ as tink_core#1.8.1/haxelib
+-D tink_core=1.8.1
+-cp ${HAXESHIM_LIBCACHE}/tink_core/1.8.1/haxelib/src
