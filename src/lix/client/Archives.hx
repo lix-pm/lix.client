@@ -25,7 +25,6 @@ typedef ArchiveJob = {
 }
 
 class DownloadedArchive {
-  public var savedAs(default, null):Option<LibVersion> = None;
   
   /**
    * The url this archive was downloaded from

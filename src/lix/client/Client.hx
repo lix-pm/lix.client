@@ -45,10 +45,11 @@ class Client {
       
       Fs.ensureDir(hxml);
       
-      var target = switch a.savedAs {
-        case Some(v): 'as ' + v.toString();
-        case None: '';
-      }
+      var target = '';
+      // switch a.savedAs {
+      //   case Some(v): 'as ' + v.toString();
+      //   case None: '';
+      // }
       
       var deps = 
         switch '${a.absRoot}/haxelib.json' {

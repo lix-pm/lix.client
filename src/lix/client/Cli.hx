@@ -37,12 +37,12 @@ class Cli {
       }
     Command.dispatch(args, 'lix - Libraries for haXe', [
     
-      new Command('download', '[<url> [as <lib[#ver]>]]', 'download lib from url if specified,\notherwise download missing libs', 
+      new Command('download', '[<url> [into <path>]]', 'download lib from url if specified,\notherwise download missing libs', 
         function (args) return switch args {
-          case [url, 'as', alias]: 
-            client.download(resolve(url), LibVersion.parse(alias));
-          case [url]: 
-            client.download(resolve(url));
+          // case [url, 'into', dir]: 
+            // client.download(resolve(url), LibVersion.parse(alias));
+          // case [url]: 
+            // client.download(resolve(url));
           case []: 
             new HaxeCli(scope).installLibs(silent);
             Noise;
