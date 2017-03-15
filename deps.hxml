@@ -1,0 +1,5 @@
+-lib switchx
+-lib haxeshim
+-lib hxnodejs
+-lib tink_core
+-cp src

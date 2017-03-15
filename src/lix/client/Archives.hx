@@ -2,6 +2,7 @@ package lix.client;
 
 import haxe.crypto.Md5;
 
+using haxe.io.Path;
 using sys.FileSystem;
 using sys.io.File;
 using haxe.Json;
@@ -35,7 +36,7 @@ class DownloadedArchive {
    */
   public var location(default, null):String;
   /**
-   * The root directory of this archive, relative to `tmpLoc`
+   * The root directory of this archive, relative to `location`
    */
   public var relRoot(default, null):String;
   /**
@@ -43,7 +44,7 @@ class DownloadedArchive {
    */
   public var absRoot(get, never):String;
     inline function get_absRoot()
-      return '$location/$relRoot';
+      return '$location/$relRoot'.removeTrailingSlashes();
      
   public var infos(default, null):ArchiveInfos;
   
@@ -63,23 +64,29 @@ class DownloadedArchive {
         '';
     }
     
-  public function saveAs(storageRoot:String, v:LibVersion):Promise<DownloadedArchive> {
-    var name = switch v.name {
+  public function saveAs(storageRoot:String, implicit:LibVersion, ?explicit:LibVersion):Promise<DownloadedArchive> {
+    
+    var found:LibVersion = {
+      name: Some(infos.name),
+      versionNumber: Some(infos.version.urlEncode()),
+      versionId: None,
+    }
+
+    var final = implicit.merge(found).merge(explicit);
+
+    var name = switch final.name {
       case None:
-        switch infos.name {
-          case null: return new Error('unable to determine library name of $source');
-          case v: v;
-        }
+        return new Error('unable to determine library name of $source');
       case Some(v):
         v;
     }
     
-    var versionNumber = switch v.versionNumber {
-      case None: infos.version;
+    var versionNumber = switch final.versionNumber {
+      case None: throw "unreachable";//unless proven otherwise
       case Some(v): v;
     }
         
-    var versionId = switch v.versionId {
+    var versionId = switch final.versionId {
       case None: 'http/'+ Md5.encode(source);
       case Some(v): v;
     }
@@ -97,11 +104,13 @@ class DownloadedArchive {
     var archive = null;
     if (target.exists())
       target.rename(archive = '$target-archived@${Date.now().getTime()}');
-    
+      
     Fs.ensureDir(target);  
     absRoot.rename(target);
+    
     if (archive != null)
       Fs.delete(archive);
+
     location = storageRoot;
     relRoot = path;
     

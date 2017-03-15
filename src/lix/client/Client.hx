@@ -1,5 +1,6 @@
 package lix.client;
 
+import lix.client.sources.*;
 import haxe.DynamicAccess;
 import lix.client.Archives;
 
@@ -12,8 +13,13 @@ class Client {
   
   public var scope(default, null):Scope;
   
-  public function new(scope) {
+  var urlToJob:Url->Promise<ArchiveJob>;
+  public var log(default, null):String->Void;
+
+  public function new(scope, urlToJob, log) {
     this.scope = scope;
+    this.urlToJob = urlToJob;
+    this.log = log;
   }
   
   static public function downloadArchiveInto(?kind:ArchiveKind, url:Url, tmpLoc:String):Promise<DownloadedArchive> 
@@ -24,15 +30,24 @@ class Client {
     }).next(function (dir:String) {
       return new DownloadedArchive(url, dir);
     });
+
+  public function downloadUrl(url:Url, ?as:LibVersion) 
+    return download(urlToJob(url), as);
     
   public function download(a:Promise<ArchiveJob>, ?as:LibVersion) 
     return a.next(
-      function (a) return downloadArchiveInto(a.kind, a.url, scope.haxeshimRoot + '/downloads/download@'+Date.now().getTime()).next(function (res) {
-        return res.saveAs(scope.libCache, a.lib.merge(as));
-      })      
-    );
+      function (a) {
+        log('downloading ${a.url}');
+        return downloadArchiveInto(a.kind, a.url, scope.haxeshimRoot + '/downloads/download@'+Date.now().getTime())
+          .next(function (res) {
+            return res.saveAs(scope.libCache, a.lib, as);
+          });      
+      });
+
+  public function installUrl(url:Url, ?as:LibVersion):Promise<Noise>
+    return install(urlToJob(url), as);
     
-  public function install(a:Promise<ArchiveJob>, ?as:LibVersion) 
+  public function install(a:Promise<ArchiveJob>, ?as:LibVersion):Promise<Noise> 
     return download(a, as).next(function (a) {
       var extra =
         switch '${a.absRoot}/extraParams.hxml' {
@@ -50,12 +65,16 @@ class Client {
       //   case Some(v): 'as ' + v.toString();
       //   case None: '';
       // }
+
+      log('mounting as $target');  
       
+      var haxelibs:DynamicAccess<String> = null;
+
       var deps = 
         switch '${a.absRoot}/haxelib.json' {
           case found if (found.exists()):
-            var ret:DynamicAccess<String> = found.getContent().parse().dependencies;
-            [for (key in ret.keys()) '-lib $key'];
+            haxelibs = found.getContent().parse().dependencies;
+            [for (name in haxelibs.keys()) '-lib $name'];
           default: [];
         }
       
@@ -65,7 +84,13 @@ class Client {
         '-cp $${HAXESHIM_LIBCACHE}/${a.relRoot}/${a.infos.classPath}',
         extra,
       ].concat(deps).join('\n'));
-      return Noise;
+      
+      return 
+        switch haxelibs {
+          case null: Noise;
+          default:
+            Haxelib.installDependencies(haxelibs, this, function (s) return '${scope.scopeLibDir}/$s.hxml'.exists());
+        }
     });
-    
+  
 }

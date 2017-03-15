@@ -7,12 +7,11 @@ class Cli {
   
   static function main()
     dispatch(Sys.args());    
-
   
   static function dispatch(args:Array<String>) {
     
     var silent = args.remove('--silent'),
-        global = args.remove('--global');
+        global = args.remove('--global') || args.remove('-g');
         
     var scope = Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
     
@@ -22,12 +21,12 @@ class Cli {
       case v:
         args.splice(v, 2)[1];
     });
+
+    var git = new Git(github);
     
     var sources:Array<ArchiveSource> = [Web, Haxelib, github];
     var resolvers:Map<String, ArchiveSource> = [for (s in sources) for (scheme in s.schemes()) scheme => s];
-    
-    var client = new Client(scope);
-    
+
     function resolve(url:Url):Promise<ArchiveJob>
       return switch resolvers[url.scheme] {
         case null:
@@ -35,6 +34,9 @@ class Cli {
         case v:
           v.processUrl(url);
       }
+    
+    var client = new Client(scope, resolve, if (silent) function (_) {} else Sys.println);
+    
     Command.dispatch(args, 'lix - Libraries for haXe', [
     
       new Command('download', '[<url> [into <path>]]', 'download lib from url if specified,\notherwise download missing libs', 
@@ -44,21 +46,33 @@ class Cli {
           // case [url]: 
             // client.download(resolve(url));
           case []: 
-            new HaxeCli(scope).installLibs(silent);
-            Noise;
+
+            var s = new switchx.Switchx(scope);
+            
+            s.resolveOnline(scope.config.version)
+              .next(s.download.bind(_, { force: false }))
+              .next(function (_) {
+                new HaxeCli(scope).installLibs(silent);
+                return Noise;//actually the above just exits
+              });
           case v: new Error('too many arguments');
         }
       ),
       
       new Command('install', '<url> [as <lib[#ver]>]', 'install lib from specified url',
-        function (args) return switch args {
-          case [url, 'as', alias]: 
-            client.install(resolve(url), LibVersion.parse(alias));
-          case [url]: 
-            client.install(resolve(url));
-          case []: new Error('Missing url');
-          case v: new Error('too many arguments');
-        }
+        function (args) 
+          return 
+            if (scope.isGlobal && !global)
+              new Error('Current scope is global. Please use --global if you intend to install globally, or create a local scope.');
+            else
+              switch args {
+                case [url, 'as', alias]: 
+                  client.installUrl(url, LibVersion.parse(alias));
+                case [url]: 
+                  client.installUrl(url);
+                case []: new Error('Missing url');
+                case v: new Error('too many arguments');
+              }
       ),
       
     ], []).handle(Command.reportOutcome);
