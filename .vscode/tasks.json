@@ -1,7 +1,7 @@
 {
     "version": "0.1.0",
     "command": "haxe",
-    "args": ["lix.client.hxml", "--times"],
+    "args": ["lix.client.hxml", "--next", "-cmd", "node bin/lix.js install haxelib:tink_state"],
     "problemMatcher": {
         "owner": "haxe",
         "pattern": {

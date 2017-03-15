@@ -4,6 +4,8 @@ class Git {
   
   var github:GitHub;
 
+  public function schemes() return ['git'];
+
   public function new(github) {
     this.github = github;
   }

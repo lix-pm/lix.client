@@ -20,7 +20,7 @@ class Haxelib {
           ({
             url: 'https://lib.haxe.org/p/$name/$version/download/',
             normalized: 'haxelib:$name#$version',
-            dest: Some('$name/haxelib/$version'),
+            dest: [name, version, 'haxelib'],
             kind: Zip,
             lib: { name: Some(name), version: Some(version) }
           } : ArchiveJob);

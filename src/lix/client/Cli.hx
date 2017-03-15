@@ -39,22 +39,16 @@ class Cli {
     
     Command.dispatch(args, 'lix - Libraries for haXe', [
     
-      new Command('download', '[<url> [as <lib[#ver]>]]', 'download lib from url if specified,\notherwise download missing libs', 
+      new Command('download', '[<url[#lib[#ver]]>]', 'download lib from url if specified,\notherwise download missing libs', 
         function (args) return switch args {
-          case [url, 'into', dir, 'as', alias] | [url, 'as', alias, 'into', dir]: 
-
-            client.downloadUrl(url, dir, LibVersion.parse(alias));
-
-          case [url, 'as', alias]:
-
-            client.downloadUrl(url, LibVersion.parse(alias));
-
           case [url, 'into', dir]: 
 
             client.downloadUrl(url, dir);
 
           case [url]: 
+
             client.downloadUrl(url);
+
           case []: 
 
             var s = new switchx.Switchx(scope);

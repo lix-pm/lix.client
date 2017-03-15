@@ -3,6 +3,7 @@ package lix.client;
 import haxe.crypto.Md5;
 
 using haxe.io.Path;
+
 using sys.FileSystem;
 using sys.io.File;
 using haxe.Json;
@@ -17,7 +18,7 @@ typedef ArchiveJob = {
   var normalized(default, null):Url;
   var url(default, null):Url;
   var lib(default, null):LibVersion;
-  var dest(default, null):Option<String>;
+  var dest(default, null):Option<Array<String>>;
 
   @:optional var kind(default, null):Null<ArchiveKind>;
 }
@@ -31,15 +32,14 @@ typedef ArchiveJob = {
 class DownloadedArchive {
   
   /**
-   * The url this archive was downloaded from
+   * The job the archive originated from
    */
-  public var source(default, null):Url;
+  public var job(default, null):ArchiveJob;
+
+  var storageRoot:String;
+
   /**
-   * The (initially temporary) location this archive was downloaded to
-   */
-  public var location(default, null):String;
-  /**
-   * The root directory of this archive, relative to `location`
+   * The root directory of this archive, relative to the library cache
    */
   public var relRoot(default, null):String;
   /**
@@ -47,16 +47,55 @@ class DownloadedArchive {
    */
   public var absRoot(get, never):String;
     inline function get_absRoot()
-      return '$location/$relRoot'.removeTrailingSlashes();
+      return '$storageRoot/$relRoot'.removeTrailingSlashes();
      
+  static var RESERVED = "!#$&'()*+,/:;=?@[]";
+
+  static function escape(s:String) {
+    for (i in 0...RESERVED.length)
+      s = s.replace(RESERVED.charAt(i), '_');
+    return s;
+  }
+    
   public var infos(default, null):ArchiveInfos;
   
-  public function new(source, location) {
-    this.source = source;
-    this.location = location;
-    this.relRoot = seekRoot(location);
+  public function new(tmpLoc:String, storageRoot:String, job:ArchiveJob) {
     
-    this.infos = readInfos(absRoot);
+    this.storageRoot = storageRoot;
+
+    var curRoot = '$tmpLoc/${seekRoot(tmpLoc)}';
+
+    this.job = job;
+    this.infos = readInfos(curRoot, job.lib);
+
+    // this.relRoot = job.dest.or(function () {
+    //   var parts = [job.normalized.toString()];
+
+    //   switch this.infos.version {
+    //     case null:
+    //     case v: parts.unshift(v);
+    //   }
+
+    //   switch this.infos.name {
+    //     case null:
+    //     case v: parts.unshift(v);
+    //   }
+
+    //   return parts.map(escape).join('/');
+    // });
+
+    var archive = null;
+    if (absRoot.exists())
+      absRoot.rename(archive = '$absRoot-archived@${Date.now().getTime()}');
+      
+    Fs.ensureDir(absRoot);  
+    curRoot.rename(absRoot);
+    
+    if (archive != null)
+      Fs.delete(archive);
+
+    if (tmpLoc.exists())
+      Fs.delete(tmpLoc);
   }
   
   static function seekRoot(path:String) 
@@ -66,54 +105,8 @@ class DownloadedArchive {
       default:
         '';
     }
-    
-  public function saveAs(storageRoot:String, ?path:String, ?alias:LibVersion):Promise<DownloadedArchive> {
-    
-    var name = infos.name,
-        version = infos.version;
-
-    if (alias != null) {
-      switch alias.name {
-        case Some(v): name = v;
-        default:
-      }
-      switch alias.version {
-        case Some(v): version = v;
-        default:
-      }
-    }
-
-    if (name == null)
-      return new Error('No name explicitly chosen for or defined within the library loaded from $source');
-
-    if (path == null)
-      path = '$name/${source.urlEncode()}';
-
-    this.infos = {
-      name: name,
-      version: version,
-      classPath: this.infos.classPath,
-    }
-
-    var target = '$storageRoot/$path';
-    
-    var archive = null;
-    if (target.exists())
-      target.rename(archive = '$target-archived@${Date.now().getTime()}');
-      
-    Fs.ensureDir(target);  
-    absRoot.rename(target);
-    
-    if (archive != null)
-      Fs.delete(archive);
-
-    location = storageRoot;
-    relRoot = path;
-    
-    return this;
-  }
   
-  function readInfos(root:String):ArchiveInfos {
+  static function readInfos(root:String, lib:LibVersion):ArchiveInfos {
     
     var files = root.readDirectory();
     
@@ -122,14 +115,21 @@ class DownloadedArchive {
         if (files.indexOf('src') != -1) 'src';
         else if (files.indexOf('hx') != -1) 'hx';
         else '';
-        
+
+    function name(found:String)
+      return lib.name.or(found);
+
+    function version(found:String)
+      return lib.version.or(found);
+
+
     return 
       if (files.indexOf('haxelib.json') != -1) {
         //TODO: there's a lot of errors to be caught here
         var info:{ name: String, version:String, ?classPath:String } = '$root/haxelib.json'.getContent().parse();
         {
-          name: info.name,
-          version: info.version,
+          name: name(info.name),
+          version: version(info.version),
           classPath: switch info.classPath {
             case null: '';
             case v: v;
@@ -139,15 +139,15 @@ class DownloadedArchive {
       else if (files.indexOf('package.json') != -1) {
         var info:{ name: String, version:String, } = '$root/package.json'.getContent().parse();
         {
-          name: info.name,
-          version: info.version,
+          name: name(info.name),
+          version: version(info.version),
           classPath: guessClassPath(),
         }
       }
       else {        
         {
-          name: null,
-          version: '0.0.0',
+          name: name(null),
+          version: version('0.0.0'),
           classPath: guessClassPath(),
         }
       }

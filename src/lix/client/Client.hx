@@ -22,34 +22,22 @@ class Client {
     this.log = log;
   }
   
-  static public function downloadArchiveInto(?kind:ArchiveKind, url:Url, tmpLoc:String):Promise<DownloadedArchive> 
-    return (switch kind {
-      case null: Download.archive(url, 0, tmpLoc);
-      case Zip: Download.zip(url, 0, tmpLoc);
-      case Tar: Download.tar(url, 0, tmpLoc);
-    }).next(function (dir:String) {
-      return new DownloadedArchive(url, dir);
-    });
-
-  public function downloadUrl(url:Url, ?into:String, ?as:LibVersion) 
-    return download(urlToJob(url), into, as);
+  public function downloadUrl(url:Url, ?into:String) 
+    return download(urlToJob(url), into);
     
-  public function download(a:Promise<ArchiveJob>, ?into:String, ?as:LibVersion) 
+  public function download(a:Promise<ArchiveJob>, ?into:String):Promise<DownloadedArchive>
     return a.next(
       function (a) {
-        log('downloading ${a.url}');
-        return downloadArchiveInto(a.kind, a.url, scope.haxeshimRoot + '/downloads/download@'+Date.now().getTime())
-          .next(function (res) {
-            return res.saveAs(scope.libCache, switch into {
-              case null: 
-                switch a.dest {
-                  case Some(v): v;
-                  default: null;
-                }
-              case v: v;
-            }, as);
-          });      
-      });
+        log('downloading ${a.normalized}');
+        return (switch a.kind {
+          case null: Download.archive;
+          case Zip: Download.zip;
+          case Tar: Download.tar;
+        })(a.url, 0, scope.haxeshimRoot + '/downloads/download@'+Date.now().getTime()).next(function (dir:String) {
+          return new DownloadedArchive(dir, scope.libCache, a);
+        });
+      }
+    );      
 
   public function installUrl(url:Url, ?as:LibVersion):Promise<Noise>
     return install(urlToJob(url), as);
@@ -62,18 +50,23 @@ class Client {
             found.getContent();
           default: '';
         }
-        
-      var hxml = Resolver.libHxml(scope.scopeLibDir, a.infos.name);
+      
+      if (as == null)
+        as = { name: None, version: None };
+
+      var infos:ArchiveInfos = a.infos;
+
+      var name = as.name.or(infos.name),
+          version = as.version.or(infos.version);
+
+      if (name == null)
+        return new Error('Could not determine library name for ${a.job.normalized}');
+
+      var hxml = Resolver.libHxml(scope.scopeLibDir, name);
       
       Fs.ensureDir(hxml);
-      
-      // var target = '';
-      // switch a.savedAs {
-      //   case Some(v): 'as ' + v.toString();
-      //   case None: '';
-      // }
 
-      // log('mounting as $target');  
+      log('mounting as $name#$version');  
       
       var haxelibs:DynamicAccess<String> = null;
 
@@ -86,9 +79,9 @@ class Client {
         }
       
       hxml.saveContent([
-        '# @install: lix download ${a.source.toString()} into ${a.location}',
-        '-D ${a.infos.name}=${a.infos.version}',
-        '-cp $${HAXESHIM_LIBCACHE}/${a.relRoot}/${a.infos.classPath}',
+        '# @install: lix download ${a.job.normalized} into ${a.relRoot}',
+        '-D $name=$version',
+        '-cp $${HAXESHIM_LIBCACHE}/${a.relRoot}/${infos.classPath}',
         extra,
       ].concat(deps).join('\n'));
       

@@ -4,12 +4,16 @@ class Web {
   static public function schemes() 
     return ['http', 'https'];
 
-  static public function processUrl(url:Url):Promise<ArchiveJob> 
+  static public function processUrl(url:Url):Promise<ArchiveJob> {
+    var lib = LibVersion.parse(url.hash);
+    if (lib != null)
+      url = url.toString().split('#')[0];
+
     return ({
       url: url,
       dest: None,
       normalized: url,
-      lib: { name: None, version: None },
+      lib: lib,
     } : ArchiveJob);
-
+  }
 }
