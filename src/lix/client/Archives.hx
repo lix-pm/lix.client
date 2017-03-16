@@ -68,21 +68,18 @@ class DownloadedArchive {
     this.job = job;
     this.infos = readInfos(curRoot, job.lib);
 
-    // this.relRoot = job.dest.or(function () {
-    //   var parts = [job.normalized.toString()];
 
-    //   switch this.infos.version {
-    //     case null:
-    //     case v: parts.unshift(v);
-    //   }
-
-    //   switch this.infos.name {
-    //     case null:
-    //     case v: parts.unshift(v);
-    //   }
-
-    //   return parts.map(escape).join('/');
-    // });
+    this.relRoot = [for (part in job.dest.or(["$NAME", "$VERSION", job.normalized.toString()])) switch part {
+      case "$NAME":
+        if (infos.name == null) continue;
+        infos.name;
+      case "$VERSION":
+        if (infos.version == null) continue;
+        infos.version;
+      case v: v;
+    }].map(escape).join('/');
+    
+    trace(relRoot);
 
     var archive = null;
     if (absRoot.exists())
@@ -115,6 +112,9 @@ class DownloadedArchive {
         if (files.indexOf('src') != -1) 'src';
         else if (files.indexOf('hx') != -1) 'hx';
         else '';
+
+    if (lib == null)
+      lib = LibVersion.UNDEFINED;
 
     function name(found:String)
       return lib.name.or(found);

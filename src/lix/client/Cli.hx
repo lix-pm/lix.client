@@ -59,6 +59,7 @@ class Cli {
                 new HaxeCli(scope).installLibs(silent);
                 return Noise;//actually the above just exits
               });
+
           case v: new Error('too many arguments');
         }
       ),
@@ -78,7 +79,12 @@ class Cli {
                 case v: new Error('too many arguments');
               }
       ),
-      
+      new Command('build', '...args', 'build',
+        function (args) {
+          @:privateAccess new HaxeCli(scope).dispatch(args);
+          return Noise;
+        }
+      )
     ], []).handle(Command.reportOutcome);
   }
   

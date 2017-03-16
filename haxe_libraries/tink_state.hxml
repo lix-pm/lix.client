@@ -1,5 +1,0 @@
-# @install: lix download haxelib:tink_state#0.4.2 into undefined
--D tink_state=0.4.2
--cp ${HAXESHIM_LIBCACHE}/undefined/src
-
--lib tink_core

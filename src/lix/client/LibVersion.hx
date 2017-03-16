@@ -38,4 +38,5 @@ package lix.client;
         case v:
           { name: Some(s.substring(0, v)), version: Some(s.substring(v + 1)) };
       }
+  static public var UNDEFINED(default, null):LibVersion = { name: None, version: None };
 }
