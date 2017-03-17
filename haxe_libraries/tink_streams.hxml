@@ -1,0 +1,5 @@
+# @install: lix download https://github.com/haxetink/tink_streams/archive/e273e709a003e76a00ea4221aadd8b47ffc9fc18.tar.gz into tink_streams/0.2.0/github/e273e709a003e76a00ea4221aadd8b47ffc9fc18
+-D tink_streams=0.2.0
+-cp ${HAXESHIM_LIBCACHE}/tink_streams/0.2.0/github/e273e709a003e76a00ea4221aadd8b47ffc9fc18/src
+
+-lib tink_core

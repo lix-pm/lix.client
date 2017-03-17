@@ -1,9 +1,9 @@
 -lib switchx
 -lib haxeshim
 -lib tink_semver
+-lib tink_web
 -lib hxnodejs
--lib tink_core
--lib tink_url
+
 -cp src
 -js bin/lix.js
 -main lix.client.Cli

@@ -1,0 +1,6 @@
+# @install: lix download haxelib:tink_http#0.6.0 into tink_http/0.6.0/haxelib
+-D tink_http=0.6.0
+-cp ${HAXESHIM_LIBCACHE}/tink_http/0.6.0/haxelib/src
+
+-lib tink_url
+-lib tink_io
