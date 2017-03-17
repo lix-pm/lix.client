@@ -44,7 +44,7 @@ class Haxelib {
             client.installArchive(Haxelib.getArchive(name, switch version.payload {
               case '' | '*': null;
               case v: v;
-            }));
+            }), true);
           case v:
             client.installUrl(version, { name: Some(name), version: None });
         }).handle(cb);

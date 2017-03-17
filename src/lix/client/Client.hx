@@ -14,12 +14,15 @@ class Client {
   
   public var scope(default, null):Scope;
   
+  var resolver:Array<Dependency>->Promise<Array<ArchiveJob>>;
   var urlToJob:Url->Promise<ArchiveJob>;
+  
   public var log(default, null):String->Void;
 
-  public function new(scope, urlToJob, log) {
+  public function new(scope, urlToJob, resolver, log) {
     this.scope = scope;
     this.urlToJob = urlToJob;
+    this.resolver = resolver;
     this.log = log;
   }
   
@@ -38,22 +41,15 @@ class Client {
           return new DownloadedArchive(dir, scope.libCache, a);
         });
       }
-    );      
+    );     
 
-  var api:ProjectsApi = null;
+  public function installMany(projects:Array<Dependency>):Promise<Noise>
+    return resolver(projects).next(function (jobs) {
+      return Promise.inSequence([for (j in jobs) installArchive(j)]).noise();
+    });
 
   public function install(lib:ProjectName, ?constraint:Constraint):Promise<Noise>
-    return 
-      tink.semver.Resolve.dependencies(
-        if (true) [] else [{ name: lib, constraint: constraint }], 
-        function (name) return api.byName(name).info().next(function (p) return new tink.semver.Resolve.Infos(p.versions))
-      ).next(function (resolved) {
-        // trace(resolved);
-        // Promise.inSequence([for (name in resolved.keys())
-          // installArchive()
-        // ]);
-        return Noise;
-      });
+    return installMany([{ name: lib, constraint: constraint }]);
 
   public function installUrl(url:Url, ?as:LibVersion):Promise<Noise> 
     return installArchive(urlToJob(url), as, true);

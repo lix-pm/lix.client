@@ -9,12 +9,12 @@ typedef Dependency = tink.semver.Resolve.Dependency<ProjectName>;
 typedef Constraint = tink.semver.Constraint;
 
 typedef ProjectFilter = {
-  ?tags:Array<Tag>,
-  ?textSearch:String,
-  ?includeDeprecated:Bool,
-  ?modifiedSince:Date,
-  ?limit:Int,
-  ?offset:Int,
+  @:optional var tags(default, never):Array<Tag>;
+  @:optional var textSearch(default, never):String;
+  @:optional var includeDeprecated(default, never):Bool;
+  @:optional var modifiedSince(default, never):Date;
+  @:optional var limit(default, never):Int;
+  @:optional var offset(default, never):Int;
 }
 
 interface ProjectsApi {
@@ -40,23 +40,24 @@ interface VersionApi {
 
 typedef ProjectInfo = {
   >ProjectDescription, 
-  versions:Array<ProjectData>
+  var versions(default, never):Array<ProjectData>;
 }
 
 typedef ProjectVersion = {
-  version:Version,
-  dependencies: Array<Dependency>,
-  haxe: Constraint,
-  published:Date,
+  var version(default, never):Version;
+  var dependencies(default, never):Array<Dependency>;
+  var haxe(default, never):Constraint;
+  var published(default, never):Date;
 }
 
 typedef ProjectDescription = {
-  name:ProjectName,
-  description:String,
-  authors:Array<Author>,
-  ?tags:Array<Tag>,
-  ?deprecated:Bool,
+  var name(default, never):ProjectName;
+  var description(default, never):String;
+  var authors(default, never):Array<Author>;
+  @:optional var tags(default, never):Array<Tag>;
+  @:optional var deprecated(default, never):Bool;
 }
+
 typedef ProjectData = {
   >ProjectVersion,
   >ProjectDescription,
