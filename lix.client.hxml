@@ -1,5 +1,6 @@
 -lib switchx
 -lib haxeshim
+-lib tink_semver
 -lib hxnodejs
 -lib tink_core
 -lib tink_url

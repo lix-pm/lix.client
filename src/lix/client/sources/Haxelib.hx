@@ -41,7 +41,7 @@ class Haxelib {
         client.log('Installing dependency $name');
         (switch version.scheme {
           case null:
-            client.install(Haxelib.getArchive(name, switch version.payload {
+            client.installArchive(Haxelib.getArchive(name, switch version.payload {
               case '' | '*': null;
               case v: v;
             }));

@@ -2,7 +2,7 @@ package lix.client;
 
 import lix.client.Archives;
 import lix.client.sources.*;
-
+import lix.api.Api;
 class Cli {
   
   static function main()
@@ -21,10 +21,8 @@ class Cli {
       case v:
         args.splice(v, 2)[1];
     });
-
-    var git = new Git(github);
     
-    var sources:Array<ArchiveSource> = [Web, Haxelib, github];
+    var sources:Array<ArchiveSource> = [Web, Haxelib, github, new Git(github)];
     var resolvers:Map<String, ArchiveSource> = [for (s in sources) for (scheme in s.schemes()) scheme => s];
 
     function resolve(url:Url):Promise<ArchiveJob>
@@ -45,7 +43,7 @@ class Cli {
 
             client.downloadUrl(url, dir);
 
-          case [url]: 
+          case [(_:Url) => url]: 
 
             client.downloadUrl(url);
 
@@ -73,7 +71,11 @@ class Cli {
               switch args {
                 case [url, 'as', alias]: 
                   client.installUrl(url, LibVersion.parse(alias));
-                case [url]: 
+                case [library, constraint]:
+                  Promise.lift(Constraint.parse(constraint)).next(client.install.bind(library, _));
+                case [library] if ((library:Url).scheme == null): 
+                  client.install(library);
+                case [url]:
                   client.installUrl(url);
                 case []: new Error('Missing url');
                 case v: new Error('too many arguments');

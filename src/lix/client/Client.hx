@@ -3,6 +3,7 @@ package lix.client;
 import lix.client.sources.*;
 import haxe.DynamicAccess;
 import lix.client.Archives;
+import lix.api.Api;
 
 using sys.FileSystem;
 using sys.io.File;
@@ -23,9 +24,9 @@ class Client {
   }
   
   public function downloadUrl(url:Url, ?into:String) 
-    return download(urlToJob(url), into);
+    return downloadArchive(urlToJob(url), into);
     
-  public function download(a:Promise<ArchiveJob>, ?into:String):Promise<DownloadedArchive>
+  public function downloadArchive(a:Promise<ArchiveJob>, ?into:String):Promise<DownloadedArchive>
     return a.next(
       function (a) {
         log('downloading ${a.normalized}');
@@ -39,11 +40,26 @@ class Client {
       }
     );      
 
-  public function installUrl(url:Url, ?as:LibVersion):Promise<Noise>
-    return install(urlToJob(url), as);
+  var api:ProjectsApi = null;
+
+  public function install(lib:ProjectName, ?constraint:Constraint):Promise<Noise>
+    return 
+      tink.semver.Resolve.dependencies(
+        if (true) [] else [{ name: lib, constraint: constraint }], 
+        function (name) return api.byName(name).info().next(function (p) return new tink.semver.Resolve.Infos(p.versions))
+      ).next(function (resolved) {
+        // trace(resolved);
+        // Promise.inSequence([for (name in resolved.keys())
+          // installArchive()
+        // ]);
+        return Noise;
+      });
+
+  public function installUrl(url:Url, ?as:LibVersion):Promise<Noise> 
+    return installArchive(urlToJob(url), as, true);
     
-  public function install(a:Promise<ArchiveJob>, ?as:LibVersion):Promise<Noise> 
-    return download(a).next(function (a) {
+  public function installArchive(a:Promise<ArchiveJob>, ?as:LibVersion, ?withHaxeLibDependencies:Bool):Promise<Noise> 
+    return downloadArchive(a).next(function (a) {
       var extra =
         switch '${a.absRoot}/extraParams.hxml' {
           case found if (found.exists()):
