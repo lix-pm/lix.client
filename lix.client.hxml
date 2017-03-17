@@ -6,6 +6,7 @@
 
 -cp src
 -js bin/lix.js
--main lix.client.Cli
+#-main lix.client.Cli
+-main lix.server.Server
 --macro haxeshim.Build.postprocess()
 -dce full
