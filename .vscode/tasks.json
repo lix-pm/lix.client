@@ -1,7 +1,7 @@
 {
     "version": "0.1.0",
     "command": "haxe",
-    "args": ["lix.client.hxml", "--next", "-cmd", "node bin/lix.js install tink_core 1.9.0"],
+    "args": ["lix.client.hxml", "--next", "-cmd", "start node bin/lix.js install tink_core 1.9.0"],
     "problemMatcher": {
         "owner": "haxe",
         "pattern": {

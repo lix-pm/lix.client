@@ -30,12 +30,16 @@ interface ProjectApi {
   @:get('/')
   function info():Promise<ProjectInfo>;
 
+  @:put('/$version')
+  @:params(body = archive)
+  function submit(version:String, archive:tink.io.Source):Promise<{}>;
+
   @:sub('/$version')
   function version(version:Version):VersionApi;
 }
 
 interface VersionApi {
-  function download():Promise<{ url:String }>;
+  function download():tink.io.Source;
 }
 
 typedef ProjectInfo = {
