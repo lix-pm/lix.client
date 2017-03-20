@@ -12,7 +12,7 @@ class Cli {
     dispatch(Sys.args());    
   
   static function dispatch(args:Array<String>) {
-    
+    var version = haxe.Json.parse(sys.io.File.getContent(js.Node.__dirname+'/../package.json')).version;
     var silent = args.remove('--silent'),
         global = args.remove('--global') || args.remove('-g'),
         force = args.remove('--force');
@@ -39,7 +39,7 @@ class Cli {
     
     var client = new Client(scope, resolve, function (_) return new Error(NotImplemented, "not implemented"), if (silent) function (_) {} else Sys.println);
     
-    Command.dispatch(args, 'lix - Libraries for haXe', [
+    Command.dispatch(args, 'lix - Libraries for haXe (v$version)', [
     
       new Command('download', '[<url[#lib[#ver]]>]', 'download lib from url if specified,\notherwise download missing libs', 
         function (args) return switch args {
