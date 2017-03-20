@@ -1,0 +1,3 @@
+# @install: lix download haxelib:tink_priority#0.1.3 into tink_priority/0.1.3/haxelib
+-D tink_priority=0.1.3
+-cp ${HAXESHIM_LIBCACHE}/tink_priority/0.1.3/haxelib/src

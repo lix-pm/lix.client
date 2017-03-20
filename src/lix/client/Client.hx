@@ -10,7 +10,7 @@ using sys.io.File;
 
 using haxe.Json;
 
-class Client {
+@:tink class Client {
   
   public var scope(default, null):Scope;
   
@@ -26,20 +26,31 @@ class Client {
     this.log = log;
   }
   
-  public function downloadUrl(url:Url, ?into:String) 
-    return downloadArchive(urlToJob(url), into);
+  public function downloadUrl(url:Url, ?options) 
+    return downloadArchive(urlToJob(url), options);
     
-  public function downloadArchive(a:Promise<ArchiveJob>, ?into:String):Promise<DownloadedArchive>
+  public function downloadArchive(a:Promise<ArchiveJob>, _ = { into: (null:String), force: false }):Promise<DownloadedArchive>
     return a.next(
       function (a) {
-        log('downloading ${a.normalized}');
-        return (switch a.kind {
-          case null: Download.archive;
-          case Zip: Download.zip;
-          case Tar: Download.tar;
-        })(a.url, 0, scope.haxeshimRoot + '/downloads/download@'+Date.now().getTime()).next(function (dir:String) {
-          return new DownloadedArchive(dir, scope.libCache, a);
-        });
+
+        if (into == null)
+          into = DownloadedArchive.dest(a);
+        
+        return 
+          if ('${scope.libCache}/$into'.exists() && !force) {
+            log('already downloaded: ${a.normalized}');
+            DownloadedArchive.existent(into, scope.libCache, a);
+          }
+          else {
+            log('downloading ${a.normalized}');
+            (switch a.kind {
+              case null: Download.archive;
+              case Zip: Download.zip;
+              case Tar: Download.tar;
+            })(a.url, 0, scope.haxeshimRoot + '/downloads/download@'+Date.now().getTime()).next(function (dir:String) {
+              return DownloadedArchive.fresh(dir, scope.libCache, a);
+            });
+          }
       }
     );     
 
@@ -91,7 +102,7 @@ class Client {
         }
       
       hxml.saveContent([
-        '# @install: lix download ${a.job.normalized} into ${a.relRoot}',
+        '# @install: lix --silent download ${a.job.normalized} into ${a.relRoot}',
         '-D $name=$version',
         '-cp $${HAXESHIM_LIBCACHE}/${a.relRoot}/${infos.classPath}',
         extra,

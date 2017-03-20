@@ -58,41 +58,64 @@ class DownloadedArchive {
   }
     
   public var infos(default, null):ArchiveInfos;
-  
-  public function new(tmpLoc:String, storageRoot:String, job:ArchiveJob) {
-    
-    this.storageRoot = storageRoot;
+  static public function dest(job:ArchiveJob, ?infos:ArchiveInfos)
+    return 
+      if (infos == null) 
+        switch job.dest {
+          case None: null;
+          case Some(dest): dest.map(escape).join('/');
+        }
+      else [for (part in job.dest.or(["$NAME", "$VERSION", job.normalized.toString()])) switch part {
+        case "$NAME":
+          if (infos.name == null) continue;
+          infos.name;
+        case "$VERSION":
+          if (infos.version == null) continue;
+          infos.version;
+        case v: v;
+      }].map(escape).join('/');
 
+  static public function fresh(tmpLoc:String, storageRoot:String, job:ArchiveJob) {
     var curRoot = '$tmpLoc/${seekRoot(tmpLoc)}';
+    var infos = readInfos(curRoot, job.lib);
 
-    this.job = job;
-    this.infos = readInfos(curRoot, job.lib);
-
-
-    this.relRoot = [for (part in job.dest.or(["$NAME", "$VERSION", job.normalized.toString()])) switch part {
-      case "$NAME":
-        if (infos.name == null) continue;
-        infos.name;
-      case "$VERSION":
-        if (infos.version == null) continue;
-        infos.version;
-      case v: v;
-    }].map(escape).join('/');
+    var relRoot = dest(job, infos);
     
-    trace(relRoot);
+    var ret = new DownloadedArchive(relRoot, storageRoot, job, infos);
 
     var archive = null;
-    if (absRoot.exists())
-      absRoot.rename(archive = '$absRoot-archived@${Date.now().getTime()}');
+
+    switch ret.absRoot {
+      case old if (old.exists()):
+        old.rename(archive = '$old-archived@${Date.now().getTime()}');
+      default:
+    }
       
-    Fs.ensureDir(absRoot);  
-    curRoot.rename(absRoot);
+    Fs.ensureDir(ret.absRoot);  
+    curRoot.rename(ret.absRoot);
     
     if (archive != null)
       Fs.delete(archive);
 
     if (tmpLoc.exists())
       Fs.delete(tmpLoc);
+    return ret;
+  }
+
+  static public function existent(path:String, storageRoot:String, job:ArchiveJob) {
+    return new DownloadedArchive(path, storageRoot, job);
+  }
+
+  function new(relRoot:String, storageRoot:String, job:ArchiveJob, ?infos) {
+    
+    this.storageRoot = storageRoot;
+    this.relRoot = relRoot;
+    
+    this.job = job;
+    this.infos = switch infos {
+      case null: readInfos(absRoot, job.lib); 
+      case v: v;
+    }
   }
   
   static function seekRoot(path:String) 

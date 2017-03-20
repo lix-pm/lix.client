@@ -3,6 +3,9 @@ package lix.client;
 import lix.client.Archives;
 import lix.client.sources.*;
 import lix.api.Api;
+
+using sys.FileSystem;
+
 class Cli {
   
   static function main()
@@ -11,7 +14,8 @@ class Cli {
   static function dispatch(args:Array<String>) {
     
     var silent = args.remove('--silent'),
-        global = args.remove('--global') || args.remove('-g');
+        global = args.remove('--global') || args.remove('-g'),
+        force = args.remove('--force');
         
     var scope = Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
     
@@ -39,9 +43,27 @@ class Cli {
     
       new Command('download', '[<url[#lib[#ver]]>]', 'download lib from url if specified,\notherwise download missing libs', 
         function (args) return switch args {
+          case [url, 'as', legacy]:
+            var target = legacy.replace('#', '/');
+            var absTarget = scope.libCache + '/$target';
+            function shorten(s:String)
+              return 
+                if (s.length > 40) s.substr(0, 37)+ '...';
+                else s;
+
+            if (absTarget.exists()) 
+              new Error('`download <url> as <ver>` is no longer supported');
+            else {
+              Sys.println('[WARN]: Processing obsolete `download ${args.map(shorten).join(" ")}`.\n        Please reinstall library in a timely manner!\n\n');
+              client.downloadUrl(url, { into: target }).next(function (a) return {
+                Fs.ensureDir(absTarget);
+                a.absRoot.rename(absTarget);
+                return a;
+              });
+            }
           case [url, 'into', dir]: 
 
-            client.downloadUrl(url, dir);
+            client.downloadUrl(url, { into: dir });
 
           case [(_:Url) => url]: 
 
