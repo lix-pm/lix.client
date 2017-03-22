@@ -24,12 +24,21 @@ class ProjectsRepo implements ProjectsApi {
   }
 }
 
-class ProjectRepo implements ProjectApi {
-  
-  public function new(name:String) {}
+@:tables()
+class Db extends tink.sql.Database {
+}
 
-  public function submit(version:String, archive:tink.io.Source):Promise<{}>
+class ProjectRepo implements ProjectApi {
+
+  var path:String;
+  
+  public function new(name:String) {
+    this.path = '/libraries/$name';
+  }
+
+  public function submit(version:String, archive:tink.io.Source):Promise<{}> {
     return new Error('Not Implemented');
+  }
 
   public function info():Promise<ProjectInfo> 
     return new Error('Not Implemented');
