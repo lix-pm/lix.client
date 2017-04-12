@@ -72,13 +72,16 @@ class Cli {
           case []: 
 
             var s = new switchx.Switchx(scope);
-            
-            s.resolveOnline(scope.config.version)
-              .next(s.download.bind(_, { force: false }))
-              .next(function (_) {
-                new HaxeCli(scope).installLibs(silent);
-                return Noise;//actually the above just exits
-              });
+            @:privateAccess switchx.Cli.ensureNeko(Scope.seek()).next(
+              function (_) return
+                s.resolveOnline(scope.config.version)
+                  .next(s.download.bind(_, { force: false }))
+                  .next(function (_) {
+                    new HaxeCli(scope).installLibs(silent);
+                    return Noise;//actually the above just exits
+                  })             
+            );
+
 
           case v: new Error('too many arguments');
         }
