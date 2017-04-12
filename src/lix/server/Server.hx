@@ -6,11 +6,17 @@ import tink.http.Request;
 
 class Server {
   static function main() {
-    var r = new tink.web.routing.Router<ProjectsRepo>(new ProjectsRepo());
+    
+    var r = new tink.web.routing.Router<ProjectsApi>(new ProjectsRepo());
+
     new tink.http.containers.NodeContainer(1234).run(function (req:IncomingRequest) {
       return r.route(tink.web.routing.Context.ofRequest(req)).recover(tink.http.Response.OutgoingResponse.reportError);
     });
+
     trace('running');
+
+    var db = new Db('lix', new tink.sql.drivers.MySql({ user: 'root', password: '' }));
+    db.Project.where(Project.id == 'tink_core').all().handle(function (x) trace(x));
   }
 }
 
@@ -24,7 +30,43 @@ class ProjectsRepo implements ProjectsApi {
   }
 }
 
-@:tables()
+typedef Project = {
+  var id(default, never):ProjectName;
+  var deprecated(default, never):Bool;
+}
+
+typedef ProjectName = String;
+typedef TagName = String;
+
+typedef Tags = {
+  var project(default, never):ProjectName;
+  var tag(default, never):TagName;
+}
+
+typedef User = {
+  var id(default, never):Int;
+  var nick(default, never):String;
+}
+
+typedef ProjectVersion = {
+  var project(default, never):ProjectName;
+  var version(default, never):String;
+  var published(default, never):Date;
+}
+
+typedef ProjectContributor = {
+  var user(default, never):Int;
+  var project(default, never):ProjectName;
+  var role(default, never):ContributorRole;
+}
+
+@:enum abstract ContributorRole(String) {
+  var Owner = 'owner';
+  var Admin = 'admin';
+  var Publisher = 'publisher';
+}
+
+@:tables(Project, User, ProjectVersion, Tags, ProjectContributor)
 class Db extends tink.sql.Database {
 }
 

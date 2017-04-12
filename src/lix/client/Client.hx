@@ -48,7 +48,7 @@ using haxe.Json;
               case Zip: Download.zip;
               case Tar: Download.tar;
             })(a.url, 0, scope.haxeshimRoot + '/downloads/download@'+Date.now().getTime()).next(function (dir:String) {
-              return DownloadedArchive.fresh(dir, scope.libCache, a);
+              return DownloadedArchive.fresh(dir, scope.libCache, into, a);
             });
           }
       }

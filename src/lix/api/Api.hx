@@ -6,6 +6,7 @@ typedef ProjectName = String;
 typedef Author = String;
 typedef Tag = String;
 typedef Dependency = tink.semver.Resolve.Dependency<ProjectName>;
+
 typedef Constraint = tink.semver.Constraint;
 
 typedef ProjectFilter = {
@@ -18,7 +19,7 @@ typedef ProjectFilter = {
 }
 
 interface ProjectsApi {
-  @:params(query = filter)
+  @:params(filter = query)
   @:get('/')
   function list(?filter:ProjectFilter):Promise<Array<ProjectDescription>>;
   
@@ -31,7 +32,7 @@ interface ProjectApi {
   function info():Promise<ProjectInfo>;
 
   @:put('/$version')
-  @:params(body = archive)
+  @:params(archive = body)
   function submit(version:String, archive:tink.io.Source):Promise<{}>;
 
   @:sub('/$version')

@@ -75,11 +75,11 @@ class DownloadedArchive {
         case v: v;
       }].map(escape).join('/');
 
-  static public function fresh(tmpLoc:String, storageRoot:String, job:ArchiveJob) {
+  static public function fresh(tmpLoc:String, storageRoot:String, targetLoc:String, job:ArchiveJob) {
     var curRoot = '$tmpLoc/${seekRoot(tmpLoc)}';
     var infos = readInfos(curRoot, job.lib);
-
-    var relRoot = dest(job, infos);
+    var relRoot = targetLoc;
+    // var relRoot = dest(job, infos);
     
     var ret = new DownloadedArchive(relRoot, storageRoot, job, infos);
 
