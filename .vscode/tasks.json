@@ -1,7 +1,7 @@
 {
     "version": "0.1.0",
     "command": "haxe",
-    "args": ["lix.client.hxml", "--next", "-cmd", "node bin/lix.js download https://github.com/haxetink/tink_chunk/archive/69a8247941c0135f1b7b2a4f5ce9518932b0d274.tar.gz into tink_chunk/0.1.0/github/69a8247941c0135f1b7b2a4f5ce9518932b0d274"],
+    "args": ["lix.client.hxml", "--next", "-cmd", "node bin/lix.js install haxelib:ewrf"],
     "problemMatcher": {
         "owner": "haxe",
         "pattern": {
