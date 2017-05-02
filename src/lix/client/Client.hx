@@ -33,11 +33,19 @@ using haxe.Json;
     return a.next(
       function (a) {
 
-        if (into == null)
-          into = DownloadedArchive.dest(a);
+        var cacheFile = null;
+
+        if (into == null) 
+          switch a.dest {
+            case Fixed(path): 
+              into = DownloadedArchive.path(path);
+            case Computed(_):
+              cacheFile = '${scope.libCache}/.cache/libNames/${DownloadedArchive.escape(a.url)}';
+              if (cacheFile.exists()) into = cacheFile.getContent();
+          }
         
         return 
-          if ('${scope.libCache}/$into'.exists() && !force) {
+          if (into != null && '${scope.libCache}/$into'.exists() && !force) {
             log('already downloaded: ${a.normalized}');
             DownloadedArchive.existent(into, scope.libCache, a);
           }
@@ -48,7 +56,14 @@ using haxe.Json;
               case Zip: Download.zip;
               case Tar: Download.tar;
             })(a.url, 0, scope.haxeshimRoot + '/downloads/download@'+Date.now().getTime()).next(function (dir:String) {
-              return DownloadedArchive.fresh(dir, scope.libCache, into, a);
+              var ret = DownloadedArchive.fresh(dir, scope.libCache, into, a);
+
+              if (cacheFile != null) {
+                Fs.ensureDir(cacheFile);
+                cacheFile.saveContent(ret.relRoot);
+              }
+
+              return ret;
             });
           }
       }

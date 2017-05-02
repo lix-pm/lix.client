@@ -35,7 +35,7 @@ class GitHub {
       case sha if (sha.length == 40):
         return ({
           normalized: 'https://${credentials}github.com/$owner/$project/archive/$sha.tar.gz',
-          dest: Some(["$NAME", "$VERSION", "github", sha]),
+          dest: Computed(function (l) return [l.name, l.version, 'github', sha]),
           url: 'https://${credentials}github.com/$owner/$project/archive/$sha.tar.gz',
           lib: { name: Some(project), version: None }, 
         } : ArchiveJob);

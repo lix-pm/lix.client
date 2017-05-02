@@ -13,12 +13,17 @@ enum ArchiveKind {
   Tar;
 }
 
+enum ArchiveDestination {
+  Fixed(path:Array<String>);
+  Computed(f:ArchiveInfos->Array<String>);
+}
+
 typedef ArchiveJob = {
   
   var normalized(default, null):Url;
   var url(default, null):Url;
   var lib(default, null):LibVersion;
-  var dest(default, null):Option<Array<String>>;
+  var dest(default, null):ArchiveDestination;
 
   @:optional var kind(default, null):Null<ArchiveKind>;
 }
@@ -51,35 +56,24 @@ class DownloadedArchive {
      
   static var RESERVED = "!#$&'()*+,/:;=?@[]";
 
-  static function escape(s:String) {
+  static public function escape(s:String) {
     for (i in 0...RESERVED.length)
       s = s.replace(RESERVED.charAt(i), '_');
     return s;
   }
+
+  static public function path(parts:Array<String>)
+    return parts.map(escape).join('/');
     
   public var infos(default, null):ArchiveInfos;
-  static public function dest(job:ArchiveJob, ?infos:ArchiveInfos)
-    return 
-      if (infos == null) 
-        switch job.dest {
-          case None: null;
-          case Some(dest): dest.map(escape).join('/');
-        }
-      else [for (part in job.dest.or(["$NAME", "$VERSION", job.normalized.toString()])) switch part {
-        case "$NAME":
-          if (infos.name == null) continue;
-          infos.name;
-        case "$VERSION":
-          if (infos.version == null) continue;
-          infos.version;
-        case v: v;
-      }].map(escape).join('/');
 
   static public function fresh(tmpLoc:String, storageRoot:String, targetLoc:String, job:ArchiveJob) {
     var curRoot = '$tmpLoc/${seekRoot(tmpLoc)}';
     var infos = readInfos(curRoot, job.lib);
-    var relRoot = targetLoc;
-    // var relRoot = dest(job, infos);
+    var relRoot = path(switch job.dest {
+      case Fixed(path): path;
+      case Computed(f): f(infos);
+    });
     
     var ret = new DownloadedArchive(relRoot, storageRoot, job, infos);
 

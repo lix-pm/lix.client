@@ -11,7 +11,7 @@ class Web {
 
     return ({
       url: url,
-      dest: None,
+      dest: Computed(function (l) return [l.name, l.version, url]),
       normalized: url,
       lib: lib,
     } : ArchiveJob);
