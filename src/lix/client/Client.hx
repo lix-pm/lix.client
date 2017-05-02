@@ -13,23 +13,25 @@ using haxe.Json;
 @:tink class Client {
   
   public var scope(default, null):Scope;
+  public var log(default, null):String->Void;
+  public var force(default, null):Bool;
   
   var resolver:Array<Dependency>->Promise<Array<ArchiveJob>>;
   var urlToJob:Url->Promise<ArchiveJob>;
   
-  public var log(default, null):String->Void;
 
-  public function new(scope, urlToJob, resolver, log) {
+  public function new(scope, urlToJob, resolver, log, force) {
     this.scope = scope;
     this.urlToJob = urlToJob;
     this.resolver = resolver;
     this.log = log;
+    this.force = force;
   }
   
   public function downloadUrl(url:Url, ?options) 
     return downloadArchive(urlToJob(url), options);
     
-  public function downloadArchive(a:Promise<ArchiveJob>, _ = { into: (null:String), force: false }):Promise<DownloadedArchive>
+  public function downloadArchive(a:Promise<ArchiveJob>, _ = { into: (null:String) }):Promise<DownloadedArchive>
     return a.next(
       function (a) {
 
@@ -41,30 +43,33 @@ using haxe.Json;
               into = DownloadedArchive.path(path);
             case Computed(_):
               cacheFile = '${scope.libCache}/.cache/libNames/${DownloadedArchive.escape(a.url)}';
-              if (cacheFile.exists()) into = cacheFile.getContent();
+              if (cacheFile.exists()) 
+                into = cacheFile.getContent();
           }
         
+        var exists = into != null && '${scope.libCache}/$into'.exists();
         return 
-          if (into != null && '${scope.libCache}/$into'.exists() && !force) {
+          if (exists && !force) {
             log('already downloaded: ${a.normalized}');
             DownloadedArchive.existent(into, scope.libCache, a);
           }
           else {
-            log('downloading ${a.normalized}');
+            log('${if (exists) "forcedly redownloading" else "downloading"} ${a.normalized}');
             (switch a.kind {
               case null: Download.archive;
               case Zip: Download.zip;
               case Tar: Download.tar;
-            })(a.url, 0, scope.haxeshimRoot + '/downloads/download@'+Date.now().getTime()).next(function (dir:String) {
-              var ret = DownloadedArchive.fresh(dir, scope.libCache, into, a);
+            })(a.url, 0, scope.haxeshimRoot + '/downloads/download@' + Date.now().getTime())
+              .next(dir => {
+                var ret = DownloadedArchive.fresh(dir, scope.libCache, into, a);
 
-              if (cacheFile != null) {
-                Fs.ensureDir(cacheFile);
-                cacheFile.saveContent(ret.relRoot);
-              }
+                if (cacheFile != null) {
+                  Fs.ensureDir(cacheFile);
+                  cacheFile.saveContent(ret.relRoot);
+                }
 
-              return ret;
-            });
+                return ret;
+              });
           }
       }
     );     

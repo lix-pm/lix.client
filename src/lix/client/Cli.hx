@@ -37,7 +37,13 @@ class Cli {
           v.processUrl(url);
       }
     
-    var client = new Client(scope, resolve, function (_) return new Error(NotImplemented, "not implemented"), if (silent) function (_) {} else Sys.println);
+    var client = new Client(
+      scope, 
+      resolve, 
+      function (_) return new Error(NotImplemented, "not implemented"), 
+      if (silent) function (_) {} else Sys.println,
+      force
+    );
     
     Command.dispatch(args, 'lix - Libraries for haXe (v$version)', [
     
