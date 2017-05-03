@@ -12,19 +12,20 @@ using sys.FileSystem;
 class Cli {
   
   static function main()
-    switch Sys.args() {
-      case ['-v' | '--version']: 
-        Sys.println('$__dirname/../package.json'.getContent().parse().version);
-      case v: 
-        dispatch(v);
-    }
+    dispatch(Sys.args());
   
   static function dispatch(args:Array<String>) {
     var version = haxe.Json.parse(sys.io.File.getContent(js.Node.__dirname+'/../package.json')).version;
     var silent = args.remove('--silent'),
         global = args.remove('--global') || args.remove('-g'),
         force = args.remove('--force');
-        
+    
+    args = Command.expand(args, [
+      "+tink install github:haxetink/tink_${0}",
+      "+coco install github:MVCoconut/coconut.${0}",
+      "+lib install haxelib:${0}",
+    ]);
+
     var scope = Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
     
     var github = new GitHub(switch args.indexOf('--gh-credentials') {
@@ -54,7 +55,6 @@ class Cli {
     );
     
     Command.dispatch(args, 'lix - Libraries for haXe (v$version)', [
-    
       new Command('download', '[<url[#lib[#ver]]>]', 'download lib from url if specified,\notherwise download missing libs', 
         function (args) return switch args {
           case [url, 'as', legacy]:
@@ -120,12 +120,19 @@ class Cli {
                 case v: new Error('too many arguments');
               }
       ),
-      new Command('build', '...args', 'build',
+      new Command('build', '...args', 'build (if haxeshim is not installed)',
         function (args) {
           @:privateAccess new HaxeCli(scope).dispatch(args);
           return Noise;
         }
-      )
+      ),
+      new Command(['--version', '-v'], '', 'print version', function (args) return
+        if (args.length > 0) new Error('too many arguments')
+        else {
+          Sys.println(version);
+          Noise;
+        }
+      ),       
     ], []).handle(Command.reportOutcome);
   }
   
