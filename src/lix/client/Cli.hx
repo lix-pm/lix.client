@@ -3,13 +3,21 @@ package lix.client;
 import lix.client.Archives;
 import lix.client.sources.*;
 import lix.api.Api;
+import js.Node.*;
 
+using haxe.Json;
+using sys.io.File;
 using sys.FileSystem;
 
 class Cli {
   
   static function main()
-    dispatch(Sys.args());    
+    switch Sys.args() {
+      case ['-v' | '--version']: 
+        Sys.println('$__dirname/../package.json'.getContent().parse().version);
+      case v: 
+        dispatch(v);
+    }
   
   static function dispatch(args:Array<String>) {
     var version = haxe.Json.parse(sys.io.File.getContent(js.Node.__dirname+'/../package.json')).version;
