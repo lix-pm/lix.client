@@ -70,10 +70,13 @@ class DownloadedArchive {
   static public function fresh(tmpLoc:String, storageRoot:String, targetLoc:String, job:ArchiveJob) {
     var curRoot = '$tmpLoc/${seekRoot(tmpLoc)}';
     var infos = readInfos(curRoot, job.lib);
-    var relRoot = path(switch job.dest {
-      case Fixed(path): path;
-      case Computed(f): f(infos);
-    });
+    var relRoot = 
+      if (targetLoc == null) 
+        path(switch job.dest {
+          case Fixed(path): path;
+          case Computed(f): f(infos);
+        });
+      else targetLoc;
     
     var ret = new DownloadedArchive(relRoot, storageRoot, job, infos);
 

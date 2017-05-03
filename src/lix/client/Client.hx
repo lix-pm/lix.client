@@ -34,7 +34,7 @@ using haxe.Json;
   public function downloadArchive(a:Promise<ArchiveJob>, _ = { into: (null:String) }):Promise<DownloadedArchive>
     return a.next(
       function (a) {
-
+        
         var cacheFile = null;
 
         if (into == null) 
