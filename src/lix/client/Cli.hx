@@ -42,7 +42,7 @@ class Cli {
         args.splice(v, 2)[1];
     });
     
-    var sources:Array<ArchiveSource> = [Web, Haxelib, github, new Git(github, gitlab)];
+    var sources:Array<ArchiveSource> = [Web, Haxelib, github, gitlab, new Git(github, gitlab)];
     var resolvers:Map<String, ArchiveSource> = [for (s in sources) for (scheme in s.schemes()) scheme => s];
 
     function resolve(url:Url):Promise<ArchiveJob>
