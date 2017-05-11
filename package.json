@@ -1,6 +1,6 @@
 {
   "name": "lix.pm",
-  "version": "0.5.6",
+  "version": "0.6.1",
   "bin": {
     "lix": "bin/lix.js"
   },
