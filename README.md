@@ -35,8 +35,9 @@ Currently, you can download and install libraries from urls, with the following 
 - `haxelib:<name>[#<version>]` - will get the library from haxelib, either the specific version or the latest
 - `github:<owner>/<repo>[#<brach|tag|sha>]` - will get the library from GitHub
 - `gh:...` an alias for `github`
+- `gitlab:<owner>/<repo>[#<brach|tag|sha>]` - will get the library from GitLab
 
-Note that for github you can specify credentials using `--gh-credentials` parameter. Be warned though that these credentials are then baked into the hxmls as well. Be very careful about using this option.
+Note that for github and gitlab you can specify credentials using the `--gh-credentials` and `--gl-private-token` parameters respectively. Be warned though that these credentials are then baked into the hxmls as well. Be very careful about using this option.
 
 ### Aliasing
 
