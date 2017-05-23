@@ -1,0 +1,9 @@
+.vscode
+haxe_libraries
+node_modules
+src
+.gitignore
+.haxerc
+*.hxml
+*.hxproj
+*.bat
