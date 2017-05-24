@@ -1,6 +1,7 @@
 package lix.client.sources;
 
 class Haxelib {
+  static var SERVER = 'https://lib.haxe.org';
   static public function schemes():Array<String>
     return ['haxelib'];
 
@@ -18,7 +19,7 @@ class Haxelib {
           resolveVersion(name).next(getArchive.bind(name, _));
         case v:
           ({
-            url: 'https://lib.haxe.org/p/$name/$version/download/',
+            url: '$SERVER/p/$name/$version/download/',
             normalized: 'haxelib:$name#$version',
             dest: Fixed([name, version, 'haxelib']),
             kind: Zip,
@@ -27,7 +28,7 @@ class Haxelib {
       }    
       
   static public function resolveVersion(name:String):Promise<String> 
-    return Download.text('https://lib.haxe.org/p/$name').next(function (s) return s.split(')</title>')[0].split('(').pop());
+    return Download.text('$SERVER/p/$name').next(function (s) return s.split(')</title>')[0].split('(').pop());
 
   static public function installDependencies(haxelibs:haxe.DynamicAccess<String>, client:Client, skip:String->Bool) {
     
