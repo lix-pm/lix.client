@@ -48,7 +48,11 @@ class Haxelib {
             }), true);
           case v:
             client.installUrl(version, { name: Some(name), version: None });
-        }).handle(cb);
+        }).handle(function (o) cb(switch o {
+          case Failure(e):
+            Failure(Error.withData(e.code, '$name: ${e.message}', e.data));
+          default: o;
+        }));
       }, true)
     ];
 
