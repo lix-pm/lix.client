@@ -11,9 +11,11 @@ class TestBase {
 	
 	public function new() {}
 	
-	function lix(args:Array<String>, debug = false) {
+	function switchx(args:Array<String>, debug = false)
+		return run('switchx', args, debug);
+	
+	function lix(args:Array<String>, debug = false)
 		return run('node', ['$CWD/bin/lix.js'].concat(args), debug);
-	}
 	
 	function run(cmd, args, debug = false) {
 		var proc = new Process(cmd, args);
