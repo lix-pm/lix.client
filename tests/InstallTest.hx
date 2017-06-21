@@ -16,6 +16,7 @@ class InstallTest extends TestBase {
 		dir = 'test_' + Sha1.encode(Std.string(Std.random(999999))).substr(0, 12); // fancy way to make a random folder name
 		dir.createDirectory();
 		Sys.setCwd(dir);
+		switchx(['scope', 'create']);
 		return Noise;
 	}
 	
@@ -28,7 +29,6 @@ class InstallTest extends TestBase {
 	
 	@:variant('tink_core')
 	public function haxelib(lib:String) {
-		switchx(['scope', 'create']);
 		lix(['install', 'haxelib:$lib']);
 		var resolved = resolve(lib).split('\n');
 		asserts.assert(resolved[0] == '-D');
@@ -41,7 +41,6 @@ class InstallTest extends TestBase {
 	@:variant('haxetink/tink_core')
 	public function github(repo:String) {
 		var lib = repo.split('/')[1];
-		switchx(['scope', 'create']);
 		lix(['install', 'gh:$repo']);
 		var resolved = resolve(lib).split('\n');
 		asserts.assert(resolved[0] == '-D');
@@ -53,7 +52,6 @@ class InstallTest extends TestBase {
 	
 	@:variant('tink_core', '1.13.1')
 	public function haxelibVersion(lib:String, version:String) {
-		switchx(['scope', 'create']);
 		lix(['install', 'haxelib:$lib#$version']);
 		var resolved = resolve(lib).split('\n');
 		asserts.assert(resolved[0] == '-D');
@@ -66,7 +64,6 @@ class InstallTest extends TestBase {
 	@:variant('haxetink/tink_core', '93227943')
 	public function githubHash(repo:String, hash:String) {
 		var lib = repo.split('/')[1];
-		switchx(['scope', 'create']);
 		lix(['install', 'gh:$repo#$hash']);
 		var resolved = resolve(lib).split('\n');
 		asserts.assert(resolved[0] == '-D');
@@ -78,7 +75,6 @@ class InstallTest extends TestBase {
 	
 	@:variant('haxe-react/haxe-react-native', 'react-native')
 	public function githubAs(repo:String, lib:String) {
-		switchx(['scope', 'create']);
 		lix(['install', 'gh:$repo', 'as', lib]);
 		var resolved = resolve(lib).split('\n');
 		asserts.assert(resolved[0] == '-D');
@@ -94,13 +90,11 @@ class InstallTest extends TestBase {
 	function regex(lib:String, type:SourceType) {
 		var pattern = '/haxe_libraries/$lib/';
 		pattern += switch type {
-			case Haxelib(None): '[^/]*/haxelib/';
-			case Haxelib(Some(version)): '$version/haxelib/';
-			case Github(None): '[^/]*/github/\\w*/';
-			case Github(Some(hash)): '[^/]*/github/$hash\\w*/';
+			case Haxelib(None): '[^/]*/haxelib';
+			case Haxelib(Some(version)): '$version/haxelib';
+			case Github(None): '[^/]*/github/\\w*';
+			case Github(Some(hash)): '[^/]*/github/$hash\\w*';
 		}
-		
-		pattern += 'src';
 		return new EReg(pattern, '');
 	}
 }
