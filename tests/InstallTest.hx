@@ -64,8 +64,8 @@ class InstallTest extends TestBase {
 	@:variant('haxetink/tink_core', '93227943')
 	public function githubHash(repo:String, hash:String) {
 		var lib = repo.split('/')[1];
-		lix(['install', 'gh:$repo#$hash'], true);
-		var resolved = resolve(lib, true).split('\n');
+		lix(['install', 'gh:$repo#$hash']);
+		var resolved = resolve(lib).split('\n');
 		asserts.assert(resolved[0] == '-D');
 		asserts.assert(resolved[1].startsWith('$lib='));
 		asserts.assert(resolved[2] == '-cp');
@@ -75,7 +75,7 @@ class InstallTest extends TestBase {
 	
 	@:variant('haxe-react/haxe-react-native', 'react-native')
 	public function githubAs(repo:String, lib:String) {
-		lix(['install', 'gh:$repo', 'as', lib], true);
+		lix(['install', 'gh:$repo', 'as', lib]);
 		var resolved = resolve(lib).split('\n');
 		asserts.assert(resolved[0] == '-D');
 		asserts.assert(resolved[1].startsWith('$lib='));
