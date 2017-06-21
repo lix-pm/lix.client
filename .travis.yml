@@ -6,6 +6,7 @@ node_js: 6
 
 os:
   - linux
+  - osx
     
 install:
   - npm install haxe-travix lix.pm haxeshim -g
