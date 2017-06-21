@@ -30,7 +30,7 @@ class InstallTest extends TestBase {
 	public function haxelib(lib:String) {
 		switchx(['scope', 'create']);
 		lix(['install', 'haxelib:$lib']);
-		var resolved = run('haxe', ['--run', 'resolve-args', '-lib', lib]).stdout.split('\n');
+		var resolved = resolve(lib).split('\n');
 		asserts.assert(resolved[0] == '-D');
 		asserts.assert(resolved[1].startsWith('$lib='));
 		asserts.assert(resolved[2] == '-cp');
@@ -43,22 +43,61 @@ class InstallTest extends TestBase {
 		var lib = repo.split('/')[1];
 		switchx(['scope', 'create']);
 		lix(['install', 'gh:$repo']);
-		var resolved = run('haxe', ['--run', 'resolve-args', '-lib', lib]).stdout.split('\n');
+		var resolved = resolve(lib).split('\n');
 		asserts.assert(resolved[0] == '-D');
 		asserts.assert(resolved[1].startsWith('$lib='));
 		asserts.assert(resolved[2] == '-cp');
-		trace(resolved[3]);
 		asserts.assert(regex(lib, Github(None)).match(resolved[3]));
 		return asserts.done();
 	}
+	
+	@:variant('tink_core', '1.13.1')
+	public function haxelibVersion(lib:String, version:String) {
+		switchx(['scope', 'create']);
+		lix(['install', 'haxelib:$lib#$version']);
+		var resolved = resolve(lib).split('\n');
+		asserts.assert(resolved[0] == '-D');
+		asserts.assert(resolved[1] == '$lib=$version');
+		asserts.assert(resolved[2] == '-cp');
+		asserts.assert(regex(lib, Haxelib(Some(version))).match(resolved[3]));
+		return asserts.done();
+	}
+	
+	@:variant('haxetink/tink_core', '93227943')
+	public function githubHash(repo:String, hash:String) {
+		var lib = repo.split('/')[1];
+		switchx(['scope', 'create']);
+		lix(['install', 'gh:$repo#$hash']);
+		var resolved = resolve(lib).split('\n');
+		asserts.assert(resolved[0] == '-D');
+		asserts.assert(resolved[1].startsWith('$lib='));
+		asserts.assert(resolved[2] == '-cp');
+		asserts.assert(regex(lib, Github(Some(hash))).match(resolved[3]));
+		return asserts.done();
+	}
+	
+	@:variant('haxe-react/haxe-react-native', 'react-native')
+	public function githubAs(repo:String, lib:String) {
+		switchx(['scope', 'create']);
+		lix(['install', 'gh:$repo', 'as', lib]);
+		var resolved = resolve(lib).split('\n');
+		asserts.assert(resolved[0] == '-D');
+		asserts.assert(resolved[1].startsWith('$lib='));
+		asserts.assert(resolved[2] == '-cp');
+		asserts.assert(regex(repo.split('/')[1], Github(None)).match(resolved[3]));
+		return asserts.done();
+	}
+	
+	function resolve(lib:String, debug = false)
+		return run('haxe', ['--run', 'resolve-args', '-lib', lib], debug).stdout;
 	
 	function regex(lib:String, type:SourceType) {
 		var pattern = '/haxe_libraries/$lib/';
 		pattern += switch type {
 			case Haxelib(None): '[^/]*/haxelib/';
-			case Haxelib(version): '$version/haxelib/';
+			case Haxelib(Some(version)): '$version/haxelib/';
 			case Github(None): '[^/]*/github/\\w*/';
-			case Github(hash): '[^/]*/github/$hash\\w*/';
+			case Github(Some(hash)): '[^/]*/github/$hash\\w*/';
 		}
 		
 		pattern += 'src';
