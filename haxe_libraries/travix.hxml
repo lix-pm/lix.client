@@ -1,0 +1,3 @@
+# @install: lix --silent download 'haxelib:travix#0.9.0' into travix/0.9.0/haxelib
+-D travix=0.9.0
+-cp ${HAXESHIM_LIBCACHE}/travix/0.9.0/haxelib/src

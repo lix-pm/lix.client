@@ -4,6 +4,9 @@
   "bin": {
     "lix": "bin/lix.js"
   },
+  "scripts": {
+    "prepublishOnly": "haxe lix.client.hxml"
+  },
   "description": "lix - Libraries for haXe",
   "repository": {
     "type": "git",

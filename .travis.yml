@@ -1,0 +1,18 @@
+sudo: required
+dist: trusty
+
+language: node_js
+node_js: 6
+
+os:
+  - linux
+    
+install:
+  - npm install haxe-travix lix.pm haxeshim -g
+  - lix download
+  - haxe lix.client.hxml
+  - npm install . -g
+  - npm install
+
+script:
+  - travix neko
