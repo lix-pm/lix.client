@@ -122,7 +122,7 @@ using haxe.Json;
         }
       
       hxml.saveContent([
-        '# @install: lix --silent download \'${a.job.normalized}\' into ${a.relRoot}',
+        '# @install: lix --silent download "${a.job.normalized}" into ${a.relRoot}',
         '-D $name=$version',
         '-cp $${HAXESHIM_LIBCACHE}/${a.relRoot}/${infos.classPath}',
         extra,
