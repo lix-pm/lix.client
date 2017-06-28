@@ -1,6 +1,6 @@
 {
     "version": "0.1.0",
     "command": "haxe",
-    "args": ["lix.client.hxml", "--next", "-cmd", "node bin/lix.js +tink core"],
+    "args": ["lix.client.hxml", "--times"],
     "problemMatcher": "$haxe"
 }
