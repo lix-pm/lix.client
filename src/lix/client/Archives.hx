@@ -57,6 +57,7 @@ class DownloadedArchive {
   static var RESERVED = "!#$&'()*+,/:;=?@[]";
 
   static public function escape(s:String) {
+    if (s == null) return null;
     for (i in 0...RESERVED.length)
       s = s.replace(RESERVED.charAt(i), '_');
     return s;
