@@ -1,5 +1,5 @@
-# @install: lix download https://github.com/haxetink/tink_url/archive/13d2ba21ae3d06c01b6d948fb3b5535b5fff6e78.tar.gz as tink_url#0.2.0/13d2ba21ae3d06c01b6d948fb3b5535b5fff6e78
--D tink_url=0.2.0
--cp ${HAXESHIM_LIBCACHE}/tink_url/0.2.0/13d2ba21ae3d06c01b6d948fb3b5535b5fff6e78/src
+# @install: lix --silent download "https://github.com/haxetink/tink_url/archive/7c98a2ea212c3a2f8d9ff41c1450eae98eee812f.tar.gz" into tink_url/0.3.1/github/7c98a2ea212c3a2f8d9ff41c1450eae98eee812f
+-D tink_url=0.3.1
+-cp ${HAXESHIM_LIBCACHE}/tink_url/0.3.1/github/7c98a2ea212c3a2f8d9ff41c1450eae98eee812f/src
 
 -lib tink_stringly

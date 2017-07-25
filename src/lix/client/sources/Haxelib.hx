@@ -1,22 +1,24 @@
 package lix.client.sources;
 
+private class Proxy extends haxe.remoting.AsyncProxy<lix.client.sources.haxelib.Repo> {}
+
 class Haxelib {
-  static var SERVER = 'https://lib.haxe.org';
+  static var SERVER = 'lib.haxe.org';
   static public function schemes():Array<String>
     return ['haxelib'];
 
   static public function processUrl(url:Url):Promise<ArchiveJob> 
     return switch url.path {
       case null: new Error('invalid haxelib url $url');
-      case _.parts() => [v]: getArchive(v, url.hash);
+      case _.parts() => [v]: getArchive(v, url.hash, { server: url.host });
       default: new Error('invalid haxelib url $url');
     }
   
-  static public function getArchive(name:String, ?version:String):Promise<ArchiveJob>
+  static public function getArchive(name:String, ?version:String, ?options):Promise<ArchiveJob>
     return 
       switch version {
         case null:
-          resolveVersion(name).next(getArchive.bind(name, _));
+          resolveVersion(name, options).next(getArchive.bind(name, _));
         case v:
           ({
             url: '$SERVER/p/$name/$version/download/',
@@ -27,8 +29,21 @@ class Haxelib {
           } : ArchiveJob);
       }    
       
-  static public function resolveVersion(name:String):Promise<String> 
+  static public function resolveVersion(name:String, ?options:{ server: String }):Promise<String> {
+    return Future.async(function (cb) {
+      var server = switch options {
+        case null | { server: null }: SERVER;
+        case { server: v }: v; 
+      };
+      
+      var cnx = haxe.remoting.HttpAsyncConnection.urlConnect('https://$server/api/3.0/index.n');
+      cnx.setErrorHandler(function (e) cb(Failure(Error.withData('Failed to get version information from haxelib because $e', e))));  
+      var repo = new Proxy(cnx.api);
+      repo.getLatestVersion(name, function (s) cb(Success(s)));
+    });
+    
     return Download.text('$SERVER/p/$name').next(function (s) return s.split(')</title>')[0].split('(').pop());
+  }
 
   static public function installDependencies(haxelibs:haxe.DynamicAccess<String>, client:Client, skip:String->Bool) {
     
