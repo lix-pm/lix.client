@@ -13,8 +13,14 @@ class GitLab {
     }
   }
   
-  public function grabCommit(owner, project, version)
-    return Download.text('https://gitlab.com/api/v4/projects/$owner%2F$project/repository/commits/$version?$privateToken')
+  static function host(?options:{ ?host:String })
+    return switch options {
+      case null | { host: null }: 'gitlab.com';
+      case { host: v }: v;
+    }
+
+  public function grabCommit(owner, project, version, ?options:{ ?host:String })
+    return Download.text('https://${host(options)}/api/v4/projects/$owner%2F$project/repository/commits/$version?$privateToken')
       .next(function (s)          
         try {
           var parsed:Dynamic = s.parse();
@@ -30,25 +36,25 @@ class GitLab {
         }
       );
   
-  public function getArchive(owner:String, project:String, ?commitish:String):Promise<ArchiveJob> 
+  public function getArchive(owner:String, project:String, ?commitish:String, ?options:{ ?host:String }):Promise<ArchiveJob> 
     return switch commitish {
       case null: 
-        grabCommit(owner, project, '').next(getArchive.bind(owner, project, _));
+        grabCommit(owner, project, '', options).next(getArchive.bind(owner, project, _, options));
       case sha if (sha.length == 40):
         return ({
-          normalized: 'https://gitlab.com/$owner/$project/repository/archive.tar.gz?ref=$sha&${privateToken}',
+          normalized: 'https://${host(options)}/$owner/$project/repository/archive.tar.gz?ref=$sha&${privateToken}',
           dest: Computed(function (l) return [l.name, l.version, 'gitlab', sha]),
-          url: 'https://gitlab.com/$owner/$project/repository/archive.tar.gz?ref=$sha&${privateToken}',
+          url: 'https://${host(options)}/$owner/$project/repository/archive.tar.gz?ref=$sha&${privateToken}',
           lib: { name: Some(project), version: None }, 
         } : ArchiveJob);
       case v:
-        grabCommit(owner, project, v).next(getArchive.bind(owner, project, _));
+        grabCommit(owner, project, v, options).next(getArchive.bind(owner, project, _, options));
     }
     
   public function processUrl(url:Url):Promise<ArchiveJob> 
     return switch url.path {
       case null: new Error('invalid gitlab url $url');
-      case _.parts() => [owner, project]: getArchive(owner, project, url.hash);
+      case _.parts() => [owner, project]: getArchive(owner, project, url.hash, { host: url.host });
       default: new Error('invalid gitlab url $url');
     }
 }
