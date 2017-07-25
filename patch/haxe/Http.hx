@@ -61,7 +61,6 @@ class Http {
       }, 
       function (res) {
         var parts = [];
-        res.setEncoding('binary');//just to be sure
         res.on('end', function () onData(js.node.Buffer.concat(parts).toString()));
         res.on('data', parts.push);
         res.on('error', function (e) onError(Std.string(e)));
