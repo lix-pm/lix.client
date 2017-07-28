@@ -36,14 +36,14 @@ class Haxelib {
       case null | { host: null }: HOST;
       case { host: v }: v; 
     };
+
   static public function resolveVersion(name:String, ?options:{ host: String }):Promise<String> 
     return Future.async(function (cb) {
       var cnx = haxe.remoting.HttpAsyncConnection.urlConnect('https://${getHost(options)}/api/3.0/index.n');
       cnx.setErrorHandler(function (e) cb(Failure(Error.withData('Failed to get version information from haxelib because $e', e))));  
       var repo = new Proxy(cnx.api);
       repo.getLatestVersion(name, function (s) cb(Success(s)));
-    });    
-  
+    });
 
   static public function installDependencies(haxelibs:haxe.DynamicAccess<String>, client:Client, skip:String->Bool) {
     
