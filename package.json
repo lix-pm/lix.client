@@ -4,12 +4,16 @@
   "bin": {
     "lix": "bin/lix.js"
   },
+  "scripts": {
+    "noderify": "noderify"
+  },
   "description": "lix - Libraries for haXe",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lix-pm/lix.git"
   },
-  "dependencies": {
+  "devDependencies": {
+    "noderify": "=3.0.2",
     "tar": "=2.2.1",
     "yauzl": "=2.6.0"
   },
