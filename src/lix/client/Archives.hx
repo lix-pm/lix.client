@@ -71,6 +71,7 @@ class DownloadedArchive {
   static public function fresh(tmpLoc:String, storageRoot:String, targetLoc:String, job:ArchiveJob) {
     var curRoot = '$tmpLoc/${seekRoot(tmpLoc)}';
     var infos = readInfos(curRoot, job.lib);
+    
     var relRoot = 
       if (targetLoc == null) 
         path(switch job.dest {
@@ -137,20 +138,14 @@ class DownloadedArchive {
     if (lib == null)
       lib = LibVersion.UNDEFINED;
 
-    function name(found:String)
-      return lib.name.or(found);
-
-    function version(found:String)
-      return lib.version.or(found);
-
-
     return 
       if (files.indexOf('haxelib.json') != -1) {
         //TODO: there's a lot of errors to be caught here
         var info:{ name: String, version:String, ?classPath:String } = '$root/haxelib.json'.getContent().parse();
+        
         {
-          name: name(info.name),
-          version: version(info.version),
+          name: info.name,
+          version: info.version,
           classPath: switch info.classPath {
             case null: '';
             case v: v;
@@ -160,15 +155,15 @@ class DownloadedArchive {
       else if (files.indexOf('package.json') != -1) {
         var info:{ name: String, version:String, } = '$root/package.json'.getContent().parse();
         {
-          name: name(info.name),
-          version: version(info.version),
+          name: info.name,
+          version: info.version,
           classPath: guessClassPath(),
         }
       }
       else {        
         {
-          name: name(null),
-          version: version('0.0.0'),
+          name: lib.name.orNull(),
+          version: lib.version.or('0.0.0'),
           classPath: guessClassPath(),
         }
       }

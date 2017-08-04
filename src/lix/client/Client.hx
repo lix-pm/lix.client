@@ -98,7 +98,7 @@ using haxe.Json;
         as = { name: None, version: None };
 
       var infos:ArchiveInfos = a.infos;
-
+      
       var name = as.name.or(infos.name),
           version = as.version.or(infos.version);
 
