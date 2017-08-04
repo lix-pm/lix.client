@@ -21,7 +21,7 @@ class Haxelib {
           resolveVersion(name, options).next(getArchive.bind(name, _, options));
         case v:
           ({
-            url: '$HOST/p/$name/$version/download/',
+            url: 'https://$HOST/p/$name/$version/download/',
             normalized: 
               if (options != null && options.host != null) 'haxelib://${options.host}/$name#$version'
               else 'haxelib:$name#$version',
