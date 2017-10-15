@@ -1,3 +1,5 @@
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/lix-pm/Lobby)
+
 # Lix - a dependable package manager for your Haxe projects
 
 Lix is a package manager that makes it easy for you to track dependencies used in your Haxe project, and to make sure everyone always has the right versions when they build your app.
