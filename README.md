@@ -24,7 +24,25 @@ You can depend on Lix to manage your haxe dependencies.
 
 ---
 
-## Before we start: Haxe Shim and SwitchX
+## Contents
+
+- [Haxe Shim and SwitchX](#haxe-shim-and-switchx)
+- [Installation](#installation)
+- [Usage](#usage)
+    - [Downloading all dependencies](#downloading-all-dependencies)
+    - [Adding a new dependency](#adding-a-new-dependency)
+    - [Aliasing](#aliasing)
+    - [HXML files](#hxml-files)
+    - [Version control](#version-control)
+    - [Local development](#local-development)
+- [Concepts](#concepts)
+- [FAQ](#faq)
+- [Help and support](#help-and-support)
+- [Contributing](#contributing)
+
+---
+
+## Haxe Shim and SwitchX
 
 Before we get started: Lix is made to work with two other tools - Haxe Shim and SwitchX.
 
@@ -103,7 +121,7 @@ It's worth noting that we don't include the haxelib version in the hxml anymore,
 
 is no longer useful. Lix controls the version installed, and any version mentioned in a `-lib` argument is ignored.
 
-### Git and version control
+### Version control
 
 We recommend you add the entire `haxe_libraries` folder to your version control. For example, if you're using git:
 
@@ -117,9 +135,9 @@ Every time you switch branches, pull, merge, or clone a new repo, if the files i
 
 (A fun fact: despite the name, `lix download` often doesn't have to download anything, especially if you've used those dependencies before, as they will be cached. This makes switching branches and syncing dependencies incredibly fast and painless).
 
-### Using a local folder so you can work on a development version of a dependency
+### Local development
 
-If you develop your own haxelibs, you might be used to using `haxelib dev` to tell haxelib to use a local folder rather than a downloaded library while you develop your library.
+If you develop your own haxelibs, you might be used to using `haxelib dev` to tell haxelib to use a local folder rather than a downloaded library while you develop your library, so that changes you make in the local folder are always used in the next build.
 
 With Lix, there is no command to do this, you just edit the relevant hxml file.
 
@@ -238,7 +256,7 @@ Note: if you're using NodeJS and package.json in your project, it might be worth
 
 This will make sure lix installs its packages every time npm or yarn installs their packages.
 
-## Help and Support
+## Help and support
 
 If you find a bug or have an issue, please [file an issue on GitHub](https://github.com/lix-pm/lix.client/issues/new).
 
