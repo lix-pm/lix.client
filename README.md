@@ -1,3 +1,5 @@
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/lix-pm/Lobby)
+
 # lix - the haxe package manager that rox ... ba-dum-tss ...
 
 In a nutshell, lix is an attempt to get dependency management right, building on lessons learnt from looking at NPM, Cargo and failure to move haxelib forward. The core proposition of lix is that **dependencies should be fully locked down and versioned, so that every state can be reliably replicated.**
