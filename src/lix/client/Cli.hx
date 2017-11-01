@@ -27,6 +27,7 @@ class Cli {
     ]);
 
     var scope = Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
+    var switchxApi = new switchx.Switchx(scope, silent);
     
     var github = new GitHub(switch args.indexOf('--gh-credentials') {
       case -1:
@@ -61,8 +62,36 @@ class Cli {
       force,
       silent
     );
+
+    var switchxCommands = switchx.Cli.makeCommands(switchxApi, force);
     
+    function fromSwitchx(name:String) {
+      for (cmd in switchxCommands)
+        if (cmd.name == 'scope') return cmd;
+      throw 'assert';
+    }
+
     Command.dispatch(args, 'lix - Libraries for haXe (v$version)', [
+      new Command('install', '<url> [as <lib[#ver]>]', 'install lib from specified url',
+        function (args) 
+          return 
+            if (scope.isGlobal && !global)
+              new Error('Current scope is global. Please use --global if you intend to install globally, or create a local scope.');
+            else
+              switch args {
+                case [url, 'as', alias]: 
+                  client.installUrl(url, LibVersion.parse(alias));
+                case [library, constraint]:
+                  Promise.lift(Constraint.parse(constraint)).next(client.install.bind(library, _));
+                case [library] if ((library:Url).scheme == null): 
+                  client.install(library);
+                case [url]:
+                  client.installUrl(url);
+                case []: new Error('Missing url');
+                case v: new Error('too many arguments');
+              }
+      ),      
+      fromSwitchx('install'),
       new Command('download', '[<url[#lib[#ver]]>]', 'download lib from url if specified,\notherwise download missing libs', 
         function (args) return switch args {
           case [url, 'as', legacy]:
@@ -93,11 +122,10 @@ class Cli {
 
           case []: 
 
-            var s = new switchx.Switchx(scope, silent);
             @:privateAccess switchx.Cli.ensureNeko(Scope.seek()).next(
               function (_) return
-                s.resolveOnline(scope.config.version)
-                  .next(s.download.bind(_, { force: false }))
+                switchxApi.resolveOnline(scope.config.version)
+                  .next(switchxApi.download.bind(_, { force: false }))
                   .next(function (_) {
                     new HaxeCli(scope).installLibs(silent);
                     return Noise;//actually the above just exits
@@ -108,27 +136,7 @@ class Cli {
           case v: new Error('too many arguments');
         }
       ),
-      
-      new Command('install', '<url> [as <lib[#ver]>]', 'install lib from specified url',
-        function (args) 
-          return 
-            if (scope.isGlobal && !global)
-              new Error('Current scope is global. Please use --global if you intend to install globally, or create a local scope.');
-            else
-              switch args {
-                case [url, 'as', alias]: 
-                  client.installUrl(url, LibVersion.parse(alias));
-                case [library, constraint]:
-                  Promise.lift(Constraint.parse(constraint)).next(client.install.bind(library, _));
-                case [library] if ((library:Url).scheme == null): 
-                  client.install(library);
-                case [url]:
-                  client.installUrl(url);
-                case []: new Error('Missing url');
-                case v: new Error('too many arguments');
-              }
-      ),
-      new Command('build', '...args', 'build (if haxeshim is not installed)',
+      new Command('build', '...args', 'build through lix (useful if haxeshim is not installed)',
         function (args) {
           @:privateAccess new HaxeCli(scope).dispatch(args);
           return Noise;
