@@ -12,21 +12,14 @@ using haxe.Json;
 
 @:tink class Client {
   
-  public var scope(default, null):Scope;
-  public var log(default, null):String->Void;
-  public var force(default, null):Bool;
+  public var scope(default, null):Scope = _;
   
-  var resolver:Array<Dependency>->Promise<Array<ArchiveJob>>;
-  var urlToJob:Url->Promise<ArchiveJob>;
-  
+  var urlToJob:Url->Promise<ArchiveJob> = _;
+  var resolver:Array<Dependency>->Promise<Array<ArchiveJob>> = _;
 
-  public function new(scope, urlToJob, resolver, log, force) {
-    this.scope = scope;
-    this.urlToJob = urlToJob;
-    this.resolver = resolver;
-    this.log = log;
-    this.force = force;
-  }
+  public var log(default, null):String->Void = _;
+  public var force(default, null):Bool = _;
+  public var silent(default, null):Bool = _;
   
   public function downloadUrl(url:Url, ?options) 
     return downloadArchive(urlToJob(url), options);
@@ -59,7 +52,7 @@ using haxe.Json;
               case null: Download.archive;
               case Zip: Download.zip;
               case Tar: Download.tar;
-            })(a.url, 0, scope.haxeshimRoot + '/downloads/download@' + Date.now().getTime())
+            })(a.url, 0, scope.haxeshimRoot + '/downloads/download@' + Date.now().getTime(), !silent)
               .next(dir => {
                 var ret = DownloadedArchive.fresh(dir, scope.libCache, into, a);
 

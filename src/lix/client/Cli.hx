@@ -58,7 +58,8 @@ class Cli {
       resolve, 
       function (_) return new Error(NotImplemented, "not implemented"), 
       if (silent) function (_) {} else Sys.println,
-      force
+      force,
+      silent
     );
     
     Command.dispatch(args, 'lix - Libraries for haXe (v$version)', [
@@ -92,7 +93,7 @@ class Cli {
 
           case []: 
 
-            var s = new switchx.Switchx(scope);
+            var s = new switchx.Switchx(scope, silent);
             @:privateAccess switchx.Cli.ensureNeko(Scope.seek()).next(
               function (_) return
                 s.resolveOnline(scope.config.version)

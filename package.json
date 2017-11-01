@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "noderify": "=3.0.2",
-    "tar": "=2.2.1",
+    "tar": "=4.0.2",
     "yauzl": "=2.6.0"
   },
   "keywords": [
