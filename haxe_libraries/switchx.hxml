@@ -1,3 +1,3 @@
-# @install: lix --silent download "https://github.com/lix-pm/switchx/archive/cf4cd92d66966e6bf8ae7ca46ddac0a13b661486.tar.gz" into switchx/0.14.0/github/cf4cd92d66966e6bf8ae7ca46ddac0a13b661486
--D switchx=0.14.0
--cp ${HAXESHIM_LIBCACHE}/switchx/0.14.0/github/cf4cd92d66966e6bf8ae7ca46ddac0a13b661486/src
+# @install: lix --silent download "https://github.com/lix-pm/switchx/archive/35fae35db70360f3383efdaca27d11ff1ae0f73c.tar.gz" into switchx/0.14.2/github/35fae35db70360f3383efdaca27d11ff1ae0f73c
+-D switchx=0.14.2
+-cp ${HAXESHIM_LIBCACHE}/switchx/0.14.2/github/35fae35db70360f3383efdaca27d11ff1ae0f73c/src
