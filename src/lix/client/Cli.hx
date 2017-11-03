@@ -20,6 +20,19 @@ class Cli {
         global = args.remove('--global') || args.remove('-g'),
         force = args.remove('--force');
     
+    // var p:lix.client.sources.npm.Packument = tink.Json.parse('{
+    //   "versions":{
+    //     "0.11.1":{
+    //       "version": "0.11.1",
+    //       "haxeDependencies": {
+    //         "switchx": "*"
+    //       }
+    //     }
+    //   }
+    // }');
+
+    // trace(p);
+
     args = Command.expand(args, [
       "+tink install github:haxetink/tink_${0}",
       "+coco install github:MVCoconut/coconut.${0}",
