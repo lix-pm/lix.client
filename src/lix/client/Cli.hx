@@ -15,7 +15,7 @@ class Cli {
     dispatch(Sys.args());
   
   static function dispatch(args:Array<String>) {
-    var version = haxe.Json.parse(sys.io.File.getContent(js.Node.__dirname+'/../package.json')).version;
+    var version = CompileTime.parseJsonFile("./package.json").version;//haxe.Json.parse(sys.io.File.getContent(js.Node.__dirname+'/../package.json')).version;
     var silent = args.remove('--silent'),
         global = args.remove('--global') || args.remove('-g'),
         force = args.remove('--force');
