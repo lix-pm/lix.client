@@ -7,7 +7,7 @@
   "scripts": {
     "noderify": "noderify",
     "bundle": "noderify bin/lix.js > bin/lix.bundle.js",
-    "build": "npm run bundle && mv bin/lix.bundle.js bin/lix.js"
+    "build": "haxe lix.client.hxml && npm run bundle && mv bin/lix.bundle.js bin/lix.js"
   },
   "description": "lix - Libraries for haXe",
   "repository": {
