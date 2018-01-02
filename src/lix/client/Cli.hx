@@ -149,6 +149,26 @@ class Cli {
           case v: new Error('too many arguments');
         }
       ),
+      new Command('run', 'lib ...args', 'run a library', function (args) return switch args {
+        case []: new Error('no library specified');
+        case args:
+          var lib = args.shift();
+          return Fs.get(Resolver.libHxml(scope.scopeLibDir, lib))
+            .next(
+              function (s) {
+                for (line in s.split('\n'))
+                  switch line.split('# @run: ').map(StringTools.trim) {
+                    case ['', cmd]:
+                      return Exec.shell([cmd].concat(
+                        args.map(if (Os.IS_WINDOWS) StringTools.quoteWinArg.bind(_, true) else StringTools.quoteUnixArg)
+                      ).join(' '), Sys.getCwd());
+                    case [_]:
+                    default: return new Error('invalid @run directive $line'); 
+                  }
+                  return new Error('no run directive found for library $lib');
+              }
+            );
+      }),
       new Command('build', '...args', 'build through lix (useful if haxeshim is not installed)',
         function (args) {
           @:privateAccess new HaxeCli(scope).dispatch(args);
@@ -161,8 +181,14 @@ class Cli {
           Sys.println(version);
           Noise;
         }
-      ),       
+      ),
+      new Command('run-haxelib', 'path ...args', 'invoke a haxelib at a given path following haxelib\'s conventions', function (args) return 
+        switch args {
+          case []: new Error('no path supplied');
+          default: 
+            Haxelib.runLib(scope, args);
+        }
+      ),             
     ], []).handle(Command.reportOutcome);
-  }
-  
+  }       
 }

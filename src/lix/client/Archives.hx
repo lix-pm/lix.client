@@ -32,6 +32,7 @@ typedef ArchiveJob = {
   public var name(default, null):String;
   public var version(default, null):String;
   public var classPath(default, null):String;
+  @:optional public var runAs(default, null):String;
 }
 
 class DownloadedArchive {
@@ -141,7 +142,7 @@ class DownloadedArchive {
     return 
       if (files.indexOf('haxelib.json') != -1) {
         //TODO: there's a lot of errors to be caught here
-        var info:{ name: String, version:String, ?classPath:String } = '$root/haxelib.json'.getContent().parse();
+        var info:{ name: String, version:String, ?classPath:String, ?mainClass:String } = '$root/haxelib.json'.getContent().parse();
         
         {
           name: info.name,
@@ -150,6 +151,9 @@ class DownloadedArchive {
             case null: '';
             case v: v;
           },
+          runAs: 
+            if (files.indexOf('run.n') != -1 || info.mainClass != null) "lix run-haxelib ${FINAL_INSTALLATION_DIRECTORY}"
+            else null,
         }
       }
       else if (files.indexOf('package.json') != -1) {

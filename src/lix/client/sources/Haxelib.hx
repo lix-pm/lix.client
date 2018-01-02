@@ -1,5 +1,7 @@
 package lix.client.sources;
 
+import haxeshim.Exec.*;
+
 private class Proxy extends haxe.remoting.AsyncProxy<lix.client.sources.haxelib.Repo> {}
 
 class Haxelib {
@@ -90,4 +92,24 @@ class Haxelib {
     });    
   }
   
+  static public function runLib(scope:Scope, args:Array<String>):Promise<Noise> {
+    args = args.map(scope.interpolate);
+    var path = args.shift();
+    return Fs.get('$path/haxelib.json')
+      .next(
+        function (s) 
+          return 
+            try Success((haxe.Json.parse(s).mainClass:Null<String>))
+            catch (e:Dynamic) Failure(Error.withData('failed to parse haxelib.json', e))
+      )
+      .next(
+        function (mainClass) return switch mainClass {
+          case null: 
+            sync('neko', path, ['$path/run.n'].concat(args).concat([Sys.getCwd()]), { HAXELIB_RUN: '1' });
+          case v: 
+            new Error('mainClass support not implemented yet');
+        }
+      );
+  }
+
 }

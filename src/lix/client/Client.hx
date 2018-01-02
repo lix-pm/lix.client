@@ -113,13 +113,19 @@ using haxe.Json;
             [for (name in haxelibs.keys()) '-lib $name'];
           default: [];
         }
-      
-      hxml.saveContent([
+
+      var run =
+        switch infos.runAs {
+          case null: [];
+          case v: ['# @run: ' + v.replace("${FINAL_INSTALLATION_DIRECTORY}", '$${HAXESHIM_LIBCACHE}/${a.relRoot}')];
+        }
+
+      hxml.saveContent(run.concat([
         '# @install: lix --silent download "${a.job.normalized}" into ${a.relRoot}',
         '-D $name=$version',
         '-cp $${HAXESHIM_LIBCACHE}/${a.relRoot}/${infos.classPath}',
         extra,
-      ].concat(deps).join('\n'));
+      ]).concat(deps).join('\n'));
       
       return 
         switch haxelibs {
