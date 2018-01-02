@@ -1,7 +1,5 @@
 package lix.client;
 
-import haxe.crypto.Md5;
-
 using haxe.io.Path;
 
 using sys.FileSystem;

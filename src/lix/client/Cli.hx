@@ -76,11 +76,12 @@ class Cli {
       silent
     );
 
-    var switchxCommands = switchx.Cli.makeCommands(switchxApi, force);
+    var switchxCli = new switchx.Cli(switchxApi, force); 
+    var switchxCommands = switchxCli.makeCommands();
     
     function fromSwitchx(name:String) {
       for (cmd in switchxCommands)
-        if (cmd.name == 'scope') return cmd;
+        if (cmd.name == name) return cmd;
       throw 'assert';
     }
 
@@ -92,6 +93,8 @@ class Cli {
               new Error('Current scope is global. Please use --global if you intend to install globally, or create a local scope.');
             else
               switch args {
+                case ['haxe', version]:
+                  switchxCli.download(version).next(switchxCli.switchTo);
                 case [url, 'as', alias]: 
                   client.installUrl(url, LibVersion.parse(alias));
                 case [library, constraint]:
@@ -104,7 +107,13 @@ class Cli {
                 case v: new Error('too many arguments');
               }
       ),      
-      fromSwitchx('install'),
+      new Command('install haxe', '<version>|<alias>', 'install specified haxe version', null),//this is never matched and is here purely for usage display
+      new Command('use', 'haxe <alias>|<version>', 'use specified haxe version', function (args) return switch args {
+        case ['haxe', version]: switchxApi.resolveInstalled(version).next(switchxCli.switchTo);
+        default: new Error('invalid arguments');
+      }),
+      fromSwitchx('list').as('haxe-versions', 'lists currently downloaded haxe versions'),
+      fromSwitchx('scope'),
       new Command('download', '[<url[#lib[#ver]]>]', 'download lib from url if specified,\notherwise download missing libs', 
         function (args) return switch args {
           case [url, 'as', legacy]:
