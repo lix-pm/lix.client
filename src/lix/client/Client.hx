@@ -142,7 +142,7 @@ using haxe.Json;
       function exec(hook:String, cmd:Null<String>):Promise<Noise>
         return 
           if (cmd != null) {
-            cmd = interpolate(cmd);
+            cmd = scope.interpolate(interpolate(cmd));//TODO: this is a mess
             log('Processing $hook hook:');
             log('> $cmd');
             Exec.shell(cmd, scope.cwd, scope.haxeInstallation.env())
