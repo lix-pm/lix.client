@@ -114,25 +114,53 @@ using haxe.Json;
           default: [];
         }
 
-      var run =
-        switch infos.runAs {
-          case null: [];
-          case v: ['# @run: ' + v.replace("${FINAL_INSTALLATION_DIRECTORY}", '$${HAXESHIM_LIBCACHE}/${a.relRoot}')];
-        }
+      function interpolate(s:String)
+        return Resolver.interpolate(s, switch _ {
+          case 'DOWNLOAD_LOCATION': '$${HAXESHIM_LIBCACHE}/${a.relRoot}';
+          default: null;  
+        });
 
-      hxml.saveContent(run.concat([
+      var lines = [];
+
+      switch infos.runAs {
+        case null:
+        case v: lines.push('# @run: ${interpolate(v)}');
+      }
+
+      switch infos.postDownload {
+        case null:
+        case v: lines.push('# @post-install: ${interpolate(v)}');
+      }
+
+      hxml.saveContent(lines.concat([
         '# @install: lix --silent download "${a.job.normalized}" into ${a.relRoot}',
         '-D $name=$version',
         '-cp $${HAXESHIM_LIBCACHE}/${a.relRoot}/${infos.classPath}',
         extra,
       ]).concat(deps).join('\n'));
       
-      return 
+      function exec(hook:String, cmd:Null<String>):Promise<Noise>
+        return 
+          if (cmd != null) {
+            cmd = interpolate(cmd);
+            log('Processing $hook hook:');
+            log('> $cmd');
+            Exec.shell(cmd, scope.cwd, scope.haxeInstallation.env())
+              .map(_ => Noise);
+          }
+          else
+            Noise;
+
+      return Promise.lift(
         switch haxelibs {
           case null: Noise;
           default:
             Haxelib.installDependencies(haxelibs, this, function (s) return '${scope.scopeLibDir}/$s.hxml'.exists());
         }
+      ).next(_ => 
+        if (!a.alreadyDownloaded) exec('post download', infos.postDownload)
+        else Noise
+      ).next(_ => exec('post install', infos.postInstall));
     });
   
 }

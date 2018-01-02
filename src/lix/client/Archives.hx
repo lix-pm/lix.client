@@ -33,6 +33,8 @@ typedef ArchiveJob = {
   public var version(default, null):String;
   public var classPath(default, null):String;
   @:optional public var runAs(default, null):String;
+  @:optional public var postDownload(default, null):String;
+  @:optional public var postInstall(default, null):String;
 }
 
 class DownloadedArchive {
@@ -41,6 +43,8 @@ class DownloadedArchive {
    * The job the archive originated from
    */
   public var job(default, null):ArchiveJob;
+
+  public var alreadyDownloaded(default, null):Bool = true;
 
   var storageRoot:String;
 
@@ -82,6 +86,7 @@ class DownloadedArchive {
       else targetLoc;
     
     var ret = new DownloadedArchive(relRoot, storageRoot, job, infos);
+    ret.alreadyDownloaded = false;
 
     var archive = null;
 
@@ -142,7 +147,14 @@ class DownloadedArchive {
     return 
       if (files.indexOf('haxelib.json') != -1) {
         //TODO: there's a lot of errors to be caught here
-        var info:{ name: String, version:String, ?classPath:String, ?mainClass:String } = '$root/haxelib.json'.getContent().parse();
+        var info:{ 
+          name: String, 
+          version:String, 
+          ?classPath:String, 
+          ?mainClass:String,
+          ?postInstall: String, 
+          ?postDownload: String, 
+        } = '$root/haxelib.json'.getContent().parse();
         
         {
           name: info.name,
@@ -152,8 +164,10 @@ class DownloadedArchive {
             case v: v;
           },
           runAs: 
-            if (files.indexOf('run.n') != -1 || info.mainClass != null) "lix run-haxelib ${FINAL_INSTALLATION_DIRECTORY}"
+            if (files.indexOf('run.n') != -1 || info.mainClass != null) "haxelib run-dir ${DOWNLOAD_LOCATION}"
             else null,
+          postInstall: info.postInstall,
+          postDownload: info.postDownload,
         }
       }
       else if (files.indexOf('package.json') != -1) {
