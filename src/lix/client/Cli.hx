@@ -152,22 +152,8 @@ class Cli {
       new Command('run', 'lib ...args', 'run a library', function (args) return switch args {
         case []: new Error('no library specified');
         case args:
-          var lib = args.shift();
-          return Fs.get(Resolver.libHxml(scope.scopeLibDir, lib))
-            .next(
-              function (s) {
-                for (line in s.split('\n'))
-                  switch line.split('# @run: ').map(StringTools.trim) {
-                    case ['', cmd]:
-                      return Exec.shell([cmd].concat(
-                        args.map(if (Os.IS_WINDOWS) StringTools.quoteWinArg.bind(_, true) else StringTools.quoteUnixArg)
-                      ).join(' '), Sys.getCwd());
-                    case [_]:
-                    default: return new Error('invalid @run directive $line'); 
-                  }
-                  return new Error('no run directive found for library $lib');
-              }
-            );
+          scope.getLibCommand(args)
+            .next(function (cmd) return cmd());
       }),
       new Command('build', '...args', 'build through lix (useful if haxeshim is not installed)',
         function (args) {
