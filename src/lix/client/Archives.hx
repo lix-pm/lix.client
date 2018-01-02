@@ -164,7 +164,7 @@ class DownloadedArchive {
             case v: v;
           },
           runAs: 
-            if (files.indexOf('run.n') != -1 || info.mainClass != null) "haxelib run-dir ${DOWNLOAD_LOCATION}"
+            if (files.indexOf('run.n') != -1 || info.mainClass != null) 'haxelib run-dir ${info.name} $${DOWNLOAD_LOCATION}'
             else null,
           postInstall: info.postInstall,
           postDownload: info.postDownload,
