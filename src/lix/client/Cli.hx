@@ -12,7 +12,7 @@ using sys.FileSystem;
 class Cli {
   
   static function main()
-    dispatch(Sys.args());
+    switchx.Cli.ensureGlobal('lix').handle(dispatch.bind(Sys.args()));
   
   static function dispatch(args:Array<String>) {
     var version = CompileTime.parseJsonFile("./package.json").version;//haxe.Json.parse(sys.io.File.getContent(js.Node.__dirname+'/../package.json')).version;
@@ -90,7 +90,7 @@ class Cli {
         function (args) 
           return 
             if (scope.isGlobal && !global)
-              new Error('Current scope is global. Please use --global if you intend to install globally, or create a local scope.');
+              new Error('Current scope is global. Please use --global if you intend to install globally, or create a local scope with `lix scope create`.');
             else
               switch args {
                 case ['haxe', version]:
