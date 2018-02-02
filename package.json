@@ -19,9 +19,6 @@
     "tar": "=4.0.2",
     "yauzl": "=2.6.0"
   },
-  "haxeDependencies": {
-    "switchx": "*"
-  },
   "keywords": [
     "haxe"
   ],

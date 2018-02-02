@@ -11,27 +11,23 @@ using sys.FileSystem;
 
 class Cli {
   
-  static function main()
-    switchx.Cli.ensureGlobal('lix').handle(dispatch.bind(Sys.args()));
+  static function main() {
+    var args = Sys.args();
+    var global = args.remove('--global') || args.remove('-g');
+    function getScope()
+      return Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
+    
+    (switch getScope.catchExceptions() {
+      case Failure(e):
+        switchx.Cli.ensureGlobal('lix');
+      case Success(v): Future.sync(v);
+    }).handle(dispatch.bind(_, global, args));
+  }
   
-  static function dispatch(args:Array<String>) {
+  static function dispatch(scope:Scope, global:Bool, args:Array<String>) {
     var version = CompileTime.parseJsonFile("./package.json").version;//haxe.Json.parse(sys.io.File.getContent(js.Node.__dirname+'/../package.json')).version;
     var silent = args.remove('--silent'),
-        global = args.remove('--global') || args.remove('-g'),
         force = args.remove('--force');
-    
-    // var p:lix.client.sources.npm.Packument = tink.Json.parse('{
-    //   "versions":{
-    //     "0.11.1":{
-    //       "version": "0.11.1",
-    //       "haxeDependencies": {
-    //         "switchx": "*"
-    //       }
-    //     }
-    //   }
-    // }');
-
-    // trace(p);
 
     args = Command.expand(args, [
       "+tink install github:haxetink/tink_${0}",
@@ -39,7 +35,6 @@ class Cli {
       "+lib install haxelib:${0}",
     ]);
 
-    var scope = Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
     var switchxApi = new switchx.Switchx(scope, silent);
     
     var github = new GitHub(switch args.indexOf('--gh-credentials') {

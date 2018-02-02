@@ -1,0 +1,12 @@
+-lib haxeshim
+--macro haxeshim.Build.postprocess()
+-dce full
+--each
+-main haxeshim.HaxeCli 
+-js bin/haxeshim.js
+--next
+-main haxeshim.HaxelibCli 
+-js bin/haxelibshim.js
+--next
+-main haxeshim.NekoCli 
+-js bin/nekoshim.js
