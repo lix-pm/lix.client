@@ -164,12 +164,6 @@ class Cli {
           scope.getLibCommand(args)
             .next(function (cmd) return cmd());
       }),
-      new Command('build', '...args', 'build through lix (useful if haxeshim is not installed)',
-        function (args) {
-          @:privateAccess new HaxeCli(scope).dispatch(args);
-          return Noise;
-        }
-      ),
       new Command(['--version', '-v'], '', 'print version', function (args) return
         if (args.length > 0) new Error('too many arguments')
         else {

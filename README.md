@@ -1,32 +1,26 @@
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/lix-pm/Lobby)
 
-# Lix - a dependable package manager for your Haxe projects
+# lix - a dependable package manager for your Haxe projects
 
-Lix is a package manager that makes it easy for you to track dependencies used in your Haxe project, and to make sure everyone always has the right versions when they build your app.
+lix is a package manager that makes it easy for you to track dependencies used in your Haxe project, and to make sure everyone always has the right versions when they build your app.
 
-- Lix installs dependencies faster than haxelib.
+- lix tracks everything in version control so you know exactly when and how a dependency changed. As a result:
+  - lix helps you avoid "software erosion", so that when you come back to a project 6 months later on a different computer, you can still get things compiling exactly as they did last time you were working on it.
+  - lix makes it easy to collaborate with other developers even when dependencies are changing regularly.
+- lix works with all existing haxelibs, as well as dependencies hosted on GitHub or GitLab.
+- lix lets you switch branches and update the dependencies much faster than haxelib.
+- lix installs dependencies faster than haxelib.
 
-- Lix lets you switch branches and update the dependencies much faster than haxelib.
+The core proposition of lix is that **all dependencies should be fully locked down and versioned, so that every state can be reliably replicated.**
 
-- Lix tracks everything in version control so you know exactly when and how a dependency changed.
+To track dependencies, lix leverages the conventions put forth by [haxeshim](https://github.com/lix-pm/haxeshim). This means that for each dependency, there is a `<libName>.hxml` in the project's `haxe_libraries` folder. In addition to putting all required compiler arguments into a library's hxml, lix also leaves behind installation instructions that allow to redownload the exact same version on another machine. If you check out any particular state of a project, then `lix download` will download any missing library versions.
 
-- Lix makes it easy to collaborate with other developers even when dependencies are changing regularly.
-
-- Lix helps you avoid "software erosion", so that when you come back to a project 6 months later on a different computer, you can still get things compiling exactly as they did last time you were working on it.
-
-- Lix works with all existing haxelibs, as well as dependencies hosted on GitHub or GitLab.
-
-The core proposition of lix is that **dependencies should be fully locked down and versioned, so that every state can be reliably replicated.**
-
-To track dependencies, lix leverages [haxeshim](https://github.com/lix-pm/haxeshim). This means that for each dependency, there is a `<libName>.hxml` in the project's `haxe_libraries` folder. In addition to putting all required compiler arguments into a library's hxml, lix also leaves behind installation instructions that allow to redownload the exact same version on another machine. If you check out any particular state of a project, then `lix download` will download any missing library versions.
-
-You can depend on Lix to manage your haxe dependencies.
+You can depend on lix to manage your haxe dependencies.
 
 ---
 
 ## Contents
 
-- [Haxe Shim and SwitchX](#haxe-shim-and-switchx)
 - [Installation](#installation)
 - [Usage](#usage)
     - [Downloading all dependencies](#downloading-all-dependencies)
@@ -42,30 +36,29 @@ You can depend on Lix to manage your haxe dependencies.
 
 ---
 
-## Haxe Shim and SwitchX
+## Haxe Shim
 
-Before we get started: Lix is made to work with two other tools - Haxe Shim and SwitchX.
+Before we get started: lix is made to work on top of Haxe Shim. [You can read more about it here](https://github.com/lix-pm/haxeshim), but essetially, you can think of it just normal Haxe with a slightly tweaked cli. What it does is to replace the tight coupling in the haxe toolchain in favor of simple conventions:
 
-**Haxe Shim** is needed as (for now) Haxe and Haxelib are tied at the hip, and it's impossible to replace Haxelib without doing some tricky business. Haxe Shim does that tricky business. In day-to-day usage there isn't much difference between Haxe and Haxe Shim, except that you can use SwitchX and Lix. [You can read more about Haxe Shim here](https://github.com/lix-pm/haxeshim).
-
-**SwitchX** tracks the Haxe version your project uses, and works with Haxe Shim to make sure every time you run "haxe", it runs the right version (even if that version is a particular nightly build!). [You can read more about SwitchX here](https://github.com/lix-pm/switchx).
+- decouple the haxe command from the haxe compiler (which are right now the very same thing) and instead use project specific configuration of the Haxe version, meaning that you can seamlessly have different Haxe versions in different projects on the same machine and also ensure that the same project will use the same Haxe version across different machines
+- decouple Haxe from Haxelib (which are right now tied at the hip) and instead use project specific configuration of dependencies in a simple hxml-based format. Any tool capable of writing these hxmls can thus supply dependencies to the project. Moreover, this setup also ensures frictionless use of different dependency  versions in different projects and reliable replication of dependency versions across separate machines.
 
 ## Installation
 
-Lix is installed through npm (or yarn). If you don't have one of these installed, you can find out [how to install NodeJS and NPM here](https://nodejs.org/en/download/).
+lix is installed through npm (or yarn). If you don't have one of these installed, you can find out [how to install NodeJS and NPM here](https://nodejs.org/en/download/).
 
-To install Lix (as well as Haxe Shim and SwitchX):
+To install lix:
 
-    npm install --global haxeshim switchx lix.pm
+    npm install --global lix
 
-After this you will have the commands "haxe" "switchx" and "lix" available.
+After this you will have the commands `lix`, `haxe`, `haxelib` and `neko` available.
 
-For each project you want to use Lix for, you should create a "scope":
+For each project you want to use lix for, you should create a "scope":
 
-    switchx scope create
-    switchx use stable
+    lix scope create
+    lix use stable
 
-This will create a ".haxerc" file saying we should use the current stable Haxe version for this project. It will also tell Haxe Shim that this project should expect to find information about haxelibs in the "haxe_libraries" folder.
+This will create a ".haxerc" in the cwd, saying we should use the current stable Haxe version for this project. It will also tell Haxe Shim that this project should expect to find information about haxelibs in the "haxe_libraries" folder.
 
 ## Usage
 
@@ -73,9 +66,9 @@ This will create a ".haxerc" file saying we should use the current stable Haxe v
 
     lix download
 
-This will make sure all dependencies are installed and on the right versions.
+This will make sure all dependencies are installed and on the right versions. It will also fetch neko and the project specific haxe version.
 
-You should use this after using 'git clone', 'git pull', 'git checkout' and similar commands.
+You should use this after using `git clone`, `git pull`, `git checkout` and similar commands.
 
 ### Adding a new dependency
 
@@ -96,20 +89,20 @@ Note that for github and gitlab you can specify credentials using the `--gh-cred
 You can always download a library under a different name and version, example:
 
 ```
-lix install gh:lix-pm/lix as othername#1.2.3
+lix install haxelib:tink_core as othername#1.2.3
 ```
 
-You will find the following `othername.hxml` in your `haxe_libraries`:
+You will find something like the following `othername.hxml` in your `haxe_libraries`:
 
 ```
-# @install: lix --silent download "https://github.com/lix-pm/lix/archive/542deeb721697ffe0c20ffa8ee457521ed146f6c.tar.gz" into lix.pm/0.9.4/github/542deeb721697ffe0c20ffa8ee457521ed146f6c
+# @install: lix --silent download "haxelib:tink_core#1.16.1" into tink_core/1.16.1/haxelib
 -D othername=1.2.3
--cp ${HAXESHIM_LIBCACHE}/lix.pm/0.9.4/github/542deeb721697ffe0c20ffa8ee457521ed146f6c/src
+-cp ${HAXESHIM_LIBCACHE}/tink_core/1.16.1/haxelib/src
 ```
 
 ### Hxml files
 
-Once you've installed a dependency with Lix and it exists in your `haxe_libraries` folder, you can add it to your haxe build (hxml file) with:
+Once you've installed a dependency with lix and it exists in your `haxe_libraries` folder, you can add it to your haxe build (hxml file) with:
 
     -lib mylibrary
 
@@ -117,9 +110,9 @@ where "mylibrary" has a valid file in `haxe_libraries/mylibrary.hxml`.
 
 It's worth noting that we don't include the haxelib version in the hxml anymore, so doing this:
 
-    -lib mylibrary 1.0.0
+    -lib mylibrary:1.0.0
 
-is no longer useful. Lix controls the version installed, and any version mentioned in a `-lib` argument is ignored.
+is no longer accepted.
 
 ### Version control
 
@@ -127,7 +120,7 @@ We recommend you add the entire `haxe_libraries` folder to your version control.
 
     git add haxe_libraries
 
-Then every time you change a dependency with Lix, you should commit those changes to git.
+Then every time you change a dependency with lix, you should commit those changes to git.
 
 Every time you switch branches, pull, merge, or clone a new repo, if the files in "haxe_libraries" have changed, you should re-run:
 
@@ -139,7 +132,7 @@ Every time you switch branches, pull, merge, or clone a new repo, if the files i
 
 If you develop your own haxelibs, you might be used to using `haxelib dev` to tell haxelib to use a local folder rather than a downloaded library while you develop your library, so that changes you make in the local folder are always used in the next build.
 
-With Lix, there is no command to do this, you just edit the relevant hxml file.
+With lix, there is no command to do this, you just edit the relevant hxml file.
 
 For example, change `haxe_libraries/tink_core.hxml` from:
 
@@ -153,7 +146,7 @@ to:
     -D tink_core=1.15.0
     -cp /home/jason/workspace/tink_core/src/
 
-When you do this, it will show up as a modified file in Git. You should avoid commiting this change, as it won't work for anyone else who wants to use your project but doesn't have the exact same project in the exact same location.
+When you do this, it will show up as a modified file in git. You should avoid commiting this change, as it won't work for anyone else who wants to use your project but doesn't have the exact same project in the exact same location.
 
 Instead, once you've finished the work on your dependency, (even if it's a work in progress), push your changes to Github, and then use that:
 
@@ -163,7 +156,7 @@ This way if anyone else wants to use your work-in-progress, they'll be able to.
 
 ## Concepts
 
-Lix was designed based on a few key concepts that we believe have helped package managers for other languages be successful. Understanding these concepts can help you understand the way Lix works.
+lix was designed based on a few key concepts that we believe have helped package managers for other languages be successful. Understanding these concepts can help you understand the way lix works.
 
 - **Every haxe dependency is easy to find, look in `haxe_libraries/${libName}.hxml`.**
 
@@ -171,19 +164,21 @@ Lix was designed based on a few key concepts that we believe have helped package
 
     In Haxe, this was hard because the Haxe compiler didn't know how to find the dependencies, it ran haxelib to find out where they are. Breaking this apart is one of the things Haxe Shim does, by intercepting any "-lib" arguments and replacing them with "-cp" arguments based on a simple standard.
 
-    What's the standard Haxe Shim expects (and that Lix provides)?
+    What's the standard Haxe Shim expects (and that lix provides)?
 
     There is a "haxe_libraries" folder, and inside it is one hxml file for each dependency. When haxe wants to use "tink_core", it looks for "haxe_libraries/tink_core.hxml", and then uses all of the arguments, class paths and defines from that hxml file in the haxe build.
 
 - **You can run one command, `lix download` to get all of your dependencies installed after cloning, pulling or checking out a branch.**
 
-    The hxml files Lix generates have information about how to install the dependency - from haxelib, GitHub, GitLab, or Http. This allows it to rebuild the exact same environment it is expecting, whether you are switching branches, revisiting old code or cloning a repo for the first time.
+    The hxml files lix generates have information about how to install the dependency - from haxelib, GitHub, GitLab, or Http. This allows it to rebuild the exact same environment it is expecting, whether you are switching branches, revisiting old code or cloning a repo for the first time.
 
     Just run `lix download` and your dependencies will be perfectly in sync.
 
+    On top of downloading the necessary libraries, lix will also download the right Haxe version and make sure neko is available too.
+
 - **Your entire `haxe_libraries` folder should be tracked in version control.**
 
-    NPM and Yarn have a package.json file. Yarn has a yarn.lock file. Hmm has a "hmm.json" file. With Lix, you just commit the whole "haxe_libraries" folder to version control, making it easy to track any changes to dependency versions.
+    NPM and Yarn have a package.json file. Yarn has a yarn.lock file. Hmm has a "hmm.json" file. With lix, you just commit the whole "haxe_libraries" folder to version control, making it easy to track any changes to dependency versions.
 
     This means whenever you switch branches, pull an update or merge changes it is easy to get the exact dependencies in sync.
 
@@ -191,11 +186,11 @@ Lix was designed based on a few key concepts that we believe have helped package
 
 - **Dependency versions should be scoped to each project, rather than global.**
 
-    Haxelib eventually supported this with `haxelib --newrepo` and a hidden `.haxelib/` folder.
+    Haxelib eventually supported this with `haxelib newrepo` and a hidden `.haxelib/` folder.
 
-    With Lix and Haxe Shim, we look for the `haxe_libraries/` folder in the same place as the `.haxerc` file.
+    With lix and Haxe Shim, we look for the `haxe_libraries/` folder in the same place as the `.haxerc` file.
 
-    This is why you call `switchx scope create` when you introduce Lix to your project - it creates the `.haxerc` file that tells Haxe Shim to look here for the `haxe_libraries/` folder.
+    This is why you call `lix scope create` when you introduce lix to your project - it creates the `.haxerc` file that tells Haxe Shim to look here for the `haxe_libraries/` folder.
 
 ## FAQ
 
@@ -205,53 +200,51 @@ Haxelib was built many years ago, before npm even existed. It was great at first
 
 - The only thing tracked in version control is your hxml files, which works when you install libraries directly from Haxelib, but is very hard to manage when installing dependencies from GitHub etc.
     - This made it difficult to use when you had to use unreleased versions of a library, or a fork of a library.
-    - This also failed to track the exact versions of dependencies, meaning even if the right version of "tink_macros" was installed, the wrong version of "tink_core" might be installed, etc.
+    - This also failed to track the exact versions of dependencies, meaning even if the right version of `tink_macro` was installed, the wrong version of `tink_core` might be installed, etc.
 - The way haxe and haxelib are tightly coupled makes it difficult to maintain, so development has really stalled for several years. (Haxe Shim breaks this dependency by instead using a standardised way to locate information about dependencies, making it much easier to build a tool like lix.)
-- Juraj, who started Lix, was actually the main maintainer of Haxelib for about two years, and resolved that replacing it was a more effective plan than trying to improve it.
+- Juraj, who started lix, was actually the main maintainer of Haxelib for about two years, and resolved that replacing it was a more effective plan than trying to improve it.
 
 ### How does this compare to hmm?
 
 Hmm is another tool that aims to improve package management for haxe projects. It does this by storing version information and installation instructions in "hmm.json", allowing you to restore state based on those instructions.
 
-It's a big step forward from Haxelib, but we think Lix is a step forward again.
+It's a big step forward from Haxelib, but we think lix is a step forward again.
 
 Reasons you might prefer hmm:
 
 - you do not want to install NodeJS or NPM.
 - you do not want to use Haxe Shim, you'd prefer to use normal Haxe and normal Haxelib.
-- ... possibly something to do with hxcpp?
 
-Reasons you might prefer Lix:
+Reasons you might prefer lix:
 
 - Hmm install tracks the dependencies you installed directly, but it doesn't track the sub dependencies, so it's possible when you restore a project the sub-dependency versions might change. In this way builds aren't reproducible and your project might still be subject to "software erosion"
-- Hmm still uses Haxelib to run the installs, and Lix is much faster than Haxelib.
+- Hmm still uses Haxelib to run the installs, and lix is much faster than Haxelib.
 
 ### Is this similar to npm / yarn / cargo / $packageManager?
 
-Lix has taken inspiration from each of these package managers, and tries to learn lessons from each. It is not exactly the same in its implementation as any other package manager.
+lix has taken inspiration from each of these package managers, and tries to learn lessons from each. It is not exactly the same in its implementation as any other package manager.
 
-For example, like "npm" Lix will know how to install dependencies from GitHub, which is great for using unreleased development versions.
+For example, like npm lix will know how to install dependencies from GitHub, which is great for using unreleased development versions.
 
-Like "yarn", Lix will cache the exact versions installed, including the exact versions of all dependencies, the exact commit SHAs for any dependencies loaded from Github, and more, meaning you have a reproducible build.
+Like yarn, lix will cache the exact versions installed, including the exact versions of all dependencies, the exact commit SHAs for any dependencies loaded from Github, and more, meaning you have a reproducible build.
 
-Unlike either, Lix does not make a local copy of each library inside a folder in your project, preferring instead to keep the source code in a global folder, to save install time and disk space.
+Unlike either, lix does not make a local copy of each library inside a folder in your project, preferring instead to keep the source code in a global folder, to save install time and disk space.
 
 ### Can I use these tools without installing them globally?
 
 Yes. When you install just skip the "-g" option:
 
-    npm install haxeshim switchx lix.pm
+    npm install haxeshim lix --save
 
 And then you can run each of them with:
 
     npm run haxe
-    npm run switchx
     npm run lix
 
 Note: if you're using NodeJS and package.json in your project, it might be worth adding this to your package.json:
 
     "scripts": {
-        "postinstall": "npm run lix install"
+        "postinstall": "npm run lix download"
     }
 
 This will make sure lix installs its packages every time npm or yarn installs their packages.
