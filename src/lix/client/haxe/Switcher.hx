@@ -12,11 +12,13 @@ class Switcher {
   
   public var scope(default, null):haxeshim.Scope;
   public var silent(default, null):Bool;
+  public var log(default, null):String->Void;
   var downloads:String;
     
-  public function new(scope, silent) {
+  public function new(scope, silent, log) {
     this.scope = scope;
     this.silent = silent;
+    this.log = log;
     
     Fs.ensureDir(scope.versionDir.addTrailingSlash());
     Fs.ensureDir(scope.haxelibRepo.addTrailingSlash());
@@ -216,6 +218,37 @@ class Switcher {
       root.delete();
   }
       
+  public function install(version:String, options:{ force: Bool }) 
+    return resolveAndDownload(version, options).next(switchTo);
+  
+  public function resolveAndDownload(version:String, options:{ force: Bool }) {
+    return (switch ((version : UserVersion) : UserVersionData) {
+      case UNightly(_) | UOfficial(_): 
+        resolveInstalled(version);
+      default: 
+        Promise.lift(new Error('$version needs to be resolved online'));
+    }).tryRecover(function (_) {
+      log('Looking up Haxe version "$version" online');
+      return resolveOnline(version).next(function (r) {
+        log('  Resolved to $r. Downloading ...');
+        return r;
+      });
+    }).next(function (r) {
+      return download(r, options).next(function (wasDownloaded) {
+        
+        log(
+          if (!wasDownloaded)
+            '  ... already downloaded!'
+          else
+            '  ... download complete!'
+        );
+        
+        return r;
+      });
+    });
+  }    
+  
+
   public function download(version:ResolvedVersion, options:{ force: Bool }):Promise<Bool> {
     
     inline function download(url, into)

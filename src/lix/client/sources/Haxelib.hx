@@ -47,7 +47,7 @@ class Haxelib {
       repo.getLatestVersion(name, function (s) cb(Success(s)));
     });
 
-  static public function installDependencies(haxelibs:haxe.DynamicAccess<String>, client:Client, skip:String->Bool) {
+  static public function installDependencies(haxelibs:haxe.DynamicAccess<String>, libs:Libraries, skip:String->Bool) {
     
     var ret:Array<Promise<Noise>> = [
       for (name in haxelibs.keys()) Future.async(function (cb) {
@@ -56,15 +56,15 @@ class Haxelib {
           return;
         }
         var version:Url = haxelibs[name];
-        client.log('Installing dependency $name');
+        libs.log('Installing dependency $name');
         (switch version.scheme {
           case null:
-            client.installArchive(Haxelib.getArchive(name, switch version.payload {
+            libs.installArchive(Haxelib.getArchive(name, switch version.payload {
               case '' | '*': null;
               case v: v;
             }), true);
           case v:
-            client.installUrl(version, { name: Some(name), version: None });
+            libs.installUrl(version, { name: Some(name), version: None });
         }).handle(function (o) cb(switch o {
           case Failure(e):
             Failure(Error.withData(e.code, '$name: ${e.message}', e.data));

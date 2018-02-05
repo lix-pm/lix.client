@@ -35,8 +35,6 @@ class Cli {
       "+coco install github:MVCoconut/coconut.${0}",
       "+lib install haxelib:${0}",
     ]);
-
-    var switchxApi = new switchx.Switchx(scope, silent);
     
     var github = new GitHub(switch args.indexOf('--gh-credentials') {
       case -1:
@@ -63,23 +61,20 @@ class Cli {
           v.processUrl(url);
       }
     
-    var client = new Client(
+    var log = if (silent) function (_) {} else Sys.println;
+
+    var hx = new lix.client.haxe.Switcher(scope, silent, log);    
+    var libs = new Libraries(
       scope, 
       resolve, 
       function (_) return new Error(NotImplemented, "not implemented"), 
-      if (silent) function (_) {} else Sys.println,
+      log,
       force,
       silent
     );
 
-    var switchxCli = new switchx.Cli(switchxApi, force); 
-    var switchxCommands = switchxCli.makeCommands();
-    
-    function fromSwitchx(name:String) {
-      for (cmd in switchxCommands)
-        if (cmd.name == name) return cmd;
-      throw 'assert';
-    }
+    // var switchxCli = new switchx.Cli(switcher, force); 
+    // var switchxCommands = switchxCli.makeCommands();
 
     Command.dispatch(args, 'lix - Libraries for haXe (v$version)', [
       new Command('install', '<url> [as <lib[#ver]>]', 'install lib from specified url',
@@ -90,26 +85,26 @@ class Cli {
             else
               switch args {
                 case ['haxe', version]:
-                  switchxCli.download(version).next(switchxCli.switchTo);
+                  hx.install(version, { force: force });
                 case [url, 'as', alias]: 
-                  client.installUrl(url, LibVersion.parse(alias));
+                  libs.installUrl(url, LibVersion.parse(alias));
                 case [library, constraint]:
-                  Promise.lift(Constraint.parse(constraint)).next(client.install.bind(library, _));
+                  Promise.lift(Constraint.parse(constraint)).next(libs.install.bind(library, _));
                 case [library] if ((library:Url).scheme == null): 
-                  client.install(library);
+                  libs.install(library);
                 case [url]:
-                  client.installUrl(url);
+                  libs.installUrl(url);
                 case []: new Error('Missing url');
                 case v: new Error('too many arguments');
               }
       ),      
       new Command('install haxe', '<version>|<alias>', 'install specified haxe version', null),//this is never matched and is here purely for usage display
       new Command('use', 'haxe <alias>|<version>', 'use specified haxe version', function (args) return switch args {
-        case ['haxe', version]: switchxApi.resolveInstalled(version).next(switchxCli.switchTo);
+        case ['haxe', version]: hx.resolveInstalled(version).next(hx.switchTo);
         default: new Error('invalid arguments');
       }),
-      fromSwitchx('list').as('haxe-versions', 'lists currently downloaded haxe versions'),
-      fromSwitchx('scope'),
+      // fromSwitchx('list').as('haxe-versions', 'lists currently downloaded haxe versions'),
+      // fromSwitchx('scope'),
       new Command('download', '[<url[#lib[#ver]]>]', 'download lib from url if specified,\notherwise download missing libs', 
         function (args) return switch args {
           case [url, 'as', legacy]:
@@ -124,7 +119,7 @@ class Cli {
               new Error('`download <url> as <ver>` is no longer supported');
             else {
               Sys.println('[WARN]: Processing obsolete `download ${args.map(shorten).join(" ")}`.\n        Please reinstall library in a timely manner!\n\n');
-              client.downloadUrl(url, { into: target }).next(function (a) return {
+              libs.downloadUrl(url, { into: target }).next(function (a) return {
                 Fs.ensureDir(absTarget);
                 a.absRoot.rename(absTarget);
                 return a;
@@ -132,23 +127,23 @@ class Cli {
             }
           case [url, 'into', dir]: 
 
-            client.downloadUrl(url, { into: dir });
+            libs.downloadUrl(url, { into: dir });
 
           case [(_:Url) => url]: 
 
-            client.downloadUrl(url);
+            libs.downloadUrl(url);
 
           case []: 
 
-            @:privateAccess switchx.Cli.ensureNeko(Scope.seek()).next(
-              function (_) return
-                switchxApi.resolveOnline(scope.config.version)
-                  .next(switchxApi.download.bind(_, { force: false }))
+            // @:privateAccess switchx.Cli.ensureNeko(Scope.seek()).next(
+              // function (_) return
+                hx.resolveOnline(scope.config.version)
+                  .next(hx.download.bind(_, { force: false }))
                   .next(function (_) {
                     new HaxeCli(scope).installLibs(silent);
                     return Noise;//actually the above just exits
-                  })             
-            );
+                  })    ;         
+            // );
 
 
           case v: new Error('too many arguments');
