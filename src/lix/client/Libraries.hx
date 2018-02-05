@@ -10,7 +10,7 @@ using sys.io.File;
 
 using haxe.Json;
 
-@:tink class Client {
+@:tink class Libraries {
   
   public var scope(default, null):Scope = _;
   

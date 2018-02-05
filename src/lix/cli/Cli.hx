@@ -1,8 +1,9 @@
-package lix.client;
+package lix.cli;
 
 import lix.client.Archives;
 import lix.client.sources.*;
 import lix.api.Api;
+import lix.client.*;
 import js.Node.*;
 
 using haxe.Json;
@@ -17,11 +18,11 @@ class Cli {
     function getScope()
       return Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
     
-    (switch getScope.catchExceptions() {
-      case Failure(e):
-        switchx.Cli.ensureGlobal('lix');
-      case Success(v): Future.sync(v);
-    }).handle(dispatch.bind(_, global, args));
+    // (switch getScope.catchExceptions() {
+    //   case Failure(e):
+    //     switchx.Cli.ensureGlobal('lix');
+    //   case Success(v): Future.sync(v);
+    // }).handle(dispatch.bind(_, global, args));
   }
   
   static function dispatch(scope:Scope, global:Bool, args:Array<String>) {

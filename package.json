@@ -1,13 +1,16 @@
 {
-  "name": "lix.pm",
+  "name": "lix",
   "version": "0.14.0",
   "bin": {
-    "lix": "bin/lix.js"
+    "lix": "bin/lix.js",
+    "haxe": "bin/haxeshim.js",
+    "haxelib": "bin/haxelibshim.js",
+    "neko": "bin/nekoshim.js"
   },
   "scripts": {
     "noderify": "noderify",
     "bundle": "noderify bin/lix.js > bin/lix.bundle.js",
-    "build": "haxe lix.client.hxml && npm run bundle && mv bin/lix.bundle.js bin/lix.js"
+    "build": "haxe haxeshim.hxml && haxe lix.cli.hxml && npm run bundle && mv bin/lix.bundle.js bin/lix.js"
   },
   "description": "lix - Libraries for haXe",
   "repository": {

@@ -232,19 +232,41 @@ Unlike either, lix does not make a local copy of each library inside a folder in
 
 ### Can I use these tools without installing them globally?
 
-Yes. When you install just skip the "-g" option:
+Yes, assuming your project has a `package.json`. If not, you can create it by:
 
-    npm install haxeshim lix --save
+- `echo "{}" > package.json` (will just create an empty file)
+- `npm init` (will take you through the whole setup process)
 
-And then you can run each of them with:
+With that in place, install lix just skipping the "-g" option:
 
-    npm run haxe
-    npm run lix
+    npm install lix --save
 
-Note: if you're using NodeJS and package.json in your project, it might be worth adding this to your package.json:
+And then you can run each of the commands with:
+
+```
+npx lix
+npx haxe
+npx haxelib
+npx neko
+```
+
+Not that npx requires you to either have npm >= 5.2.0 or installing it via `npm i -g npx` (use sudo as appropriate).
+
+If you prefer yarn:
+
+    yarn add lix
+
+And then
+
+    yarn exec lix
+    yarn exec haxe
+    yarn exec haxelib
+    yarn exec neko
+
+Consider adding this to your `package.json`, for frictionless intallation:
 
     "scripts": {
-        "postinstall": "npm run lix download"
+        "postinstall": "lix download"
     }
 
 This will make sure lix installs its packages every time npm or yarn installs their packages.

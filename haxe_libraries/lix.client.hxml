@@ -1,0 +1,12 @@
+-D lix.client
+
+#-lib switchx
+-lib haxeshim
+-lib tink_semver
+-lib tink_web
+-lib tink_sql
+-lib compiletime
+-lib hxnodejs
+-lib tink_lang
+
+-cp src
