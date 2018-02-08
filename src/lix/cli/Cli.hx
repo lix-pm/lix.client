@@ -11,23 +11,16 @@ using sys.io.File;
 
 class Cli {
   
-  static function main() {
-    var args = Sys.args();
-    var global = args.remove('--global') || args.remove('-g');
-    function getScope()
-      return Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
-    
-    // (switch getScope.catchExceptions() {
-    //   case Failure(e):
-    //     switchx.Cli.ensureGlobal('lix');
-    //   case Success(v): Future.sync(v);
-    // }).handle(dispatch.bind(_, global, args));
-  }
+  static function main() 
+    HaxeCmd.ensure(dispatch.bind(Sys.args()));
   
-  static function dispatch(scope:Scope, global:Bool, args:Array<String>) {
+  static function dispatch(args:Array<String>) {
     var version = CompileTime.parseJsonFile("./package.json").version;//haxe.Json.parse(sys.io.File.getContent(js.Node.__dirname+'/../package.json')).version;
     var silent = args.remove('--silent'),
-        force = args.remove('--force');
+        force = args.remove('--force'),
+        global = args.remove('--global') || args.remove('-g');
+
+    var scope = Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
 
     args = Command.expand(args, [
       "+tink install github:haxetink/tink_${0}",

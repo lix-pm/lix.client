@@ -287,3 +287,6 @@ If you would like to know how to help, or would like to discuss a feature you're
 
 Your help will be much appreciated!
 
+# Acknowledgements
+
+Very special thanks to [Geir](https://github.com/zrrrzzt) who was kind to hand over the lix package on npm. From this point forward, that package is now available as [lix-index](https://www.npmjs.com/package/lix-index).

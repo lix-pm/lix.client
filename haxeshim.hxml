@@ -10,3 +10,6 @@
 --next
 -main lix.cli.NekoCmd 
 -js bin/nekoshim.js
+--next
+-main haxeshim.PostInstall
+-js bin/postinstall.js
