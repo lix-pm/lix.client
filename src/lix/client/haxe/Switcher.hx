@@ -287,5 +287,27 @@ class Switcher {
         });
     }  
   }
+
+  static public function ensureNeko(echo:String->Void):Promise<String> {
+
+    var neko = Neko.PATH;
+
+    return
+      if (neko.exists()) 
+        neko;
+      else {
+        
+        echo('Neko seems to be missing. Attempting download ...');
+
+        (switch Sys.systemName() {
+          case 'Windows': Download.zip.bind('https://github.com/HaxeFoundation/neko/releases/download/v2-2-0/neko-2.2.0-win.zip');
+          case 'Mac': Download.tar.bind('https://github.com/HaxeFoundation/neko/releases/download/v2-2-0/neko-2.2.0-osx64.tar.gz');
+          default: Download.tar.bind('https://github.com/HaxeFoundation/neko/releases/download/v2-2-0/neko-2.2.0-linux64.tar.gz');
+        })(1, neko).next(function (x) {
+          echo('done');
+          return x;
+        });
+      }
+  }  
   
 }

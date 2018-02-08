@@ -1,6 +1,6 @@
 {
     "version": "0.1.0",
     "command": "haxe",
-    "args": ["lix.cli.hxml", "--times"],
+    "args": ["haxeshim.hxml", "--times"],
     "problemMatcher": "$haxe"
 }

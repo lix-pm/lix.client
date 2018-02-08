@@ -1,12 +1,12 @@
--lib haxeshim
+-lib lix.client
 --macro haxeshim.Build.postprocess()
 -dce full
 --each
--main haxeshim.HaxeCli 
+-main lix.cli.HaxeCmd
 -js bin/haxeshim.js
 --next
--main haxeshim.HaxelibCli 
+-main lix.cli.HaxelibCmd
 -js bin/haxelibshim.js
 --next
--main haxeshim.NekoCli 
+-main lix.cli.NekoCmd 
 -js bin/nekoshim.js

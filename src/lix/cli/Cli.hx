@@ -8,7 +8,6 @@ import js.Node.*;
 
 using haxe.Json;
 using sys.io.File;
-using sys.FileSystem;
 
 class Cli {
   
@@ -73,9 +72,6 @@ class Cli {
       silent
     );
 
-    // var switchxCli = new switchx.Cli(switcher, force); 
-    // var switchxCommands = switchxCli.makeCommands();
-
     Command.dispatch(args, 'lix - Libraries for haXe (v$version)', [
       new Command('install', '<url> [as <lib[#ver]>]', 'install lib from specified url',
         function (args) 
@@ -103,8 +99,71 @@ class Cli {
         case ['haxe', version]: hx.resolveInstalled(version).next(hx.switchTo);
         default: new Error('invalid arguments');
       }),
-      // fromSwitchx('list').as('haxe-versions', 'lists currently downloaded haxe versions'),
-      // fromSwitchx('scope'),
+      new Command('download haxe', '<version>|<alias>', 'download specified haxe version', null),//this is never matched and is here purely for usage display
+      new Command('scope', '[create|delete]', 'creates or deletes the current scope or\ninspects it if no argument is supplied',
+        function (args) return switch args {
+          case ['create']:
+            Scope.create(scope.cwd, {
+              version: scope.config.version,
+              resolveLibs: if (scope.isGlobal) Scoped else scope.config.resolveLibs,
+            });
+            log('created scope in ${scope.cwd}');
+            Noise;
+          case ['delete']:
+            if (scope.isGlobal)
+              new Error('Cannot delete global scope');
+            else {
+              scope.delete();
+              log('deleted scope in ${scope.scopeDir}');
+              Noise;
+            }
+          case []: 
+            println(
+              (if (scope.isGlobal) '[global]'
+              else '[local]') + ' ${scope.scopeDir}'
+            );
+            Noise;
+          case v: 
+            new Error('Invalid arguments');
+        }
+      ),
+      new Command('haxe-versions', '', 'lists currently downloaded versions',
+        function (args) return switch args {
+          case []:
+            hx.officialInstalled(IncludePrereleases).next(function (o) {
+              return hx.nightliesInstalled().next(function (n) {
+                function highlight(s:String)
+                  return
+                    if (s == scope.config.version)
+                      ' -> $s';
+                    else
+                      '    $s';
+                
+                println('');
+                println('Official releases:');
+                println('');
+                
+                for (v in o) 
+                  println(highlight(v));
+                
+                if (n.iterator().hasNext()) {
+                  println('');
+                  println('Nightly builds:');
+                  println('');
+                  
+                  for (v in n) 
+                    println(highlight(v.hash) + v.published.format('  (%Y-%m-%d %H:%M)'));
+                }
+                
+                println('');
+                
+                return Noise;
+              });
+            });
+          default:
+            new Error('command `list` does expect arguments');
+        }
+      ),
       new Command('download', '[<url[#lib[#ver]]>]', 'download lib from url if specified,\notherwise download missing libs', 
         function (args) return switch args {
           case [url, 'as', legacy]:
@@ -135,16 +194,15 @@ class Cli {
 
           case []: 
 
-            // @:privateAccess switchx.Cli.ensureNeko(Scope.seek()).next(
-              // function (_) return
+            lix.client.haxe.Switcher.ensureNeko(println)
+              .next(function (_) return
                 hx.resolveOnline(scope.config.version)
                   .next(hx.download.bind(_, { force: false }))
                   .next(function (_) {
                     new HaxeCli(scope).installLibs(silent);
                     return Noise;//actually the above just exits
-                  })    ;         
-            // );
-
+                  })
+              );
 
           case v: new Error('too many arguments');
         }
