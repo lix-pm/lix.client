@@ -5,7 +5,7 @@ class Build {
     for (file in sys.FileSystem.readDirectory('bin')) {
       var file = 'bin/$file';
       var tmp = '$file.bundled';
-      Sys.command('npm run noderify $file > $tmp');
+      Sys.command('npm run --silent noderify $file > $tmp');
       sys.FileSystem.rename(tmp, file);
     }
   }
