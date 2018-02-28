@@ -159,6 +159,8 @@ class Cli {
       ),
       new Command('download', '[<url[#lib[#ver]]>]', 'download lib from url if specified,\notherwise download missing libs', 
         function (args) return switch args {
+          case ['haxe', version]:
+            hx.resolveAndDownload(version, { force: force });
           case [url, 'as', legacy]:
             var target = legacy.replace('#', '/');
             var absTarget = scope.libCache + '/$target';
