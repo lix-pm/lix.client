@@ -1,6 +1,5 @@
 package lix.cli;
 
-import js.Node.*;
 import Sys.*;
 
 using StringTools;
@@ -94,6 +93,9 @@ class Command {
     this.doc = doc;
     this.exec = exec;
   }
+
+  static public function attempt<T>(p:Promise<T>, andThen:Callback<T>)
+    p.recover(Command.reportError).handle(andThen);
 
   public function as(alias:CommandName, ?doc:String)
     return new Command(alias, args, if (doc == null) this.doc else doc, exec);

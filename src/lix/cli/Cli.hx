@@ -4,15 +4,11 @@ import lix.client.Archives;
 import lix.client.sources.*;
 import lix.api.Api;
 import lix.client.*;
-import js.Node.*;
-
-using haxe.Json;
-using sys.io.File;
 
 class Cli {
   
   static function main() 
-    HaxeCmd.ensure(dispatch.bind(Sys.args()));
+    Command.attempt(HaxeCmd.ensureScope(), dispatch.bind(Sys.args()));
   
   static function dispatch(args:Array<String>) {
     var version = CompileTime.parseJsonFile("./package.json").version;//haxe.Json.parse(sys.io.File.getContent(js.Node.__dirname+'/../package.json')).version;
