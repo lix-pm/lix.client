@@ -215,7 +215,8 @@ class Cli {
         switch args {
           case []: new Error('no path supplied');
           default: 
-            Haxelib.runLib(scope, args);
+            new haxeshim.HaxelibCli(scope).run(args.slice(1));
+            Noise;
         }
       ),             
     ], []).handle(Command.reportOutcome);

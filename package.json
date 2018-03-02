@@ -1,6 +1,6 @@
 {
   "name": "lix",
-  "version": "15.0.0-rc.5",
+  "version": "15.0.0-rc.7",
   "bin": {
     "lix": "bin/lix.js",
     "haxe": "bin/haxeshim.js",
@@ -9,7 +9,6 @@
   },
   "scripts": {
     "noderify": "noderify",
-    "prepublishOnly": "haxe --run Build",
     "build": "haxe --run Build",
     "postinstall": "node bin/postinstall.js"
   },
