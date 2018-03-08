@@ -48,11 +48,14 @@ using haxe.Json;
           }
           else {
             log('${if (exists) "forcedly redownloading" else "downloading"} ${a.normalized}');
+            var dest = scope.haxeshimRoot + '/downloads/download@' + Date.now().getTime();
             (switch a.kind {
-              case null: Download.archive;
-              case Zip: Download.zip;
-              case Tar: Download.tar;
-            })(a.url, 0, scope.haxeshimRoot + '/downloads/download@' + Date.now().getTime(), !silent)
+              case null: Download.archive(a.url, 0, dest, !silent);
+              case Zip: Download.zip(a.url, 0, dest, !silent);
+              case Tar: Download.tar(a.url, 0, dest, !silent);
+              case Custom(load): 
+                load({ dest: dest, silent: silent, source: a.normalized, scope: scope });
+            })
               .next(dir => {
                 var ret = DownloadedArchive.fresh(dir, scope.libCache, into, a);
 

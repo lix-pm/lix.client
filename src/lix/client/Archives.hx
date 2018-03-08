@@ -9,7 +9,11 @@ using haxe.Json;
 enum ArchiveKind {
   Zip;
   Tar;
+  Custom(load:CustomLoader);
 }
+
+typedef CustomLoader = CustomLoaderContext->Promise<String>;
+typedef CustomLoaderContext = { source:Url, dest:String, silent:Bool, scope:Scope };
 
 enum ArchiveDestination {
   Fixed(path:Array<String>);

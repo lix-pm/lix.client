@@ -1,11 +1,7 @@
 package lix.client;
 
 import haxe.Timer;
-import haxe.io.*;
-
 import lix.client.uncompress.*;
-import haxeshim.node.*;
-
 import js.node.Buffer;
 import js.node.Url;
 import js.node.Http;
@@ -71,7 +67,6 @@ class Download {
           zip.on("entry", function (entry) switch Fs.peel(entry.fileName, peel) {
             case None:
             case Some(f):
-              //trace([zip.entriesRead, zip.entryCount]);
               var path = '$into/$f';
               if (path.endsWith('/')) 
                 done();
@@ -167,7 +162,6 @@ class Download {
   
   static public function tar(url:String, peel:Int, into:String, ?progress:Bool):Promise<Directory>
     return download(url, withProgress(progress, untar.bind(_, into, peel)));
-
     
   static public function zip(url:String, peel:Int, into:String, ?progress:Bool):Promise<Directory>
     return download(url, withProgress(progress, unzip.bind(_, into, peel)));
