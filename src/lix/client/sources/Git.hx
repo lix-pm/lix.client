@@ -47,16 +47,16 @@ class Git {
   public function processUrl(url:Url):Promise<ArchiveJob> 
     return 
       switch url.payload {
-        // case gh if (gh.startsWith('https://github.com')):
-        //   github.processUrl(switch url.payload {
-        //     case v if (v.endsWith('.git')): v.substr(0, v.length - 4);
-        //     case v: v;
-        //   });
-        // case gl if (gl.startsWith('https://gitlab.com')):
-        //   gitlab.processUrl(switch url.payload {
-        //     case v if (v.endsWith('.git')): v.substr(0, v.length - 4);
-        //     case v: v;
-        //   });
+        case gh if (gh.startsWith('https://github.com')):
+          github.processUrl(switch url.payload {
+            case v if (v.endsWith('.git')): v.substr(0, v.length - 4);
+            case v: v;
+          });
+        case gl if (gl.startsWith('https://gitlab.com')):
+          gitlab.processUrl(switch url.payload {
+            case v if (v.endsWith('.git')): v.substr(0, v.length - 4);
+            case v: v;
+          });
         case (_:Url) => url:
           var origin = url.resolve(''),
               version = switch url.hash {
