@@ -12,7 +12,7 @@
     "build": "haxe --run Build",
     "postinstall": "node bin/postinstall.js"
   },
-  "description": "lix - Libraries for haXe",
+  "description": "lix - Libraries for Haxe",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lix-pm/lix.git"
