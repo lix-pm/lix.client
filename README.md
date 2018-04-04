@@ -38,7 +38,7 @@ You can depend on lix to manage your haxe dependencies.
 
 ## Haxe Shim
 
-Before we get started: lix is made to work on top of Haxe Shim. [You can read more about it here](https://github.com/lix-pm/haxeshim), but essetially, you can think of it just normal Haxe with a slightly tweaked cli. What it does is to replace the tight coupling in the haxe toolchain in favor of simple conventions:
+Before we get started: lix is made to work on top of Haxe Shim. [You can read more about it here](https://github.com/lix-pm/haxeshim), but essentially, you can think of it just normal Haxe with a slightly tweaked cli. What it does is to replace the tight coupling in the haxe toolchain in favor of simple conventions:
 
 - decouple the haxe command from the haxe compiler (which are right now the very same thing) and instead use project specific configuration of the Haxe version, meaning that you can seamlessly have different Haxe versions in different projects on the same machine and also ensure that the same project will use the same Haxe version across different machines
 - decouple Haxe from Haxelib (which are right now tied at the hip) and instead use project specific configuration of dependencies in a simple hxml-based format. Any tool capable of writing these hxmls can thus supply dependencies to the project. Moreover, this setup also ensures frictionless use of different dependency  versions in different projects and reliable replication of dependency versions across separate machines.
