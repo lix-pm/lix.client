@@ -44,16 +44,16 @@ class Git {
     }
   }
     
-  public function processUrl(url:Url):Promise<ArchiveJob> 
+  public function processUrl(raw:Url):Promise<ArchiveJob> 
     return 
-      switch url.payload {
+      switch raw.payload {
         case gh if (gh.startsWith('https://github.com')):
-          github.processUrl(switch url.payload {
+          github.processUrl(switch gh {
             case v if (v.endsWith('.git')): v.substr(0, v.length - 4);
             case v: v;
           });
         case gl if (gl.startsWith('https://gitlab.com')):
-          gitlab.processUrl(switch url.payload {
+          gitlab.processUrl(switch gl {
             case v if (v.endsWith('.git')): v.substr(0, v.length - 4);
             case v: v;
           });
@@ -77,8 +77,8 @@ class Git {
               Promise.lift(version);
           
           sha.next(function (sha):ArchiveJob return {
-            url: url,
-            normalized: url.resolve('#$sha'),
+            url: raw,
+            normalized: raw.scheme + ':' + url.resolve('#$sha'),
             dest: Computed(function (l) return [l.name, l.version, 'git', sha]),
             lib: { name: None, version: None },
             kind: Custom(function (ctx) return {
