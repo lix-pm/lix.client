@@ -258,10 +258,10 @@ If you prefer yarn:
 
 And then
 
-    yarn exec lix
-    yarn exec haxe
-    yarn exec haxelib
-    yarn exec neko
+    yarn lix
+    yarn haxe
+    yarn haxelib
+    yarn neko
 
 Consider adding this to your `package.json`, for frictionless intallation:
 
