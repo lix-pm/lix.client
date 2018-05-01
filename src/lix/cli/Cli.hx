@@ -23,20 +23,15 @@ class Cli {
       "+coco install github:MVCoconut/coconut.${0}",
       "+lib install haxelib:${0}",
     ]);
+
+    function grab(name:String)
+      return switch args.indexOf(name) {
+        case -1: null;
+        case v: args.splice(v, 2)[1];
+      }
     
-    var github = new GitHub(switch args.indexOf('--gh-credentials') {
-      case -1:
-        null;
-      case v:
-        args.splice(v, 2)[1];
-    });
-    
-    var gitlab = new GitLab(switch args.indexOf('--gl-private-token') {
-      case -1:
-        null;
-      case v:
-        args.splice(v, 2)[1];
-    });
+    var github = new GitHub(grab('--gh-credentials')),
+        gitlab = new GitLab(grab('--gl-private-token'));
     
     var sources:Array<ArchiveSource> = [Web, Haxelib, github, gitlab, new Git(github, gitlab, scope)];
     var resolvers:Map<String, ArchiveSource> = [for (s in sources) for (scheme in s.schemes()) scheme => s];
@@ -108,8 +103,7 @@ class Cli {
             }
           case []: 
             println(
-              (if (scope.isGlobal) '[global]'
-              else '[local]') + ' ${scope.scopeDir}'
+              (if (scope.isGlobal) '[global]' else '[local]') + ' ${scope.scopeDir}'
             );
             Noise;
           case v: 
