@@ -182,7 +182,7 @@ class DownloadedArchive {
       }
       else {        
         {
-          name: lib.name.orNull(),
+          name: lib.name.or('untitled'),
           version: lib.version.or('0.0.0'),
           classPath: guessClassPath(),
         }
