@@ -194,11 +194,14 @@ class Download {
           process.stdout.write(s);
         }
 
-        function pct(f:Float)
+        function pct(f:Float) {
+          if (!(f <= 1.0))
+            f = 1;
           return (switch Std.string(Math.round(1000 * f) / 10) {
             case whole = _.indexOf('.') => -1: '$whole.0';
             case v: v;
           }).lpad(' ', 5) + '%';
+        }
 
         var lastUpdate = Date.fromTime(0).getTime();
 
