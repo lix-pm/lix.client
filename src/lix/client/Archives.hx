@@ -34,7 +34,7 @@ typedef ArchiveJob = {
   public var name(default, null):String;
   public var version(default, null):String;
   public var classPath(default, null):String;
-  @:optional public var runAs(default, null):String;
+  public var runAs(default, null):{ libRoot: String }->Option<String>;
   @:optional public var postDownload(default, null):String;
   @:optional public var postInstall(default, null):String;
 }
@@ -165,9 +165,12 @@ class DownloadedArchive {
             case null: '';
             case v: v;
           },
-          runAs: 
-            if (files.indexOf('run.n') != -1 || info.mainClass != null) 'haxelib run-dir ${info.name} $${DOWNLOAD_LOCATION}'
-            else null,
+          runAs: function (ctx) return 
+            if ('${ctx.libRoot}/run.n'.exists() || info.mainClass != null)
+              Some('haxelib run-dir ${info.name} $${DOWNLOAD_LOCATION}');
+            else 
+              None
+          ,
           postInstall: info.postInstall,
           postDownload: info.postDownload,
         }
@@ -178,6 +181,7 @@ class DownloadedArchive {
           name: info.name,
           version: info.version,
           classPath: guessClassPath(),
+          runAs: function (_) return None,
         }
       }
       else {        
@@ -185,6 +189,7 @@ class DownloadedArchive {
           name: lib.name.or('untitled'),
           version: lib.version.or('0.0.0'),
           classPath: guessClassPath(),
+          runAs: function (_) return None,
         }
       }
   }    

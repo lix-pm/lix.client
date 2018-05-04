@@ -54,7 +54,7 @@ class GitLab {
   public function processUrl(url:Url):Promise<ArchiveJob> 
     return switch url.path {
       case null: new Error('invalid gitlab url $url');
-      case _.parts() => [owner, project]: getArchive(owner, project, url.hash, { host: url.host });
+      case _.parts().toStringArray() => [owner, project]: getArchive(owner, project, url.hash, { host: url.host });
       default: new Error('invalid gitlab url $url');
     }
 }

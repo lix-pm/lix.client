@@ -30,8 +30,12 @@ class Cli {
         case v: args.splice(v, 2)[1];
       }
     
-    var github = new GitHub(grab('--gh-credentials')),
-        gitlab = new GitLab(grab('--gl-private-token'));
+    var gitlab = new GitLab(grab('--gl-private-token')),
+        github = new GitHub(switch grab('--gh-credentials') {
+          case null: null;
+          case _.split(':') => [user, tk]: new tink.url.Auth(user, tk);
+          case v: Exec.die(422, '`--gh-credentials $v` should be `--gh-credentials <user>:<token>`');
+        });
     
     var sources:Array<ArchiveSource> = [Web, Haxelib, github, gitlab, new Git(github, gitlab, scope)];
     var resolvers:Map<String, ArchiveSource> = [for (s in sources) for (scheme in s.schemes()) scheme => s];

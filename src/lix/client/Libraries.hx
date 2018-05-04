@@ -4,6 +4,7 @@ import lix.client.sources.*;
 import haxe.DynamicAccess;
 import lix.client.Archives;
 import lix.api.Api;
+import haxeshim.Scope.*;
 
 using sys.FileSystem;
 using sys.io.File;
@@ -117,39 +118,32 @@ using haxe.Json;
           default: [];
         }
 
+      var DOWNLOAD_LOCATION = '$${$LIBCACHE}/${a.relRoot}';
+
       function interpolate(s:String)
         return Resolver.interpolate(s, switch _ {
-          case 'DOWNLOAD_LOCATION': '$${HAXESHIM_LIBCACHE}/${a.relRoot}';
+          case 'DOWNLOAD_LOCATION': DOWNLOAD_LOCATION;
           default: null;  
         });
 
-      var lines = [];
-
-      switch infos.runAs {
-        case null:
-        case v: lines.push('# @run: ${interpolate(v)}');
-      }
-
-      switch infos.postDownload {
-        case null:
-        case v: lines.push('# @post-install: ${interpolate(v)}');
-      }
-
-      hxml.saveContent(lines.concat([
-        '# @install: lix --silent download "${a.job.normalized}" into ${a.relRoot}',
-        '-D $name=$version',
-        '-cp $${HAXESHIM_LIBCACHE}/${a.relRoot}/${infos.classPath}',
-        extra,
-      ]).concat(deps).join('\n'));
       
-      function exec(hook:String, cmd:Null<String>):Promise<Noise>
+      function exec(hook:String, cmd:Null<String>, ?cwd:String):Promise<Noise>
         return 
           if (cmd != null) {
+            
             cmd = scope.interpolate(interpolate(cmd));//TODO: this is a mess
-            log('Processing $hook hook:');
+
+            if (cwd == null)
+              cwd = scope.cwd;
+
+            log('Running $hook hook:');
             log('> $cmd');
-            Exec.shell(cmd, scope.cwd, scope.haxeInstallation.env())
-              .map(_ => Noise);
+
+            Exec.shell(
+              cmd, 
+              scope.interpolate(cwd), 
+              scope.haxeInstallation.env()
+            ).map(_ => Noise);
           }
           else
             Noise;
@@ -161,9 +155,30 @@ using haxe.Json;
             Haxelib.installDependencies(haxelibs, this, function (s) return '${scope.scopeLibDir}/$s.hxml'.exists());
         }
       ).next(_ => 
-        if (!a.alreadyDownloaded) exec('post download', infos.postDownload)
+        if (!a.alreadyDownloaded) exec('post download', infos.postDownload, DOWNLOAD_LOCATION)
         else Noise
-      ).next(_ => exec('post install', infos.postInstall));
+      ).next(_ => {
+        var lines = [];
+
+        switch infos.runAs({ libRoot: scope.interpolate(DOWNLOAD_LOCATION) }) {
+          case None:
+          case Some(v): lines.push('# @run: ${interpolate(v)}');
+        }
+
+        switch infos.postDownload {
+          case null:
+          case v: lines.push('# @$POST_INSTALL: cd $DOWNLOAD_LOCATION && ${interpolate(v)}');
+        }
+
+        hxml.saveContent(lines.concat([
+          '# @$INSTALL: lix --silent download "${a.job.normalized}" into ${a.relRoot}',
+          '-D $name=$version',
+          '-cp $DOWNLOAD_LOCATION/${infos.classPath}',
+          extra,
+        ]).concat(deps).join('\n'));   
+
+        Noise;
+      }).next(_ => exec('post install', infos.postInstall));
     });
   
 }

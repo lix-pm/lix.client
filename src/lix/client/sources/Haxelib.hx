@@ -10,7 +10,7 @@ class Haxelib {
   static public function processUrl(url:Url):Promise<ArchiveJob> 
     return switch url.path {
       case null: new Error('invalid haxelib url $url');
-      case _.parts() => [v]: getArchive(v, url.hash, { host: url.host });
+      case _.parts().toStringArray() => [v]: getArchive(v, url.hash, { host: url.host });
       default: new Error('invalid haxelib url $url');
     }
   
