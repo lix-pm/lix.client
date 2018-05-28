@@ -77,9 +77,9 @@ You should use this after using `git clone`, `git pull`, `git checkout` and simi
 The schemes you can use include haxelib, github, gitlab, and http/https:
 
 - `haxelib:<name>[#<version>]` - will get the library from haxelib, either the specific version or the latest
-- `github:<owner>/<repo>[#<brach|tag|sha>]` - will get the library from GitHub, either master or a specific branch/tag/commit.
+- `github:<owner>/<repo>[#<branch|tag|sha>]` - will get the library from GitHub, either master or a specific branch/tag/commit.
 - `gh:...` an alias for `github`
-- `gitlab:<owner>/<repo>[#<brach|tag|sha>]` - will get the library from GitLab
+- `gitlab:<owner>/<repo>[#<branch|tag|sha>]` - will get the library from GitLab
 - `http:<url>` or `https:<url>` - will get the library from an arbitrary URL, pointing to a haxelib zip file... you MUST BE reasonably sure that the targeted resource NEVER changes. (For example, if the filename is "mylib-latest.zip", it will probably change. If it is "mylib-v1.0.0.zip", it is reasonably likely to not change).
 
 Note that for github and gitlab you can specify credentials using the `--gh-credentials` and `--gl-private-token` parameters respectively. Be warned though that these credentials are then baked into the hxmls as well. Be very careful about using this option.
@@ -258,10 +258,10 @@ If you prefer yarn:
 
 And then
 
-    yarn exec lix
-    yarn exec haxe
-    yarn exec haxelib
-    yarn exec neko
+    yarn lix
+    yarn haxe
+    yarn haxelib
+    yarn neko
 
 Consider adding this to your `package.json`, for frictionless intallation:
 
