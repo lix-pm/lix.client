@@ -35,6 +35,7 @@ typedef ArchiveJob = {
   public var version(default, null):String;
   public var classPath(default, null):String;
   public var runAs(default, null):{ libRoot: String }->Option<String>;
+  public var dependencies(default, null):Array<Named<Url>>;
   @:optional public var postDownload(default, null):String;
   @:optional public var postInstall(default, null):String;
 }
@@ -152,6 +153,7 @@ class DownloadedArchive {
         var info:{ 
           name: String, 
           version:String, 
+          ?dependencies:haxe.DynamicAccess<String>,
           ?classPath:String, 
           ?mainClass:String,
           ?postInstall: String, 
@@ -171,6 +173,17 @@ class DownloadedArchive {
             else 
               None
           ,
+          dependencies: switch info.dependencies {
+            case null: [];
+            case deps: 
+              [for (name in deps.keys()) 
+                new Named<Url>(name, switch deps[name] {
+                  case '' | '*': 'haxelib:$name';
+                  case version = (_:Url).scheme => null: 'haxelib:$name#$version';
+                  case u: u;
+                })
+              ]; 
+          },
           postInstall: info.postInstall,
           postDownload: info.postDownload,
         }
@@ -182,6 +195,7 @@ class DownloadedArchive {
           version: info.version,
           classPath: guessClassPath(),
           runAs: function (_) return None,
+          dependencies: [],
         }
       }
       else {        
@@ -190,6 +204,7 @@ class DownloadedArchive {
           version: lib.version.or('0.0.0'),
           classPath: guessClassPath(),
           runAs: function (_) return None,
+          dependencies: [],
         }
       }
   }    

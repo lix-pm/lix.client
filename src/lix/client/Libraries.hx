@@ -107,16 +107,6 @@ using haxe.Json;
       Fs.ensureDir(hxml);
 
       log('mounting as $name#$version');  
-      
-      var haxelibs:DynamicAccess<String> = null;
-
-      var deps = 
-        switch '${a.absRoot}/haxelib.json' {
-          case found if (found.exists()):
-            haxelibs = found.getContent().parse().dependencies;
-            [for (name in haxelibs.keys()) '-lib $name'];
-          default: [];
-        }
 
       var DOWNLOAD_LOCATION = '$${$LIBCACHE}/${a.relRoot}';
 
@@ -148,37 +138,57 @@ using haxe.Json;
           else
             Noise;
 
-      return Promise.lift(
-        switch haxelibs {
-          case null: Noise;
-          default:
-            Haxelib.installDependencies(haxelibs, this, function (s) return '${scope.scopeLibDir}/$s.hxml'.exists());
-        }
-      ).next(_ => 
-        if (!a.alreadyDownloaded) exec('post download', infos.postDownload, DOWNLOAD_LOCATION)
-        else Noise
-      ).next(_ => {
-        var lines = [];
+      function saveHxml<T>(?value:T):Promise<T> 
+        return (function () {
+          var directives = [
+            '-D $name=$version',
+            '# @$INSTALL: lix --silent download "${a.job.normalized}" into ${a.relRoot}',            
+          ];
 
-        switch infos.runAs({ libRoot: scope.interpolate(DOWNLOAD_LOCATION) }) {
-          case None:
-          case Some(v): lines.push('# @run: ${interpolate(v)}');
-        }
+          switch infos.postDownload {
+            case null:
+            case v: directives.push('# @$POST_INSTALL: cd $DOWNLOAD_LOCATION && ${interpolate(v)}');
+          }
 
-        switch infos.postDownload {
-          case null:
-          case v: lines.push('# @$POST_INSTALL: cd $DOWNLOAD_LOCATION && ${interpolate(v)}');
-        }
+          switch infos.runAs({ libRoot: scope.interpolate(DOWNLOAD_LOCATION) }) {
+            case None:
+            case Some(v): directives.push('# @run: ${interpolate(v)}');
+          }
 
-        hxml.saveContent(lines.concat([
-          '# @$INSTALL: lix --silent download "${a.job.normalized}" into ${a.relRoot}',
-          '-D $name=$version',
-          '-cp $DOWNLOAD_LOCATION/${infos.classPath}',
-          extra,
-        ]).concat(deps).join('\n'));   
+          hxml.saveContent(
+            directives
+              .concat([for (lib in infos.dependencies) '-lib ${lib.name}'])
+              .concat([
+                '-cp $DOWNLOAD_LOCATION/${infos.classPath}',
+                extra,
+              ]).join('\n')
+          );
 
-        Noise;
-      }).next(_ => exec('post install', infos.postInstall));
-    });
-  
+          return value;
+        }).catchExceptions();
+
+      saveHxml();
+
+      return 
+        Future.ofMany(//TODO: this relies on the implementation being sequential (which it currently is, but that may change)
+          [for ({ name: lib, value: url } in infos.dependencies) 
+            Future.async(
+              function (done) 
+                if ('${scope.scopeLibDir}/$lib.hxml'.exists()) //TODO: this should be in some function
+                  done(Success(Noise))
+                else
+                  installUrl(url, { name: Some(lib), version: None }).handle(done),
+              true
+            )
+          ]
+        )
+        .next(results => switch [for (Failure(e) in results) e] {
+          case []: Noise;
+          case errors: Error.withData('Failed to install dependencies:\n  ' + errors.map(e => e.message).join('\n  '), errors);
+        })
+        .next(_ => 
+          if (!a.alreadyDownloaded) exec('post download', infos.postDownload, DOWNLOAD_LOCATION)
+          else Noise
+        ).next(saveHxml).next(_ => exec('post install', infos.postInstall));
+    });  
 }

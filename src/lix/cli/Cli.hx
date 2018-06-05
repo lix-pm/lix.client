@@ -36,8 +36,10 @@ class Cli {
           case _.split(':') => [user, tk]: new tink.url.Auth(user, tk);
           case v: Exec.die(422, '`--gh-credentials $v` should be `--gh-credentials <user>:<token>`');
         });
+
+    var haxelibUrl = new tink.url.Host(grab('--haxelib-url'));
     
-    var sources:Array<ArchiveSource> = [Web, Haxelib, github, gitlab, new Git(github, gitlab, scope)];
+    var sources:Array<ArchiveSource> = [Web, new Haxelib(haxelibUrl), github, gitlab, new Git(github, gitlab, scope)];
     var resolvers:Map<String, ArchiveSource> = [for (s in sources) for (scheme in s.schemes()) scheme => s];
 
     function resolve(url:Url):Promise<ArchiveJob>

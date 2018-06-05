@@ -76,10 +76,10 @@ You should use this after using `git clone`, `git pull`, `git checkout` and simi
 
 The schemes you can use include haxelib, github, gitlab, and http/https:
 
-- `haxelib:<name>[#<version>]` - will get the library from haxelib, either the specific version or the latest
+- `haxelib:<name>[#<version>]` - will get the library from haxelib, either the specific version or the latest. Use `--haxelib-url <url>` (either an https or http url) to use a different server consistently. You may also use `haxelib://custom.server[:<port>]/<name>[#<version>]`, but in that case further dependencies will again be resolved against the official haxelib. If you leave the port unspecified, https assumed, otherwise http.
 - `github:<owner>/<repo>[#<branch|tag|sha>]` - will get the library from GitHub, either master or a specific branch/tag/commit.
 - `gh:...` an alias for `github`
-- `gitlab:<owner>/<repo>[#<branch|tag|sha>]` - will get the library from GitLab
+- `gitlab:<owner>/<repo>[#<branch|tag|sha>]` - will get the library from GitLab. Use `gitlab://custom.server/<owner>/<repo>[#<branch|tag|sha>]` to get it from a server of your choice.
 - `http:<url>` or `https:<url>` - will get the library from an arbitrary URL, pointing to a haxelib zip file... you MUST BE reasonably sure that the targeted resource NEVER changes. (For example, if the filename is "mylib-latest.zip", it will probably change. If it is "mylib-v1.0.0.zip", it is reasonably likely to not change).
 
 Note that for github and gitlab you can specify credentials using the `--gh-credentials` and `--gl-private-token` parameters respectively. Be warned though that these credentials are then baked into the hxmls as well. Be very careful about using this option.
