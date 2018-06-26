@@ -25,12 +25,20 @@ private class Proxy extends haxe.remoting.AsyncProxy<lix.client.sources.haxelib.
     return ['haxelib'];
 
   public function processUrl(url:Url):Promise<ArchiveJob> 
-    return switch url.path {
-      case null: new Error('invalid haxelib url $url');
-      case _.parts().toStringArray() => [v]: getArchive(v, url.hash, { host: url.host });
-      default: new Error('invalid haxelib url $url');
-    }
+    return 
+      switch url.query.toMap()['url'].toString() {
+        case _ == null || _ == baseURL => true:
+          switch url.path {
+            case null: new Error('invalid haxelib url $url');
+            case _.parts().toStringArray() => [v]: getArchive(v, url.hash, { host: url.host });
+            default: new Error('invalid haxelib url $url');
+          }
+        case v:
+          new Haxelib(v).processUrl(url);
+      }
   
+  static inline function esc(s:String) 
+    return s.replace('.', ',');
 
   function getArchive(name:String, ?version:String, ?options):Promise<ArchiveJob>
     return 
@@ -46,7 +54,7 @@ private class Proxy extends haxe.remoting.AsyncProxy<lix.client.sources.haxelib.
           var isCustom = !(host == None && isOfficial);
 
           ({
-            url: resolve('/p/$name/$version/download/', options),
+            url: resolve('/files/3.0/${esc(name)}-${esc(version)}.zip', options),
             normalized: Url.make({
               scheme: 'haxelib',
               host: host.orNull(),
