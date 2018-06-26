@@ -52,6 +52,24 @@ class Download {
   static function unzip(src:String, into:String, peel:Int, res:IncomingMessage, events:Events<String>) {
     buffered(res).next(function (bytes)
       return Future.async(function (cb) {
+        var pos = bytes.length - 4;
+        while (pos --> 0) {
+          if (
+            bytes.get(pos) == 0x50 
+            && bytes.get(pos+1) == 0x4b 
+            && bytes.get(pos+2) == 0x05 
+            && bytes.get(pos+3) == 0x06 
+          ) {
+            bytes.set(pos + 20, 0);
+            bytes.set(pos + 21, 0);
+            bytes = bytes.sub(0, pos + 22);
+            break;
+          }
+        }
+        if (pos == 0) {
+          cb(Failure(new Error(UnprocessableEntity, 'Unzip failed to find central directory in $src')));
+          return;
+        }
         Yauzl.fromBuffer(Buffer.hxFromBytes(bytes), function (err, zip) {
           var saved = -1;//something is really weird about this lib
           function done() {
@@ -62,7 +80,7 @@ class Download {
           }
           
           if (err != null)
-            cb(Failure(new Error(UnprocessableEntity, 'Failed to unzip $src')));
+            cb(Failure(new Error(UnprocessableEntity, 'Failed to unzip $src because $err')));
           
           zip.on("entry", function (entry) switch Fs.peel(entry.fileName, peel) {
             case None:
