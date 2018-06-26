@@ -41,7 +41,6 @@ class Http {
 
     var params = params.toString();
     
-    
     (switch url.scheme {
       case 'https':
         js.node.Https.request;
@@ -49,7 +48,8 @@ class Http {
         js.node.Http.request;
     })(
       {
-        host: url.host,
+        hostname: url.host.name,
+        port: url.host.port,
         protocol: url.scheme + ':',
         method: if (post) 'POST' else 'GET',
         path: url.pathWithQuery + switch [params, post] {

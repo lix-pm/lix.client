@@ -1,6 +1,5 @@
 -D lix.client
 
-#-lib switchx
 -lib haxeshim
 -lib tink_semver
 -lib tink_web
@@ -10,3 +9,5 @@
 -lib tink_lang
 
 -cp src
+-cp patch 
+# ... because hxnodejs \o/
