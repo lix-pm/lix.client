@@ -56,7 +56,7 @@ After this you will have the commands `lix`, `haxe`, `haxelib` and `neko` availa
 For each project you want to use lix for, you should create a "scope":
 
     lix scope create
-    lix use stable
+    lix use haxe stable
 
 This will create a ".haxerc" in the cwd, saying we should use the current stable Haxe version for this project. It will also tell Haxe Shim that this project should expect to find information about haxelibs in the "haxe_libraries" folder.
 
