@@ -160,7 +160,7 @@ class Switcher {
             if (n.hash == hash)
               return RNightly(n);
               
-          return new Error(NotFound, 'Unknown nightly $version');
+          return new Error(NotFound, 'Unable to resolve nightly version $version locally, install it first with `lix install haxe $version`');
         });
         
       case UOfficial(version): 
@@ -168,7 +168,7 @@ class Switcher {
         getOfficial(IncludePrereleases).next(function (versions)
           return 
             if (Lambda.has(versions, version)) ROfficial(version)
-            else new Error(NotFound, 'Unknown version $version')
+            else new Error(NotFound, 'Unable to resolve version $version locally, install it first with `lix install haxe $version`')
         );
 
       case UCustom(path): RCustom(path);
