@@ -1,6 +1,7 @@
-# @install: lix download haxelib:tink_http#0.6.0 into tink_http/0.6.0/haxelib
+# @install: lix --silent download "https://github.com/haxetink/tink_http/archive/5859ec967c26d4dd9aab725e9c4df4e7d1706197.tar.gz" into tink_http/0.6.0/github/5859ec967c26d4dd9aab725e9c4df4e7d1706197
 -D tink_http=0.6.0
--cp ${HAXESHIM_LIBCACHE}/tink_http/0.6.0/haxelib/src
+-cp ${HAXESHIM_LIBCACHE}/tink_http/0.6.0/github/5859ec967c26d4dd9aab725e9c4df4e7d1706197/src
 
+-lib http-status
 -lib tink_url
 -lib tink_io

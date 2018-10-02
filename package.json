@@ -1,19 +1,26 @@
 {
-  "name": "lix.pm",
-  "version": "0.9.0",
+  "name": "lix",
+  "version": "15.1.1",
   "bin": {
-    "lix": "bin/lix.js"
+    "lix": "bin/lix.js",
+    "haxe": "bin/haxeshim.js",
+    "haxelib": "bin/haxelibshim.js",
+    "neko": "bin/nekoshim.js"
   },
   "scripts": {
     "prepublishOnly": "haxe lix.client.hxml"
+    "noderify": "noderify",
+    "build": "haxe --run Build",
+    "postinstall": "node bin/postinstall.js"
   },
-  "description": "lix - Libraries for haXe",
+  "description": "lix - Libraries for Haxe",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lix-pm/lix.git"
   },
-  "dependencies": {
-    "tar": "=2.2.1",
+  "devDependencies": {
+    "noderify": "=3.0.2",
+    "tar": "=4.0.2",
     "yauzl": "=2.6.0"
   },
   "keywords": [

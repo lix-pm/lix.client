@@ -1,78 +1,79 @@
 package lix.client.sources;
 
-class Haxelib {
-  static var SERVER = 'https://lib.haxe.org';
-  static public function schemes():Array<String>
+import tink.url.Host;
+
+using tink.CoreApi;
+
+private class Proxy extends haxe.remoting.AsyncProxy<lix.client.sources.haxelib.Repo> {}
+
+@:tink class Haxelib {
+  static var OFFICIAL = 'https://lib.haxe.org/';
+  
+  @:lazy var isOfficial:Bool = OFFICIAL == baseURL;
+  var baseURL:String = @byDefault OFFICIAL;
+
+  function getBaseUrl(?options:{ host: tink.url.Host }):Url
+    return switch options {
+      case null | { host: null }: baseURL;
+      case { host: h }: '${if (h.port == null) 'https' else 'http'}://$h/';
+    }
+
+  function resolve(url, ?options:{ host: tink.url.Host }):Url 
+    return getBaseUrl(options).resolve(url);
+
+  public function schemes():Array<String>
     return ['haxelib'];
 
-  static public function processUrl(url:Url):Promise<ArchiveJob> 
-    return switch url.path {
-      case null: new Error('invalid haxelib url $url');
-      case _.parts() => [v]: getArchive(v, url.hash);
-      default: new Error('invalid haxelib url $url');
-    }
+  public function processUrl(url:Url):Promise<ArchiveJob> 
+    return 
+      switch url.query.toMap()['url'].toString() {
+        case _ == null || _ == baseURL => true:
+          switch url.path {
+            case null: new Error('invalid haxelib url $url');
+            case _.parts().toStringArray() => [v]: getArchive(v, url.hash, { host: url.host });
+            default: new Error('invalid haxelib url $url');
+          }
+        case v:
+          new Haxelib(v).processUrl(url);
+      }
   
-  static public function getArchive(name:String, ?version:String):Promise<ArchiveJob>
+  static inline function esc(s:String) 
+    return s.replace('.', ',');
+
+  function getArchive(name:String, ?version:String, ?options):Promise<ArchiveJob>
     return 
       switch version {
         case null:
-          resolveVersion(name).next(getArchive.bind(name, _));
+          resolveVersion(name, options).next(getArchive.bind(name, _, options));
         case v:
+          var host = switch options {
+            case null | { host: null }: None;
+            case { host: h }: Some(h);
+          }
+          
+          var isCustom = !(host == None && isOfficial);
+
           ({
-            url: '$SERVER/p/$name/$version/download/',
-            normalized: 'haxelib:$name#$version',
-            dest: Fixed([name, version, 'haxelib']),
+            url: resolve('/files/3.0/${esc(name)}-${esc(version)}.zip', options),
+            normalized: Url.make({
+              scheme: 'haxelib',
+              host: host.orNull(),
+              path: '/$name',
+              hash: version,
+              query: if (isCustom) { url : baseURL } else null,
+            }),
+            dest: Fixed([name, version, 'haxelib' + if (isCustom) '@' + getBaseUrl(options).urlEncode() else '']),
             kind: Zip,
             lib: { name: Some(name), version: Some(version) }
           } : ArchiveJob);
-      }    
-      
-  static public function resolveVersion(name:String):Promise<String> 
-    return Download.text('$SERVER/p/$name').next(function (s) return s.split(')</title>')[0].split('(').pop());
-
-  static public function installDependencies(haxelibs:haxe.DynamicAccess<String>, client:Client, skip:String->Bool) {
-    
-    var ret:Array<Promise<Noise>> = [
-      for (name in haxelibs.keys()) Future.async(function (cb) {
-        if (skip(name)) {
-          cb(Success(Noise));
-          return;
-        }
-        var version:Url = haxelibs[name];
-        client.log('Installing dependency $name');
-        (switch version.scheme {
-          case null:
-            client.installArchive(Haxelib.getArchive(name, switch version.payload {
-              case '' | '*': null;
-              case v: v;
-            }), true);
-          case v:
-            client.installUrl(version, { name: Some(name), version: None });
-        }).handle(function (o) cb(switch o {
-          case Failure(e):
-            Failure(Error.withData(e.code, '$name: ${e.message}', e.data));
-          default: o;
-        }));
-      }, true)
-    ];
-
-    return Future.ofMany(ret).map(function (results) {
-
-      var errors = [];
-      
-      for (r in results) switch r {
-        case Failure(e):
-          errors.push(e);
-        default:
       }
 
-      return switch errors {
-        case []: 
-          Success(Noise);
-        case v:
-          Failure(Error.withData('Failed to install dependencies:\n  ' + errors.map(function (e) return e.message).join('\n  '), errors));
-      }
-    });    
-  }
-  
+  function resolveVersion(name:String, ?options):Promise<String> 
+    return Future.async(function (cb) {
+      var cnx = haxe.remoting.HttpAsyncConnection.urlConnect(resolve('/api/3.0/index.n', options));
+      cnx.setErrorHandler(function (e) cb(Failure(Error.withData('Failed to get version information from haxelib because $e', e))));  
+      var repo = new Proxy(cnx.api);
+      repo.getLatestVersion(name, function (s) cb(Success(s)));
+    });
+
 }

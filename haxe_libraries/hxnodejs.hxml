@@ -1,6 +1,6 @@
-# @install: lix download https://github.com/HaxeFoundation/hxnodejs/archive/de8b3fd76643c00310fa25df842886743abaea25.tar.gz as hxnodejs#6.9.0/de8b3fd76643c00310fa25df842886743abaea25
+# @install: lix --silent download "gh://github.com/HaxeFoundation/hxnodejs#4b20c1cf371e09b4a774ed331f50cbde7b818a4f" into hxnodejs/6.9.0/github/4b20c1cf371e09b4a774ed331f50cbde7b818a4f
 -D hxnodejs=6.9.0
--cp ${HAXESHIM_LIBCACHE}/hxnodejs/6.9.0/de8b3fd76643c00310fa25df842886743abaea25/src
--D nodejs
+-cp ${HAXE_LIBCACHE}/hxnodejs/6.9.0/github/4b20c1cf371e09b4a774ed331f50cbde7b818a4f/src
 --macro allowPackage('sys')
---macro _hxnodejs.VersionWarning.include()
+# should behave like other target defines and not be defined in macro context
+--macro define('nodejs')

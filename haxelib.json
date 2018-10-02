@@ -1,0 +1,17 @@
+{
+  "name": "lix.cli",
+  "license": "MIT",
+  "tags": [
+    "lix",
+    "libraries",
+    "package-manager"
+  ],
+  "classPath": "src",
+  "contributors": [
+    "back2dos"
+  ],
+  "releasenote": "initial release",
+  "version": "0.0.0",
+  "url": "https://github.com/lix-pm/lix.client/",
+  "dependencies": {}
+}

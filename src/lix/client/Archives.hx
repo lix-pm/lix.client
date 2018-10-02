@@ -1,7 +1,5 @@
 package lix.client;
 
-import haxe.crypto.Md5;
-
 using haxe.io.Path;
 
 using sys.FileSystem;
@@ -11,7 +9,11 @@ using haxe.Json;
 enum ArchiveKind {
   Zip;
   Tar;
+  Custom(load:CustomLoader);
 }
+
+typedef CustomLoader = CustomLoaderContext->Promise<String>;
+typedef CustomLoaderContext = { source:Url, dest:String, silent:Bool, scope:Scope };
 
 enum ArchiveDestination {
   Fixed(path:Array<String>);
@@ -32,6 +34,10 @@ typedef ArchiveJob = {
   public var name(default, null):String;
   public var version(default, null):String;
   public var classPath(default, null):String;
+  public var runAs(default, null):{ libRoot: String }->Option<String>;
+  public var dependencies(default, null):Array<Named<Url>>;
+  @:optional public var postDownload(default, null):String;
+  @:optional public var postInstall(default, null):String;
 }
 
 class DownloadedArchive {
@@ -40,6 +46,8 @@ class DownloadedArchive {
    * The job the archive originated from
    */
   public var job(default, null):ArchiveJob;
+
+  public var alreadyDownloaded(default, null):Bool = true;
 
   var storageRoot:String;
 
@@ -57,6 +65,7 @@ class DownloadedArchive {
   static var RESERVED = "!#$&'()*+,/:;=?@[]";
 
   static public function escape(s:String) {
+    if (s == null) return null;
     for (i in 0...RESERVED.length)
       s = s.replace(RESERVED.charAt(i), '_');
     return s;
@@ -70,6 +79,7 @@ class DownloadedArchive {
   static public function fresh(tmpLoc:String, storageRoot:String, targetLoc:String, job:ArchiveJob) {
     var curRoot = '$tmpLoc/${seekRoot(tmpLoc)}';
     var infos = readInfos(curRoot, job.lib);
+    
     var relRoot = 
       if (targetLoc == null) 
         path(switch job.dest {
@@ -79,6 +89,7 @@ class DownloadedArchive {
       else targetLoc;
     
     var ret = new DownloadedArchive(relRoot, storageRoot, job, infos);
+    ret.alreadyDownloaded = false;
 
     var archive = null;
 
@@ -136,39 +147,64 @@ class DownloadedArchive {
     if (lib == null)
       lib = LibVersion.UNDEFINED;
 
-    function name(found:String)
-      return lib.name.or(found);
-
-    function version(found:String)
-      return lib.version.or(found);
-
-
     return 
       if (files.indexOf('haxelib.json') != -1) {
         //TODO: there's a lot of errors to be caught here
-        var info:{ name: String, version:String, ?classPath:String } = '$root/haxelib.json'.getContent().parse();
+        var info:{ 
+          name: String, 
+          version:String, 
+          ?dependencies:haxe.DynamicAccess<String>,
+          ?classPath:String, 
+          ?mainClass:String,
+          ?postInstall: String, 
+          ?postDownload: String, 
+        } = '$root/haxelib.json'.getContent().parse();
+        
         {
-          name: name(info.name),
-          version: version(info.version),
+          name: info.name,
+          version: info.version,
           classPath: switch info.classPath {
             case null: '';
             case v: v;
           },
+          runAs: function (ctx) return 
+            if ('${ctx.libRoot}/run.n'.exists() || info.mainClass != null)
+              Some('haxelib run-dir ${info.name} $${DOWNLOAD_LOCATION}');
+            else 
+              None
+          ,
+          dependencies: switch info.dependencies {
+            case null: [];
+            case deps: 
+              [for (name in deps.keys()) 
+                new Named<Url>(name, switch deps[name] {
+                  case '' | '*': 'haxelib:$name';
+                  case version = (_:Url).scheme => null: 'haxelib:$name#$version';
+                  case u: u;
+                })
+              ]; 
+          },
+          postInstall: info.postInstall,
+          postDownload: info.postDownload,
         }
       }
       else if (files.indexOf('package.json') != -1) {
         var info:{ name: String, version:String, } = '$root/package.json'.getContent().parse();
         {
-          name: name(info.name),
-          version: version(info.version),
+          name: info.name,
+          version: info.version,
           classPath: guessClassPath(),
+          runAs: function (_) return None,
+          dependencies: [],
         }
       }
       else {        
         {
-          name: name(null),
-          version: version('0.0.0'),
+          name: lib.name.or('untitled'),
+          version: lib.version.or('0.0.0'),
           classPath: guessClassPath(),
+          runAs: function (_) return None,
+          dependencies: [],
         }
       }
   }    

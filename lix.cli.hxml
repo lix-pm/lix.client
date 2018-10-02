@@ -1,0 +1,5 @@
+-lib lix.client
+-js bin/lix.js
+-main lix.cli.Cli
+--macro haxeshim.Build.postprocess()
+-dce full
