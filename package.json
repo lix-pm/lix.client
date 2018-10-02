@@ -8,7 +8,7 @@
     "neko": "bin/nekoshim.js"
   },
   "scripts": {
-    "prepublishOnly": "haxe lix.client.hxml && haxe haxeshim.hxml",
+    "prepublishOnly": "haxe lix.cli.hxml && haxe haxeshim.hxml",
     "noderify": "noderify",
     "build": "haxe --run Build",
     "postinstall": "node bin/postinstall.js"
