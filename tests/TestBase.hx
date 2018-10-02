@@ -11,11 +11,11 @@ class TestBase {
 	
 	public function new() {}
 	
-	function switchx(args:Array<String>, debug = false)
-		return run('switchx', args, debug);
-	
-	function lix(args:Array<String>, debug = false)
+	function runLix(args:Array<String>, debug = false)
 		return run('node', ['$CWD/bin/lix.js'].concat(args), debug);
+	
+	function runHaxe(args:Array<String>, debug = false)
+		return run('node', ['$CWD/bin/haxeshim.js'].concat(args), debug);
 	
 	function run(cmd, args, debug = false) {
 		var proc = new Process(cmd, args);
@@ -23,8 +23,8 @@ class TestBase {
 		var stderr = proc.stderr.readAll().toString();
 		
 		if(debug) {
-			trace(stdout);
-			trace(stderr);
+			Sys.println(stdout);
+			Sys.println(stderr);
 		}
 		
 		return {

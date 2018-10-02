@@ -13,10 +13,10 @@ class InstallTest extends TestBase {
 	
 	@:before
 	public function mkdir() {
-		dir = 'test_' + Sha1.encode(Std.string(Std.random(999999))).substr(0, 12); // fancy way to make a random folder name
+		dir = 'test_' + Date.now().getTime() + '_' + Std.random(1<<24); // fancy way to make a random folder name
 		dir.createDirectory();
 		Sys.setCwd(dir);
-		switchx(['scope', 'create']);
+		runLix(['scope', 'create']);
 		return Noise;
 	}
 	
@@ -27,68 +27,27 @@ class InstallTest extends TestBase {
 		return Noise;
 	}
 	
-	@:variant('tink_core')
-	public function haxelib(lib:String) {
-		lix(['install', 'haxelib:$lib']);
-		var resolved = resolve(lib).split('\n');
-		asserts.assert(resolved[0] == '-D');
-		asserts.assert(resolved[1].startsWith('$lib='));
-		asserts.assert(resolved[2] == '-cp');
-		asserts.assert(regex(lib, Haxelib(None)).match(resolved[3]));
-		return asserts.done();
-	}
-	
-	@:variant('haxetink/tink_core')
-	public function github(repo:String) {
-		var lib = repo.split('/')[1];
-		lix(['install', 'gh:$repo']);
-		var resolved = resolve(lib).split('\n');
-		asserts.assert(resolved[0] == '-D');
-		asserts.assert(resolved[1].startsWith('$lib='));
-		asserts.assert(resolved[2] == '-cp');
-		asserts.assert(regex(lib, Github(None)).match(resolved[3]));
-		return asserts.done();
-	}
-	
-	@:variant('tink_core', '1.13.1')
-	public function haxelibVersion(lib:String, version:String) {
-		lix(['install', 'haxelib:$lib#$version']);
-		var resolved = resolve(lib).split('\n');
-		asserts.assert(resolved[0] == '-D');
-		asserts.assert(resolved[1] == '$lib=$version');
-		asserts.assert(resolved[2] == '-cp');
-		asserts.assert(regex(lib, Haxelib(Some(version))).match(resolved[3]));
-		return asserts.done();
-	}
-	
-	@:variant('haxetink/tink_core', '93227943')
-	public function githubHash(repo:String, hash:String) {
-		var lib = repo.split('/')[1];
-		lix(['install', 'gh:$repo#$hash']);
-		var resolved = resolve(lib).split('\n');
-		asserts.assert(resolved[0] == '-D');
-		asserts.assert(resolved[1].startsWith('$lib='));
-		asserts.assert(resolved[2] == '-cp');
-		asserts.assert(regex(lib, Github(Some(hash))).match(resolved[3]));
-		return asserts.done();
-	}
-	
-	@:variant('haxe-react/haxe-react-native', 'react-native')
-	public function githubAs(repo:String, lib:String) {
-		lix(['install', 'gh:$repo', 'as', lib]);
-		var resolved = resolve(lib).split('\n');
-		asserts.assert(resolved[0] == '-D');
-		asserts.assert(resolved[1].startsWith('$lib='));
-		asserts.assert(resolved[2] == '-cp');
-		asserts.assert(regex(repo.split('/')[1], Github(None)).match(resolved[3]));
+	@:variant('tink_core',      'install haxelib:tink_core',                                 v -> this.regex('tink_core', Haxelib(None)).match(v))
+	@:variant('tink_core',      'install haxelib:tink_core#1.13.1',                          v -> this.regex('tink_core', Haxelib(Some('1.13.1'))).match(v))
+	@:variant('tink_core',      '+lib tink_core',                                            v -> this.regex('tink_core', Haxelib(None)).match(v))
+	@:variant('tink_core',      '+lib tink_core#1.13.1',                                     v -> this.regex('tink_core', Haxelib(Some('1.13.1'))).match(v))
+	@:variant('tink_core',      'install gh:haxetink/tink_core',                             v -> this.regex('tink_core', Github(None)).match(v))
+	@:variant('tink_core',      'install gh:haxetink/tink_core#93227943',                    v -> this.regex('tink_core', Github(Some('93227943'))).match(v))
+	@:variant('tink_core',      '+tink core',                                                v -> this.regex('tink_core', Github(None)).match(v))
+	@:variant('tink_core',      '+tink core#93227943',                                       v -> this.regex('tink_core', Github(Some('93227943'))).match(v))
+	@:variant('react-native',   'install gh:haxe-react/haxe-react-native as react-native',   v -> this.regex('react-native', Github(None)).match(v))
+	public function install(lib:String, args:Args, check:String->Bool) {
+		runLix(args);
+		var resolved = resolve(lib).replace('\n', ' ');
+		asserts.assert(check(resolved), '-cp tag is in place');
 		return asserts.done();
 	}
 	
 	function resolve(lib:String, debug = false)
-		return run('haxe', ['--run', 'resolve-args', '-lib', lib], debug).stdout;
+		return runHaxe(['--run', 'resolve-args', '-lib', lib], debug).stdout;
 	
 	function regex(lib:String, type:SourceType) {
-		var pattern = '/haxe_libraries/$lib/';
+		var pattern = '-cp .*/haxe_libraries/$lib/';
 		pattern += switch type {
 			case Haxelib(None): '[^/]*/haxelib';
 			case Haxelib(Some(version)): '$version/haxelib';
