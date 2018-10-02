@@ -11,10 +11,10 @@ class TestBase {
 	
 	public function new() {}
 	
-	function runLix(args:Array<String>, debug = false)
+	function runLix(args:Args, debug = false)
 		return run('node', ['$CWD/bin/lix.js'].concat(args), debug);
 	
-	function runHaxe(args:Array<String>, debug = false)
+	function runHaxe(args:Args, debug = false)
 		return run('node', ['$CWD/bin/haxeshim.js'].concat(args), debug);
 	
 	function run(cmd, args, debug = false) {

@@ -1,6 +1,5 @@
 package;
 
-import haxe.crypto.Sha1;
 import tink.unit.Assert.assert;
 
 using sys.FileSystem;
