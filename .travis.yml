@@ -6,7 +6,7 @@ node_js: 8
   
 install:
   - npm i -g lix
-  - npm i
+  - npm i --ignore-scripts
   - lix download
   - npm run build
   
