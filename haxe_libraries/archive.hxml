@@ -1,0 +1,5 @@
+-D archive=0.0.0
+# @install: lix --silent download "gh://github.com/kevinresol/archive#c762b432a6a1693d16febe6579a3cda4634e9db1" into archive/0.0.0/github/c762b432a6a1693d16febe6579a3cda4634e9db1
+-lib tink_io
+-lib format
+-cp ${HAXE_LIBCACHE}/archive/0.0.0/github/c762b432a6a1693d16febe6579a3cda4634e9db1/src

@@ -1,6 +1,5 @@
-# @install: lix --silent download "https://github.com/haxetink/tink_semver/archive/5392b0b52a8d52bae1aa4c57c3b4163a8620b4e0.tar.gz" into tink_semver/0.0.0/github/5392b0b52a8d52bae1aa4c57c3b4163a8620b4e0
 -D tink_semver=0.0.0
--cp ${HAXESHIM_LIBCACHE}/tink_semver/0.0.0/github/5392b0b52a8d52bae1aa4c57c3b4163a8620b4e0/src
-
+# @install: lix --silent download "gh://github.com/haxetink/tink_semver#c7de0c2e6e5551f3beeb8fbd4e6a5bbe44a5f625" into tink_semver/0.0.0/github/c7de0c2e6e5551f3beeb8fbd4e6a5bbe44a5f625
 -lib tink_core
 -lib tink_parse
+-cp ${HAXE_LIBCACHE}/tink_semver/0.0.0/github/c7de0c2e6e5551f3beeb8fbd4e6a5bbe44a5f625/src

@@ -1,0 +1,7 @@
+-D asys=0.3.0
+# @install: lix --silent download "haxelib:/asys#0.3.0" into asys/0.3.0/haxelib
+-lib tink_core
+-lib tink_macro
+-lib tink_io
+-lib tink_streams
+-cp ${HAXE_LIBCACHE}/asys/0.3.0/haxelib/

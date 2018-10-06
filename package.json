@@ -19,7 +19,13 @@
     "url": "git+https://github.com/lix-pm/lix.git"
   },
   "devDependencies": {
+    "amazon-cognito-auth-js": "^1.2.4",
+    "archiver": "^3.0.0",
+    "atob": "^2.1.2",
+    "btoa": "^1.2.1",
+    "ignore": "^5.0.2",
     "noderify": "=3.0.2",
+    "opn": "^5.4.0",
     "tar": "=4.0.2",
     "yauzl": "=2.6.0"
   },

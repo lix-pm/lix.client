@@ -1,0 +1,3 @@
+-D geojson=0.9.7
+# @install: lix --silent download "haxelib:/geojson#0.9.7" into geojson/0.9.7/haxelib
+-cp ${HAXE_LIBCACHE}/geojson/0.9.7/haxelib/src

@@ -2,8 +2,9 @@ package lix.cli;
 
 import lix.client.Archives;
 import lix.client.sources.*;
-import lix.api.Api;
 import lix.client.*;
+import lix.api.types.*;
+import tink.http.clients.*;
 
 class Cli {
   
@@ -218,7 +219,41 @@ class Cli {
             new haxeshim.HaxelibCli(scope).run(args.slice(1));
             Noise;
         }
-      ),             
+      ),
+      new Command('login', '', 'log in the Lix Registry', function (args) {
+        var auth = new lix.Auth();
+        var remote = new lix.Remote(
+          #if (environment == "local")
+            new NodeClient(), () -> '2'
+          #else 
+            new SecureNodeClient(), () -> auth.getSession().next(session -> session.idToken)
+          #end
+        );
+        return remote.me().get()
+          .next(user -> {
+            if(user.username == null) {
+              var readline = js.node.Readline.createInterface({
+                input: js.Node.process.stdin,
+                output: js.Node.process.stdout,
+              });
+              Future.async(function(cb) readline.question('Please input a username for your Lix account: ', cb))
+                .next(username -> {
+                  readline.close();
+                  remote.me().update({username: Some(username), nickname: None}).swap(username);
+                });
+            } else {
+              user.username;
+            }
+          })
+          .map(function(o) return switch o {
+            case Success(username):
+              Sys.println('Logged in as ${username}');
+              Success(Noise);
+            case Failure(e):
+              Sys.println(e);
+              Failure(e);
+          });
+      }),
     ], []).handle(Command.reportOutcome);
   }       
 }
