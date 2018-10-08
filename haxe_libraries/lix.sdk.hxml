@@ -1,8 +1,8 @@
 -D lix.sdk=0.0.0
-# @install: lix --silent download "gh://github.com/lix-pm/lix.sdk#45d54963d2abc93f7faa0977d8b68c03c2487f2d" into lix.sdk/0.0.0/github/45d54963d2abc93f7faa0977d8b68c03c2487f2d
+# @install: lix --silent download "gh://github.com/lix-pm/lix.sdk#79d1f345f96b82816b0f1f94a37dd661de753613" into lix.sdk/0.0.0/github/79d1f345f96b82816b0f1f94a37dd661de753613
 -lib asys
 -lib archive
 -lib lix.server
 -lib tink_await
 -lib tink_web
--cp ${HAXE_LIBCACHE}/lix.sdk/0.0.0/github/45d54963d2abc93f7faa0977d8b68c03c2487f2d/src
+-cp ${HAXE_LIBCACHE}/lix.sdk/0.0.0/github/79d1f345f96b82816b0f1f94a37dd661de753613/src

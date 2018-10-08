@@ -12,14 +12,14 @@ class Cli {
     Command.attempt(HaxeCmd.ensureScope(), dispatch.bind(Sys.args()));
   
   static function dispatch(args:Array<String>) {
-    var version = CompileTime.parseJsonFile("./package.json").version;
+    var version = Macro.getVersion();
     var silent = args.remove('--silent'),
         force = args.remove('--force'),
         global = args.remove('--global') || args.remove('-g');
 
     var scope = Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
 
-    args = Command.expand(args, [
+    args = Command.expand(args, [ 
       "+tink install github:haxetink/tink_${0}",
       "+coco install github:MVCoconut/coconut.${0}",
       "+lib install haxelib:${0}",
@@ -61,6 +61,15 @@ class Cli {
       log,
       force,
       silent
+    );
+    
+    var auth = new lix.Auth();
+    var remote = new lix.Remote(
+      #if (environment == "local")
+        new NodeClient(), () -> '2'
+      #else 
+        new SecureNodeClient(), () -> auth.getSession().next(session -> session.idToken)
+      #end
     );
 
     Command.dispatch(args, 'lix - Libraries for haXe (v$version)', [
@@ -221,14 +230,6 @@ class Cli {
         }
       ),
       new Command('login', '', 'log in the Lix Registry', function (args) {
-        var auth = new lix.Auth();
-        var remote = new lix.Remote(
-          #if (environment == "local")
-            new NodeClient(), () -> '2'
-          #else 
-            new SecureNodeClient(), () -> auth.getSession().next(session -> session.idToken)
-          #end
-        );
         return remote.me().get()
           .next(user -> {
             if(user.username == null) {
@@ -254,6 +255,28 @@ class Cli {
               Failure(e);
           });
       }),
+      new Command('logout', '', 'log out from the Lix Registry', function (args) {
+        auth.clearSession();
+        return Noise;
+      }),
+      new Command('submit', '[directory]', 'Submit package to the Lix Registry', function (args) {
+        var submitter = new lix.Submitter(remote, new archive.zip.NodeZip(), archive.scanner.AsysScanner.new.bind(_, ''));
+        return submitter.submit(args[0]);
+      }),
+      // new Command('me', '', 'Prints the current logged in username', function (args) {
+      //   var auth = new lix.Auth();
+      //   var remote = new lix.Remote(
+      //     #if (environment == "local")
+      //       new NodeClient(), () -> '2'
+      //     #else 
+      //       new SecureNodeClient(), () -> auth.getSession().next(session -> session.idToken)
+      //     #end
+      //   );
+      //   return remote.me().get().next(user -> {
+      //     Sys.println('Current username: ${user.username}');
+      //     Noise;
+      //   });
+      // }),
     ], []).handle(Command.reportOutcome);
   }       
 }
