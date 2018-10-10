@@ -1,0 +1,4 @@
+-D mime=0.0.1
+# @install: lix --silent download "haxelib:/mime#0.0.1" into mime/0.0.1/haxelib
+-cp ${HAXE_LIBCACHE}/mime/0.0.1/haxelib/
+--macro mime.Mime.init()

@@ -1,0 +1,6 @@
+-D lix.server=0.0.0
+# @install: lix --silent download "gh://github.com/lix-pm/lix.server#d50ac706ed1830bfa63cea893261684cb59519dd" into lix.server/0.0.0/github/d50ac706ed1830bfa63cea893261684cb59519dd
+-lib why-fs
+-lib tink_semver
+-lib tink_sql
+-cp ${HAXE_LIBCACHE}/lix.server/0.0.0/github/d50ac706ed1830bfa63cea893261684cb59519dd/lib

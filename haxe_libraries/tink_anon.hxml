@@ -1,0 +1,4 @@
+-D tink_anon=0.3.1
+# @install: lix --silent download "haxelib:/tink_anon#0.3.1" into tink_anon/0.3.1/haxelib
+-lib tink_macro
+-cp ${HAXE_LIBCACHE}/tink_anon/0.3.1/haxelib/src

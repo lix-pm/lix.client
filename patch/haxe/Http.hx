@@ -32,6 +32,7 @@ class Http {
   
   dynamic public function onData(s:String) {}
   dynamic public function onError(s:String) {}
+  dynamic public function onStatus(i:Int) {}
   
   public function request(?post:Bool) {
     if (rawPostData != null)

@@ -1,5 +1,9 @@
 -lib lix.client
+-lib lix.sdk
+-lib hxjs-amazon-cognito-auth-js
 -js bin/lix.js
 -main lix.cli.Cli
 --macro haxeshim.Build.postprocess()
 -dce full
+
+-D environment=prod

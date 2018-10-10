@@ -1,0 +1,4 @@
+-D futurize=1.0.1
+# @install: lix --silent download "haxelib:/futurize#1.0.1" into futurize/1.0.1/haxelib
+-lib tink_macro
+-cp ${HAXE_LIBCACHE}/futurize/1.0.1/haxelib/src

@@ -1,6 +1,10 @@
 {
-    "version": "0.1.0",
+    "version": "2.0.0",
     "command": "haxe",
     "args": ["lix.cli.hxml", "--times"],
-    "problemMatcher": "$haxe"
+    "problemMatcher": "$haxe",
+    "group": {
+        "kind": "build",
+        "isDefault": true
+    }
 }

@@ -1,0 +1,3 @@
+-D hxjs-amazon-cognito-auth-js=0.0.0
+# @install: lix --silent download "gh://github.com/kevinresol/hxjs-amazon-cognito-auth-js#f1f1abebaafc12a9b8b21a974bd2ae66a846a758" into hxjs-amazon-cognito-auth-js/0.0.0/github/f1f1abebaafc12a9b8b21a974bd2ae66a846a758
+-cp ${HAXE_LIBCACHE}/hxjs-amazon-cognito-auth-js/0.0.0/github/f1f1abebaafc12a9b8b21a974bd2ae66a846a758/src

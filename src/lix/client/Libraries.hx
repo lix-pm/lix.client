@@ -1,9 +1,9 @@
 package lix.client;
 
 import lix.client.sources.*;
-import haxe.DynamicAccess;
 import lix.client.Archives;
-import lix.api.Api;
+import lix.api.types.*;
+import haxe.DynamicAccess;
 import haxeshim.Scope.*;
 
 using sys.FileSystem;

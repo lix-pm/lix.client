@@ -2,8 +2,9 @@ package lix.cli;
 
 import lix.client.Archives;
 import lix.client.sources.*;
-import lix.api.Api;
 import lix.client.*;
+import lix.api.types.*;
+import tink.http.clients.*;
 
 class Cli {
   
@@ -11,14 +12,14 @@ class Cli {
     Command.attempt(HaxeCmd.ensureScope(), dispatch.bind(Sys.args()));
   
   static function dispatch(args:Array<String>) {
-    var version = CompileTime.parseJsonFile("./package.json").version;
+    var version = Macro.getVersion();
     var silent = args.remove('--silent'),
         force = args.remove('--force'),
         global = args.remove('--global') || args.remove('-g');
 
     var scope = Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
 
-    args = Command.expand(args, [
+    args = Command.expand(args, [ 
       "+tink install github:haxetink/tink_${0}",
       "+coco install github:MVCoconut/coconut.${0}",
       "+lib install haxelib:${0}",
@@ -39,7 +40,7 @@ class Cli {
 
     var haxelibUrl = new tink.url.Host(grab('--haxelib-url'));
     
-    var sources:Array<ArchiveSource> = [Web, new Haxelib(haxelibUrl), github, gitlab, new Git(github, gitlab, scope)];
+    var sources:Array<ArchiveSource> = [Web, new Lix(), new Haxelib(haxelibUrl), github, gitlab, new Git(github, gitlab, scope)];
     var resolvers:Map<String, ArchiveSource> = [for (s in sources) for (scheme in s.schemes()) scheme => s];
 
     function resolve(url:Url):Promise<ArchiveJob>
@@ -60,6 +61,15 @@ class Cli {
       log,
       force,
       silent
+    );
+    
+    var auth = new lix.Auth();
+    var remote = new lix.Remote(
+      #if (environment == "local")
+        new NodeClient(), () -> '2'
+      #else 
+        new SecureNodeClient(), () -> auth.getSession().next(session -> session.idToken)
+      #end
     );
 
     Command.dispatch(args, 'lix - Libraries for haXe (v$version)', [
@@ -218,7 +228,55 @@ class Cli {
             new haxeshim.HaxelibCli(scope).run(args.slice(1));
             Noise;
         }
-      ),             
+      ),
+      new Command('login', '', 'log in the Lix Registry', function (args) {
+        return remote.me().get()
+          .next(user -> {
+            if(user.username == null) {
+              var readline = js.node.Readline.createInterface({
+                input: js.Node.process.stdin,
+                output: js.Node.process.stdout,
+              });
+              Future.async(function(cb) readline.question('Please input a username for your Lix account: ', cb))
+                .next(username -> {
+                  readline.close();
+                  remote.me().update({username: Some(username), nickname: None}).swap(username);
+                });
+            } else {
+              user.username;
+            }
+          })
+          .map(function(o) return switch o {
+            case Success(username):
+              Sys.println('Logged in as ${username}');
+              Success(Noise);
+            case Failure(e):
+              Sys.println(e);
+              Failure(e);
+          });
+      }),
+      new Command('logout', '', 'log out from the Lix Registry', function (args) {
+        auth.clearSession();
+        return Noise;
+      }),
+      new Command('submit', '[directory]', 'Submit package to the Lix Registry', function (args) {
+        var submitter = new lix.Submitter(remote, new archive.zip.NodeZip(), archive.scanner.AsysScanner.new.bind(_, ''));
+        return submitter.submit(args[0]);
+      }),
+      // new Command('me', '', 'Prints the current logged in username', function (args) {
+      //   var auth = new lix.Auth();
+      //   var remote = new lix.Remote(
+      //     #if (environment == "local")
+      //       new NodeClient(), () -> '2'
+      //     #else 
+      //       new SecureNodeClient(), () -> auth.getSession().next(session -> session.idToken)
+      //     #end
+      //   );
+      //   return remote.me().get().next(user -> {
+      //     Sys.println('Current username: ${user.username}');
+      //     Noise;
+      //   });
+      // }),
     ], []).handle(Command.reportOutcome);
   }       
 }
