@@ -6,4 +6,4 @@
 --macro haxeshim.Build.postprocess()
 -dce full
 
--D environment=local
+-D environment=prod
