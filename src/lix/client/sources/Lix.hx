@@ -17,7 +17,6 @@ class Lix {
         getArchive(owner, project, url.hash);
       default: new Error('invalid lix url $url');
     }
-    return new Error('todo');
   }
   
   function getArchive(owner:String, name:String, ?version:String):Promise<ArchiveJob> {
