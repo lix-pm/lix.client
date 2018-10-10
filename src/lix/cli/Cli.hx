@@ -40,7 +40,7 @@ class Cli {
 
     var haxelibUrl = new tink.url.Host(grab('--haxelib-url'));
     
-    var sources:Array<ArchiveSource> = [Web, new Haxelib(haxelibUrl), github, gitlab, new Git(github, gitlab, scope)];
+    var sources:Array<ArchiveSource> = [Web, new Lix(), new Haxelib(haxelibUrl), github, gitlab, new Git(github, gitlab, scope)];
     var resolvers:Map<String, ArchiveSource> = [for (s in sources) for (scheme in s.schemes()) scheme => s];
 
     function resolve(url:Url):Promise<ArchiveJob>
