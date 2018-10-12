@@ -260,8 +260,17 @@ class Cli {
         return Noise;
       }),
       new Command('submit', '[directory]', 'Submit package to the Lix Registry', function (args) {
+        if(args.length > 1) return new Error('command `submit` expectes 0 or 1 arguments');
         var submitter = new lix.Submitter(remote, new archive.zip.NodeZip(), archive.scanner.AsysScanner.new.bind(_, ''));
         return submitter.submit(args[0]);
+      }),
+      new Command('owner', 'create <name>', 'Create an owner (organization) in the Lix Registry', function (args) {
+        return switch args {
+          case ['create', name]:
+            remote.owners().create(name);
+          case _:
+            new Error('Invalid arguments');
+        }
       }),
       // new Command('me', '', 'Prints the current logged in username', function (args) {
       //   var auth = new lix.Auth();
