@@ -9,6 +9,10 @@ using StringTools;
 @:asserts
 class InstallTest extends TestBase {
 	var dir:String;
+	var gh = switch Sys.getEnv('GITHUB_AUTH') {
+		case null: '';
+		case v: ' --gh-credentials $v';
+	}
 	
 	@:before
 	public function mkdir() {
@@ -26,15 +30,15 @@ class InstallTest extends TestBase {
 		return Noise;
 	}
 	
-	@:variant('tink_core',      'install haxelib:tink_core',                                 v -> this.regex('tink_core', Haxelib(None)).match(v))
-	@:variant('tink_core',      'install haxelib:tink_core#1.13.1',                          v -> this.regex('tink_core', Haxelib(Some('1.13.1'))).match(v))
-	@:variant('tink_core',      '+lib tink_core',                                            v -> this.regex('tink_core', Haxelib(None)).match(v))
-	@:variant('tink_core',      '+lib tink_core#1.13.1',                                     v -> this.regex('tink_core', Haxelib(Some('1.13.1'))).match(v))
-	@:variant('tink_core',      'install gh:haxetink/tink_core',                             v -> this.regex('tink_core', Github(None)).match(v))
-	@:variant('tink_core',      'install gh:haxetink/tink_core#93227943',                    v -> this.regex('tink_core', Github(Some('93227943'))).match(v))
-	@:variant('tink_core',      '+tink core',                                                v -> this.regex('tink_core', Github(None)).match(v))
-	@:variant('tink_core',      '+tink core#93227943',                                       v -> this.regex('tink_core', Github(Some('93227943'))).match(v))
-	@:variant('react-native',   'install gh:haxe-react/haxe-react-native as react-native',   v -> this.regex('react-native', Github(None)).match(v))
+	@:variant('tink_core',      'install haxelib:tink_core',                                         v -> this.regex('tink_core', Haxelib(None)).match(v))
+	@:variant('tink_core',      'install haxelib:tink_core#1.13.1',                                  v -> this.regex('tink_core', Haxelib(Some('1.13.1'))).match(v))
+	@:variant('tink_core',      '+lib tink_core' + this.gh,                                          v -> this.regex('tink_core', Haxelib(None)).match(v))
+	@:variant('tink_core',      '+lib tink_core#1.13.1' + this.gh,                                   v -> this.regex('tink_core', Haxelib(Some('1.13.1'))).match(v))
+	@:variant('tink_core',      'install gh:haxetink/tink_core' + this.gh,                           v -> this.regex('tink_core', Github(None)).match(v))
+	@:variant('tink_core',      'install gh:haxetink/tink_core#93227943' + this.gh,                  v -> this.regex('tink_core', Github(Some('93227943'))).match(v))
+	@:variant('tink_core',      '+tink core' + this.gh,                                              v -> this.regex('tink_core', Github(None)).match(v))
+	@:variant('tink_core',      '+tink core#93227943' + this.gh,                                     v -> this.regex('tink_core', Github(Some('93227943'))).match(v))
+	@:variant('react-native',   'install gh:haxe-react/haxe-react-native as react-native' + this.gh, v -> this.regex('react-native', Github(None)).match(v))
 	public function install(lib:String, args:Args, check:String->Bool) {
 		runLix(args);
 		var resolved = resolve(lib).replace('\n', ' ');
