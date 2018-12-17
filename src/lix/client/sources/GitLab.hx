@@ -41,10 +41,11 @@ class GitLab {
       case null: 
         grabCommit(owner, project, '', options).next(getArchive.bind(owner, project, _, options));
       case sha if (sha.length == 40):
+        var url = 'https://${host(options)}/api/v4/projects/$owner%2F$project/repository/archive.zip?sha=$sha&${privateToken}';
         return ({
-          normalized: 'https://${host(options)}/$owner/$project/repository/archive.tar.gz?ref=$sha&${privateToken}',
+          normalized: url,
           dest: Computed(function (l) return [l.name, l.version, 'gitlab', sha]),
-          url: 'https://${host(options)}/$owner/$project/repository/archive.tar.gz?ref=$sha&${privateToken}',
+          url: url,
           lib: { name: Some(project), version: None }, 
         } : ArchiveJob);
       case v:
