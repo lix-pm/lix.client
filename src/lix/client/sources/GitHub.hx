@@ -33,7 +33,6 @@ import tink.url.Auth;
       case null: 
         grabCommit(owner, project, '').next(doGet);
       case sha if (sha.length == 40):
-        trace('gh://${credentials}github.com/$owner/$project#$sha');
         return ({
           normalized: 'gh://${credentials}github.com/$owner/$project#$sha',
           dest: Computed(function (l) return [l.name, l.version, 'github', sha]),
