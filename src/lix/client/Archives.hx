@@ -27,6 +27,7 @@ typedef ArchiveJob = {
   var lib(default, null):LibVersion;
   var dest(default, null):ArchiveDestination;
 
+  @:optional var arguments(default, null):Array<String>;
   @:optional var kind(default, null):Null<ArchiveKind>;
 }
 

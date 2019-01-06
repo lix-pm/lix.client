@@ -15,6 +15,7 @@ class Cli {
     var version = Macro.getVersion();
     var silent = args.remove('--silent'),
         force = args.remove('--force'),
+        submodules = args.remove('--submodules'),
         global = args.remove('--global') || args.remove('-g');
 
     var scope = Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
@@ -39,8 +40,8 @@ class Cli {
         });
 
     var haxelibUrl = new tink.url.Host(grab('--haxelib-url'));
-    
-    var sources:Array<ArchiveSource> = [Web, new Lix(), new Haxelib(haxelibUrl), github, gitlab, new Git(github, gitlab, scope)];
+
+    var sources:Array<ArchiveSource> = [Web, new Lix(), new Haxelib(haxelibUrl), github, gitlab, new Git(github, gitlab, scope, submodules)];
     var resolvers:Map<String, ArchiveSource> = [for (s in sources) for (scheme in s.schemes()) scheme => s];
 
     function resolve(url:Url):Promise<ArchiveJob>

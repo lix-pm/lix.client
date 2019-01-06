@@ -5,13 +5,15 @@ class Git {
   var github:GitHub;
   var gitlab:GitLab;
   var scope:Scope;
+  var submodules:Bool;
 
   public function schemes() return ['git'];
 
-  public function new(github, gitlab, scope) {
+  public function new(github, gitlab, scope, submodules) {
     this.github = github;
     this.gitlab = gitlab;
     this.scope = scope;
+    this.submodules = submodules;
   }
 
   static function eval(cmd:String, cwd:String, args:Array<String>, ?env:Env) 
@@ -78,6 +80,7 @@ class Git {
           
           sha.next(function (sha):ArchiveJob return {
             url: raw,
+            arguments: submodules ? ['--submodules'] : [],
             normalized: raw.scheme + ':' + url.resolve('#$sha'),
             dest: Computed(function (l) return [l.name, l.version, 'git', sha]),
             lib: { name: None, version: None },
@@ -91,6 +94,9 @@ class Git {
                 .next(function (_)
                   return git.call(['checkout', sha])
                 )
+                .next(function (_)
+                  return submodules ? git.call(['submodule', 'update', '--init', '--recursive']) : Noise
+                )
                 .next(function (_) {
                   Fs.copy(repo, ctx.dest, function (name) return name != '$repo/.git');
                   return Noise;
@@ -98,7 +104,7 @@ class Git {
                 .next(function (_)
                   return ctx.dest
                 );
-            })          
+            })
           });
       }    
 }

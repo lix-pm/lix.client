@@ -140,9 +140,12 @@ using haxe.Json;
 
       function saveHxml<T>(?value:T):Promise<T> 
         return (function () {
+          var arguments = a.job.arguments == null ? [] : a.job.arguments.copy();
+          arguments.push('--silent');
+
           var directives = [
             '-D $name=$version',
-            '# @$INSTALL: lix --silent download "${a.job.normalized}" into ${a.relRoot}',            
+            '# @$INSTALL: lix ${arguments.join(' ')} download "${a.job.normalized}" into ${a.relRoot}',            
           ];
 
           switch infos.postDownload {
