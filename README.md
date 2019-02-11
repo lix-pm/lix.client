@@ -271,6 +271,19 @@ Consider adding this to your `package.json`, for frictionless intallation:
 
 This will make sure lix installs its packages every time npm or yarn installs their packages.
 
+## Where does lix store its cache?
+
+> It's adviced to not manually modify anything inside the cache folder of lix.
+
+These are the default paths:
+
+- On Windows: `%AppData%\haxe\`
+- On Linux/Mac: `$HOME/haxe`
+
+Here you can find the stored Haxe compiler versions, the cached haxelibs and other downloads.
+This folder can be overridden by the env var "HAXESHIM_ROOT".
+
+
 ## Help and support
 
 If you find a bug or have an issue, please [file an issue on GitHub](https://github.com/lix-pm/lix.client/issues/new).
