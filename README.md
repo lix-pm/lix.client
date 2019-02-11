@@ -275,7 +275,14 @@ This will make sure lix installs its packages every time npm or yarn installs th
 
 > It's adviced to not manually modify anything inside the cache folder of lix.
 
-On Windows: `%AppData%\haxe\`. Here you can find the stored Haxe compiler versions, the cached haxelibs and other downloads.
+These are the default paths:
+
+- On Windows: `%AppData%\haxe\`
+- On Linux/Mac: `$HOME/haxe`
+
+Here you can find the stored Haxe compiler versions, the cached haxelibs and other downloads.
+This folder can be overridden by the env var "HAXESHIM_ROOT".
+
 
 ## Help and support
 
