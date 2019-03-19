@@ -91,7 +91,7 @@ class Download {
               else {
                 Fs.ensureDir(path);
                 zip.openReadStream(entry, function (e, stream) { 
-                  var out = js.node.Fs.createWriteStream(path);
+                  var out:js.node.fs.WriteStream = js.Lib.require('graceful-fs').createWriteStream(path);
                   stream.pipe(out, { end: true } );
                   out.on('close', done);
                 });
@@ -165,7 +165,7 @@ class Download {
               else {
                 pending++;
                 var buffer = @:privateAccess new js.node.stream.PassThrough();
-                var out = js.node.Fs.createWriteStream(path, { mode: entry.mode });
+                var out:js.node.fs.WriteStream = js.Lib.require('graceful-fs').createWriteStream(path, { mode: entry.mode });
                 entry.pipe(buffer, { end: true } );
                 buffer.pipe(out, { end: true } );
                 out.on('close', done.bind(entry.size));

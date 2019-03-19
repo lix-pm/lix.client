@@ -19,6 +19,7 @@
     "url": "git+https://github.com/lix-pm/lix.git"
   },
   "devDependencies": {
+    "graceful-fs": "^4.1.15",
     "noderify": "=3.0.2",
     "tar": "=4.0.2",
     "yauzl": "=2.6.0"
