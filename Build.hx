@@ -15,6 +15,11 @@ class Build {
   }
   
   static function cmd(command:String, ?args:Array<String>) {
-    if(Sys.command(command, args) != 0) throw 'Errored: $command ${args.join(' ')}';
+    switch Sys.command(command, args) {
+      case code if (code > 0):
+        Sys.println('Errored: $command ${args == null ? '' : args.join(' ')}');
+        Sys.exit(code);
+      case _:
+    }
   }
 }
