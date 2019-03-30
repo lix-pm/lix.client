@@ -4,6 +4,7 @@ class Build {
   static function main() {
     cmd('haxe', ['haxeshim.hxml']);
     cmd('haxe', ['lix.cli.hxml']);
+    cmd('npm i');
     for (file in sys.FileSystem.readDirectory('bin')) {
       if(file.extension() == 'js') {
         var file = 'bin/$file';
