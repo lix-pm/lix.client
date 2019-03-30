@@ -3,6 +3,10 @@ dist: trusty
 
 language: node_js
 node_js: 8
+
+cache:
+  directories:
+    - $HOME/haxe
   
 install:
   - npm i -g lix
@@ -12,3 +16,12 @@ install:
   
 script:
   - lix run travix neko
+  
+after_success:
+  - args=()
+  - if [ "$TRAVIS_BRANCH" == "develop" ]; then args+=(--tag); args+=(next); fi
+  - if [ "$TRAVIS_TAG" != "" ]; then npm --no-git-tag-version version $TRAVIS_TAG && npm publish "${args[@]}"; fi
+
+env:
+  global:
+    secure: pKnlJPYq60p0zZLHFbwqTlcf2AM6YwHtg/Cs75q2Cy0oeSeS2wEFrrhSv+2q54TCxfV6Zy7B4W6ClFi9tvi/7asjWO+EagVGSkdF7217iR2rQEFEEXmw/9zSoa/Mbn1IuxtqZ+eqqFBSDttQ3fwQlvyEkWuOkZ2fDR94mS7vX+l53ycRpsOr9rnpvDidDmOC6IZ68fvXO5G2AFu5QeZ4g72SlUgihfvE2yp4isBFIayD1bTtGubmt2TA+x6RoypjLmVQVn/0rcL37MSilPN88UiYkALzb6NcpNeMjISV7RmYr4E4VIYK4cp+9gRxMkT8pOb8ceBViyYIVZpXWStrR2VeHKOhSXeCZmSOfi19HUxQtVnE06PaK3YGLnKNiB9RHfBmL+aN//YJ6mZwOdtfF0IYjidFLbEtTscOka5WtP9yOp090VhuGxpGkmFomiFjs5MWad4l7ZObQRdrU5aN5k8YZiDua20WGG++ncAHQaDnU6BEeHh0SszWhDoblFL9fgbqKFrEbPyKAFB/eMtyMW60Z2MRqeCVKc8rnJm/5YD1zOyntcsKOQMtwwZARZVdO5B8oFQMo92ULfbsy3UcHyc43eSZiLwGgAx71eMBSmXa2r5l06ElPGo2PckdV/YVagrqUa1oG+0x61cY9rFqXfpk4+ZXGJUrQvHaB6Jgg5I= 
