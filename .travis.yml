@@ -30,6 +30,7 @@ deploy:
     email: kevinresol@gmail.com
     api_key:
       secure: omrFQU9rHFHtBfDUM2dCpMdBWoHgiu+9HOjSM76AygFDi+mol1xI9CdaFH3OkT3/lJRojS5YYo93xUPpqKhmLCm3yGBqR4RrG9ruqoCJsW7NG2AfSxansfoC2W5v4YQCKcDWjj7vBNSXGpAPBz5jjuA167esTygi1ZmLuMLub/hV7wU+znZF1/9F2xQbK0u7jislH9Nz4JwHKrNiaUMxokoM/7Emfxm+HV3rIEDjeOZl0OKNyJrazxkUEbgL7VDxJ8CWVBK9AMOZvz+PzwZqq4TwmzH83ss0Qp2elVKo1ydNUVHjM6XHKfOIz2ZQdqQ6AjjPXSWfPfAqjddhRti/nUX96VP0ulOCzCxtBXBCFdFWZM43YYwmHn2F2CsHFSJitrDuzveb1gJylzt5iYqoHshbAKHaPQ1kYM+nfbDf6DzYpl4uFfyIYth2eUEJtkDf+XMLrXH+5Qhcy1CoXHvSOM/C7GXBsOHk+C+WpATG7GC3otbo+3gJspgv1uPeLKcOGREqk3HsLKYQ50ulSPLxiBQh9yf46gumx6aq6TtMSDtDYGqA8Tk5t2t/YjDX2R2kU4kM6IGIep2UvinfB1GGlsRFhEgoRPgYc5dX685gk6vd/S5ILa2W00nJU0cov/CwI4qL8BIf4fLX4BITRbIKMAEn/VM9oSG6JlpgV7pElxI=
+    tag: latest
     on:
       tags: true
       branch: master
