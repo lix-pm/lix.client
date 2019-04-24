@@ -43,6 +43,10 @@ Before we get started: lix is made to work on top of Haxe Shim. [You can read mo
 - decouple the haxe command from the haxe compiler (which are right now the very same thing) and instead use project specific configuration of the Haxe version, meaning that you can seamlessly have different Haxe versions in different projects on the same machine and also ensure that the same project will use the same Haxe version across different machines
 - decouple Haxe from Haxelib (which are right now tied at the hip) and instead use project specific configuration of dependencies in a simple hxml-based format. Any tool capable of writing these hxmls can thus supply dependencies to the project. Moreover, this setup also ensures frictionless use of different dependency  versions in different projects and reliable replication of dependency versions across separate machines.
 
+## Requirements
+
+Node.js v6 or above
+
 ## Installation
 
 lix is installed through npm (or yarn). If you don't have one of these installed, you can find out [how to install NodeJS and NPM here](https://nodejs.org/en/download/).
