@@ -1,5 +1,6 @@
 -lib lix.client
 -js bin/lix.js
 -main lix.cli.Cli
+-D no-deprecation-warnings
 --macro haxeshim.Build.postprocess()
 -dce full

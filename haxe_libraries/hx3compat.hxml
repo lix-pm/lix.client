@@ -1,0 +1,3 @@
+-D hx3compat=1.0.3
+# @install: lix --silent download "haxelib:/hx3compat#1.0.3" into hx3compat/1.0.3/haxelib
+-cp ${HAXE_LIBCACHE}/hx3compat/1.0.3/haxelib/std

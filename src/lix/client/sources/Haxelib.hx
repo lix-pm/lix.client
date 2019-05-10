@@ -62,7 +62,7 @@ private class Proxy extends haxe.remoting.AsyncProxy<lix.client.sources.haxelib.
               hash: version,
               query: if (isCustom) { url : baseURL } else null,
             }),
-            dest: Fixed([name, version, 'haxelib' + if (isCustom) '@' + getBaseUrl(options).urlEncode() else '']),
+            dest: Fixed([name, version, 'haxelib' + if (isCustom) '@' + getBaseUrl(options).toString().urlEncode() else '']),
             kind: Zip,
             lib: { name: Some(name), version: Some(version) }
           } : ArchiveJob);
@@ -72,7 +72,7 @@ private class Proxy extends haxe.remoting.AsyncProxy<lix.client.sources.haxelib.
     return Future.async(function (cb) {
       var cnx = haxe.remoting.HttpAsyncConnection.urlConnect(resolve('/api/3.0/index.n', options));
       cnx.setErrorHandler(function (e) cb(Failure(Error.withData('Failed to get version information from haxelib because $e', e))));  
-      var repo = new Proxy(cnx.api);
+      var repo = new Proxy(cnx.resolve('api'));
       repo.getLatestVersion(name, function (s) cb(Success(s)));
     });
 
