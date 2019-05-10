@@ -42,6 +42,6 @@ class InstallHaxeTest extends TestBase {
 			case v: v;
 		}
 		
-		return v.replace('\n', '').split('+')[0];
+		return v.trim().split('+')[0];
 	}
 }
