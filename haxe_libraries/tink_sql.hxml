@@ -1,7 +1,0 @@
-# @install: lix download https://github.com/haxetink/tink_sql/archive/7cef8e8c0c338e3e8b292c9e448c4244d5eb42b0.tar.gz as tink_sql#0.0.0-alpha.0/7cef8e8c0c338e3e8b292c9e448c4244d5eb42b0
--D tink_sql=0.0.0-alpha.0
--cp ${HAXESHIM_LIBCACHE}/tink_sql/0.0.0-alpha.0/7cef8e8c0c338e3e8b292c9e448c4244d5eb42b0/src
-
--lib tink_streams
--lib tink_macro
--lib tink_url
