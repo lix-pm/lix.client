@@ -72,7 +72,7 @@ class Cli {
       #end
     );
 
-    Command.dispatch(args, 'lix - Libraries for haXe (v$version)', [
+    Command.dispatch(args, 'lix - Libraries for Haxe (v$version)', [
       new Command('install', '<url> [as <lib[#ver]>]', 'install lib from specified url',
         function (args) 
           return 
