@@ -94,7 +94,7 @@ lix install haxelib:tink_core as othername#1.2.3
 
 You will find something like the following `othername.hxml` in your `haxe_libraries`:
 
-```
+```hxml
 # @install: lix --silent download "haxelib:tink_core#1.16.1" into tink_core/1.16.1/haxelib
 -D othername=1.2.3
 -cp ${HAXESHIM_LIBCACHE}/tink_core/1.16.1/haxelib/src
@@ -136,15 +136,19 @@ With lix, there is no command to do this, you just edit the relevant hxml file.
 
 For example, change `haxe_libraries/tink_core.hxml` from:
 
-    # @install: lix --silent download "haxelib:tink_core#1.15.0" into tink_core/1.15.0/haxelib
-    -D tink_core=1.15.0
-    -cp ${HAXESHIM_LIBCACHE}/tink_core/1.15.0/haxelib/src
+```hxml
+# @install: lix --silent download "haxelib:tink_core#1.15.0" into tink_core/1.15.0/haxelib
+-D tink_core=1.15.0
+-cp ${HAXESHIM_LIBCACHE}/tink_core/1.15.0/haxelib/src
+```
 
 to:
 
-    # @install: lix --silent download "haxelib:tink_core#1.15.0" into tink_core/1.15.0/haxelib
-    -D tink_core=1.15.0
-    -cp /home/jason/workspace/tink_core/src/
+```hxml
+# @install: lix --silent download "haxelib:tink_core#1.15.0" into tink_core/1.15.0/haxelib
+-D tink_core=1.15.0
+-cp /home/jason/workspace/tink_core/src/
+```
 
 When you do this, it will show up as a modified file in git. You should avoid commiting this change, as it won't work for anyone else who wants to use your project but doesn't have the exact same project in the exact same location.
 
@@ -265,9 +269,11 @@ And then
 
 Consider adding this to your `package.json`, for frictionless intallation:
 
-    "scripts": {
-        "postinstall": "lix download"
-    }
+```json
+"scripts": {
+    "postinstall": "lix download"
+}
+```
 
 This will make sure lix installs its packages every time npm or yarn installs their packages.
 
