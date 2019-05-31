@@ -28,12 +28,12 @@ class HaxeCmd {
           }    
           else Promise.lift(Noise)
         ).next(function (_) {
-          switch scope.getInstallationInstructions().instructions.install.length {
-            case 0: 
-            case v:
-              println('Missing $v libraries. Attempting download ...');
-              new HaxeCli(scope).installLibs(true);
-          }
+          // switch scope.getInstallationInstructions().instructions.install.length {
+          //   case 0: 
+          //   case v:
+          //     println('Missing $v libraries. Attempting download ...');
+          //     new HaxeCli(scope).installLibs(true);
+          // }
           return Noise;
         });
       });
