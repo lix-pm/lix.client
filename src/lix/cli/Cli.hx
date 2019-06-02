@@ -74,10 +74,8 @@ class Cli {
                   hx.install(version, { force: force });
                 case [url, 'as', alias]: 
                   libs.installUrl(url, LibVersion.parse(alias));
-                case [library, constraint]:
-                  Promise.lift(Constraint.parse(constraint)).next(libs.install.bind(library, _));
-                case [library] if ((library:Url).scheme == null): 
-                  libs.install(library);
+                case [library, _] | [library] if ((library:Url).scheme == null): 
+                  new Error('Did you mean `lix install haxelib:$library`?');
                 case [url]:
                   libs.installUrl(url);
                 case []: new Error('Missing url');
