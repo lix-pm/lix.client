@@ -1,12 +1,19 @@
 package lix.client.sources;
 
 import tink.url.Auth;
+import tink.url.Path;
 
 @:tink class GitHub {
 
+  static function isArchive(p:Path)
+    return switch p.parts() {
+      case [_, _, (_:String) => 'archive', _]: true;
+      default: false;
+    }
+
   public function intercept(url:Url)
     return return switch url {
-      case { scheme: 'https', host: { name: 'github.com' } }:
+      case { scheme: 'https', host: { name: 'github.com' }, path: isArchive(_) => false }:
         Some(processUrl(url));
       default:
         None;

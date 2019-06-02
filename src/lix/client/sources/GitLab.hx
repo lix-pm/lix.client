@@ -4,7 +4,7 @@ class GitLab {
 
   public function intercept(url:Url)
     return return switch url {
-      case { scheme: 'https', host: { name: 'gitlab.com' } }:
+      case { scheme: 'https', host: { name: 'gitlab.com' }, path: _.parts()[0] == 'api' => false }:
         Some(processUrl(url));
       default:
         None;
