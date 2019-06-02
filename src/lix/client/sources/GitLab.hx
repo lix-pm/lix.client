@@ -2,6 +2,14 @@ package lix.client.sources;
 
 class GitLab {
 
+  public function intercept(url:Url)
+    return return switch url {
+      case { scheme: 'https', host: { name: 'gitlab.com' } }:
+        Some(processUrl(url));
+      default:
+        None;
+    }
+
   public function schemes()
     return ['gitlab'];
 
@@ -55,7 +63,7 @@ class GitLab {
   public function processUrl(url:Url):Promise<ArchiveJob> 
     return switch url.path {
       case null: new Error('invalid gitlab url $url');
-      case _.parts().toStringArray() => [owner, project]: getArchive(owner, project, url.hash, { host: url.host });
+      case _.parts().toStringArray() => [owner, project]: getArchive(owner, Git.strip(project), url.hash, { host: url.host });
       default: new Error('invalid gitlab url $url');
     }
 }

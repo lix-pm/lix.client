@@ -1,19 +1,27 @@
 package lix.client.sources;
 
 class Web {
-  static public function schemes() 
+  
+  var interceptors:Array<Url->Option<Promise<ArchiveJob>>>;
+  public function new(interceptors)
+    this.interceptors = interceptors;
+
+  public function schemes() 
     return ['http', 'https'];
 
-  static public function processUrl(url:Url):Promise<ArchiveJob> {
-    var lib = LibVersion.parse(url.hash);
-    if (lib != null)
-      url = url.toString().split('#')[0];
+  public function processUrl(url:Url):Promise<ArchiveJob> {
+
+    for (i in interceptors)
+      switch i(url) {
+        case Some(p): return p;
+        default:
+      }
 
     return ({
       url: url,
       dest: Computed(function (l) return [l.name, l.version, url]),
       normalized: url,
-      lib: lib,
+      lib: null,
     } : ArchiveJob);
   }
 }

@@ -180,6 +180,8 @@ class DownloadedArchive {
                 new Named<Url>(name, switch deps[name] {
                   case '' | '*': 'haxelib:$name';
                   case version = (_:Url).scheme => null: 'haxelib:$name#$version';
+                  case (_:Url) => { scheme: 'git', payload: (_:Url) => url = { scheme: 'https', host: { name: 'github.com' | 'gitlab.com' }} }:
+                    url;
                   case u: u;
                 })
               ]; 

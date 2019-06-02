@@ -2,17 +2,17 @@ package lix.client.sources;
 
 class Git {
   
-  var github:GitHub;
-  var gitlab:GitLab;
   var scope:Scope;
 
   public function schemes() return ['git'];
 
-  public function new(github, gitlab, scope) {
-    this.github = github;
-    this.gitlab = gitlab;
+  public function new(scope) 
     this.scope = scope;
-  }
+
+  static public function strip(name:String)
+    return 
+      if (name.endsWith('.git')) name.withoutExtension();
+      else name;
 
   static function eval(cmd:String, cwd:String, args:Array<String>, ?env:Env) 
     return switch js.node.ChildProcess.spawnSync(cmd, args, { cwd: cwd, stdio:['inherit', 'pipe', 'inherit'], env: Exec.mergeEnv(env) } ) {
@@ -47,16 +47,6 @@ class Git {
   public function processUrl(raw:Url):Promise<ArchiveJob> 
     return 
       switch raw.payload {
-        case gh if (gh.startsWith('https://github.com')):
-          github.processUrl(switch gh {
-            case v if (v.endsWith('.git')): v.substr(0, v.length - 4);
-            case v: v;
-          });
-        case gl if (gl.startsWith('https://gitlab.com')):
-          gitlab.processUrl(switch gl {
-            case v if (v.endsWith('.git')): v.substr(0, v.length - 4);
-            case v: v;
-          });
         case (_:Url) => url:
           var origin = url.resolve(''),
               version = switch url.hash {

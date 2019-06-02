@@ -4,6 +4,14 @@ import tink.url.Auth;
 
 @:tink class GitHub {
 
+  public function intercept(url:Url)
+    return return switch url {
+      case { scheme: 'https', host: { name: 'github.com' } }:
+        Some(processUrl(url));
+      default:
+        None;
+    }
+
   public function schemes()
     return ['github', 'gh'];
 
@@ -48,7 +56,7 @@ import tink.url.Auth;
     return switch url.path {
       case null: new Error('invalid github url $url');
       case _.parts().toStringArray() => [owner, project]: 
-        getArchive(owner, project, url.hash, url.auth);
+        getArchive(owner, Git.strip(project), url.hash, url.auth);
       default: new Error('invalid github url $url');
     }
 }
