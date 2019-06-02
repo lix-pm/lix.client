@@ -268,7 +268,11 @@ class Download {
             }
             update();
           },
-          done: cb,
+          done: function (r) {
+            saved = total;
+            update();
+            cb(r);
+          },
         });
       }
   }

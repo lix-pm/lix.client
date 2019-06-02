@@ -8,10 +8,24 @@ using tink.CoreApi;
 class Tar {
   static public function parse(source:IReadable, onentry:TarEntry->Void):Promise<Noise> 
     return Future.async(function (cb) {
-      var parse = new TarParse({ onentry: onentry });
-      source.pipe(parse, { end: true });
-      parse.on('end', function () cb(Success(Noise)));
+      var entries = 0,
+          warnings = 0;
+
+      var parse = new TarParse({ 
+        onentry: function (e) {
+          entries++;
+          onentry(e);
+        } 
+      });
+      
+      parse.on('warn', function () warnings++);
+      parse.on('end', function () cb(
+        if (entries == 0 && warnings != 0) Failure(new Error(UnprocessableEntity, 'Invalid tar archive.')) 
+        else Success(Noise))
+      );
       parse.on('error', function (e) cb(Failure(new Error((e.message:String)))));
+      
+      source.pipe(parse, { end: true });
     });
 }
 
