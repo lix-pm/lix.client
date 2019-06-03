@@ -69,7 +69,7 @@ class Git {
           sha.next(function (sha):ArchiveJob return {
             url: raw,
             normalized: raw.scheme + ':' + url.resolve('#$sha'),
-            dest: Computed(function (l) return [l.name, l.version, 'git', sha]),
+            dest: Computed(l -> return [l.name, l.version, 'git', sha]),
             lib: { name: None, version: None },
             kind: Custom(function (ctx) return {
               var repo = Path.join([scope.libCache, '.gitrepos', DownloadedArchive.escape(origin)]);
@@ -78,16 +78,9 @@ class Git {
                 if ('$repo/.git'.exists()) ['fetch', origin]
                 else ['clone', origin, '.']
               )
-                .next(function (_)
-                  return git.call(['checkout', sha])
-                )
-                .next(function (_) {
-                  Fs.copy(repo, ctx.dest, function (name) return name != '$repo/.git');
-                  return Noise;
-                })
-                .next(function (_)
-                  return ctx.dest
-                );
+                .next(_ -> git.call(['checkout', sha]))
+                .next(_ -> Fs.copy(repo, ctx.dest, function (name) return name != '$repo/.git'))
+                .next(_ -> ctx.dest);
             })          
           });
       }    

@@ -89,7 +89,7 @@ class Download {
               if (path.endsWith('/')) 
                 done();
               else {
-                Fs.ensureDir(path);
+                Fs.ensureDir(path).eager();
                 zip.openReadStream(entry, function (e, stream) { 
                   var out:js.node.fs.WriteStream = js.Lib.require('graceful-fs').createWriteStream(path);
                   stream.pipe(out, { end: true } );
@@ -157,19 +157,22 @@ class Download {
             if (path.endsWith('/')) 
               skip();
             else {
-              Fs.ensureDir(path);
-              if (entry.type == SymbolicLink) {
-                skip();
-                symlinks.push({ from: Path.join([Path.directory(path), entry.linkpath]), to: path });
-              }
-              else {
-                pending++;
-                var buffer = @:privateAccess new js.node.stream.PassThrough();
-                var out:js.node.fs.WriteStream = js.Lib.require('graceful-fs').createWriteStream(path, { mode: entry.mode });
-                entry.pipe(buffer, { end: true } );
-                buffer.pipe(out, { end: true } );
-                out.on('close', done.bind(entry.size));
-              }
+              Fs.ensureDir(path).handle(function (o) switch o {
+                case Failure(e): cb(Failure(error = e));
+                default:
+                  if (entry.type == SymbolicLink) {
+                    skip();
+                    symlinks.push({ from: Path.join([Path.directory(path), entry.linkpath]), to: path });
+                  }
+                  else {
+                    pending++;
+                    var buffer = @:privateAccess new js.node.stream.PassThrough();
+                    var out:js.node.fs.WriteStream = js.Lib.require('graceful-fs').createWriteStream(path, { mode: entry.mode });
+                    entry.pipe(buffer, { end: true } );
+                    buffer.pipe(out, { end: true } );
+                    out.on('close', done.bind(entry.size));
+                  }
+              });
             }
         }      
       }).handle(function (o) switch o {

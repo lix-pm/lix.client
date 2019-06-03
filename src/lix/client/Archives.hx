@@ -30,12 +30,17 @@ typedef ArchiveJob = {
   @:optional var kind(default, null):Null<ArchiveKind>;
 }
 
+enum ArchiveDependency {
+  FromUrl(u:Url);
+  FromHxml(path:String);
+}
+
 @:structInit class ArchiveInfos {
   public var name(default, null):String;
   public var version(default, null):String;
   public var classPath(default, null):String;
   public var runAs(default, null):{ libRoot: String }->Option<String>;
-  public var dependencies(default, null):Array<Named<Url>>;
+  public var dependencies(default, null):Array<Named<ArchiveDependency>>;
   @:optional public var postDownload(default, null):String;
   @:optional public var postInstall(default, null):String;
 }
@@ -60,8 +65,11 @@ class DownloadedArchive {
    */
   public var absRoot(get, never):String;
     inline function get_absRoot()
-      return '$storageRoot/$relRoot'.removeTrailingSlashes();
+      return getAbsRoot(storageRoot, relRoot);
      
+  static function getAbsRoot(storageRoot, relRoot)
+    return '$storageRoot/$relRoot'.removeTrailingSlashes();
+
   static var RESERVED = "!#$&'()*+,/:;=?@[]";
 
   static public function escape(s:String) {
@@ -78,52 +86,45 @@ class DownloadedArchive {
 
   static public function fresh(tmpLoc:String, storageRoot:String, targetLoc:String, job:ArchiveJob) {
     var curRoot = '$tmpLoc/${seekRoot(tmpLoc)}';
-    var infos = readInfos(curRoot, job.lib);
-    
-    var relRoot = 
-      if (targetLoc == null) 
-        path(switch job.dest {
-          case Fixed(path): path;
-          case Computed(f): f(infos);
-        });
-      else targetLoc;
-    
-    var ret = new DownloadedArchive(relRoot, storageRoot, job, infos);
-    ret.alreadyDownloaded = false;
+    return readInfos(curRoot, job.lib)
+      .next(infos -> {
+        var relRoot = 
+          if (targetLoc == null) 
+            path(switch job.dest {
+              case Fixed(path): path;
+              case Computed(f): f(infos);
+            });
+          else targetLoc;
+        
+        var ret = new DownloadedArchive(relRoot, storageRoot, job, infos);
+        ret.alreadyDownloaded = false;
 
-    var archive = null;
-
-    switch ret.absRoot {
-      case old if (old.exists()):
-        old.rename(archive = '$old-archived@${Date.now().getTime()}');
-      default:
-    }
-      
-    Fs.ensureDir(ret.absRoot);  
-    curRoot.rename(ret.absRoot);
-    
-    if (archive != null)
-      Fs.delete(archive);
-
-    if (tmpLoc.exists())
-      Fs.delete(tmpLoc);
-    return ret;
+        var archive = null,
+            old = ret.absRoot;
+        return Fs.exists(old)
+          .next(exists ->
+            if (exists) Fs.move(old, archive = '$old-archived@${Date.now().getTime()}')
+            else Noise
+          )
+          .next(_ -> Fs.move(curRoot, ret.absRoot))
+          .next(_ -> Fs.delete(archive))
+          .next(_ -> Fs.delete(tmpLoc))
+          .swap(ret);
+      });
   }
 
-  static public function existent(path:String, storageRoot:String, job:ArchiveJob) {
-    return new DownloadedArchive(path, storageRoot, job);
-  }
+  static public function existent(path:String, storageRoot:String, job:ArchiveJob) 
+    return 
+      readInfos(getAbsRoot(storageRoot, path), job.lib)
+        .next(infos -> new DownloadedArchive(path, storageRoot, job, infos));
 
-  function new(relRoot:String, storageRoot:String, job:ArchiveJob, ?infos) {
+  function new(relRoot, storageRoot, job, infos) {
     
     this.storageRoot = storageRoot;
     this.relRoot = relRoot;
     
     this.job = job;
-    this.infos = switch infos {
-      case null: readInfos(absRoot, job.lib); 
-      case v: v;
-    }
+    this.infos = infos;
   }
   
   static function seekRoot(path:String) 
@@ -134,7 +135,7 @@ class DownloadedArchive {
         '';
     }
   
-  static function readInfos(root:String, lib:LibVersion):ArchiveInfos {
+  static function readInfos(root:String, lib:LibVersion):Promise<ArchiveInfos> {
     
     var files = root.readDirectory();
     
@@ -147,7 +148,17 @@ class DownloadedArchive {
     if (lib == null)
       lib = LibVersion.UNDEFINED;
 
-    return 
+    var haxeshimDependencies = 
+      if (files.remove('.haxerc') && files.remove('haxe_libraries')) {
+        var libs = '$root/haxe_libraries';
+        [for (f in libs.readDirectory()) 
+          if (f.extension() == 'hxml') 
+            new Named(f.withoutExtension(), FromHxml('$libs/$f'))
+        ];
+      }
+      else [];
+
+    var ret:ArchiveInfos =  
       if (files.indexOf('haxelib.json') != -1) {
         //TODO: there's a lot of errors to be caught here
         var info:{ 
@@ -174,16 +185,23 @@ class DownloadedArchive {
               None
           ,
           dependencies: switch info.dependencies {
-            case null: [];
+            case null: haxeshimDependencies;
             case deps: 
               [for (name in deps.keys()) 
-                new Named<Url>(name, switch deps[name] {
-                  case '' | '*': 'haxelib:$name';
-                  case version = (_:Url).scheme => null: 'haxelib:$name#$version';
-                  case (_:Url) => { scheme: 'git', payload: (_:Url) => url = { scheme: 'https', host: { name: 'github.com' | 'gitlab.com' }} }:
-                    url;
-                  case u: u;
-                })
+                switch [for (d in haxeshimDependencies) if (d.name == name) d] {
+                  case [v]: v;
+                  case v:
+                    new Named(
+                      name, 
+                      FromUrl(switch deps[name] {
+                        case '' | '*': 'haxelib:$name';
+                        case version = (_:Url).scheme => null: 'haxelib:$name#$version';
+                        case (_:Url) => { scheme: 'git', payload: (_:Url) => url = { scheme: 'https', host: { name: 'github.com' | 'gitlab.com' }} }:
+                          url;
+                        case u: u;
+                      })
+                    );
+                }
               ]; 
           },
           postInstall: info.postInstall,
@@ -197,7 +215,7 @@ class DownloadedArchive {
           version: info.version,
           classPath: guessClassPath(),
           runAs: function (_) return None,
-          dependencies: [],
+          dependencies: haxeshimDependencies,
         }
       }
       else {        
@@ -206,8 +224,9 @@ class DownloadedArchive {
           version: lib.version.or('0.0.0'),
           classPath: guessClassPath(),
           runAs: function (_) return None,
-          dependencies: [],
+          dependencies: haxeshimDependencies,
         }
       }
+    return ret;
   }    
 }

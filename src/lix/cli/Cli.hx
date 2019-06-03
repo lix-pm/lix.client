@@ -94,9 +94,10 @@ class Cli {
             Scope.create(scope.cwd, {
               version: scope.config.version,
               resolveLibs: if (scope.isGlobal) Scoped else scope.config.resolveLibs,
+            }).next(_ -> {
+              log('created scope in ${scope.cwd}');
+              Noise;
             });
-            log('created scope in ${scope.cwd}');
-            Noise;
           case ['delete']:
             if (scope.isGlobal)
               new Error('Cannot delete global scope');
@@ -167,11 +168,12 @@ class Cli {
               new Error('`download <url> as <ver>` is no longer supported');
             else {
               Sys.println('[WARN]: Processing obsolete `download ${args.map(shorten).join(" ")}`.\n        Please reinstall library in a timely manner!\n\n');
-              libs.downloadUrl(url, { into: target }).next(function (a) return {
-                Fs.ensureDir(absTarget);
-                a.absRoot.rename(absTarget);
-                return a;
-              });
+              libs.downloadUrl(url, { into: target })
+                .next(a -> { Fs.ensureDir(absTarget); a; })
+                .next(a -> {
+                  a.absRoot.rename(absTarget);
+                  a;
+                });
             }
           case [url, 'into', dir]: 
 

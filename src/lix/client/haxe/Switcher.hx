@@ -117,15 +117,12 @@ class Switcher {
       );
     
   public function switchTo(version:ResolvedVersion):Promise<Noise>
-    return attempt('save new configuration to ${scope.configFile}', function () {
+    return 
       scope.reconfigure({
         version: version.id,
         resolveLibs: scope.config.resolveLibs,
       });
-      
-      return Noise;
-    });
-    
+
   public function resolveInstalled(version:UserVersion):Promise<ResolvedVersion>
     return resolve(version, officialInstalled, nightliesInstalled);
     

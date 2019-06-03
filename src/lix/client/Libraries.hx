@@ -57,32 +57,37 @@ using haxe.Json;
               case Custom(load): 
                 load({ dest: dest, silent: silent, source: a.normalized, scope: scope });
             })
-              .next(dir => {
-                var ret = DownloadedArchive.fresh(dir, scope.libCache, into, a);
-
+              .next(dir => DownloadedArchive.fresh(dir, scope.libCache, into, a))
+              .next(arch => {
                 if (cacheFile != null) {
                   Fs.ensureDir(cacheFile);
-                  cacheFile.saveContent(ret.relRoot);
+                  cacheFile.saveContent(arch.relRoot);
                 }
-
-                return ret;
+                arch;
               });
           }
       }
     );     
 
-  public function installMany(projects:Array<Dependency>):Promise<Noise>
-    return resolver(projects).next(function (jobs) {
-      return Promise.inSequence([for (j in jobs) installArchive(j)]).noise();
-    });
+  public function installUrl(url:Url, ?as:LibVersion, ?options):Promise<Noise> 
+    return installArchive(urlToJob(url), as, options);
 
-  public function install(lib:ProjectName, ?constraint:Constraint):Promise<Noise>
-    return installMany([{ name: lib, constraint: constraint }]);
-
-  public function installUrl(url:Url, ?as:LibVersion):Promise<Noise> 
-    return installArchive(urlToJob(url), as, true);
+  function installFromLibHxml(lib:String, srcPath:String):Promise<Noise>
+    return Fs.copy(srcPath, '${scope.scopeLibDir}/$lib.hxml')
+      .next(_ -> scope.getDirectives(lib))
+      .next(d -> switch d['install'] {
+        case null | []: 
+          new Error('No install directive in $srcPath');
+        case directives: 
+          Promise.inSequence([for (d in directives) 
+            Promise.NOISE.next(_ -> {
+              if (!silent) log(d);
+              Exec.shell(d, scope.scopeDir);
+            })
+          ]);
+      });
     
-  public function installArchive(a:Promise<ArchiveJob>, ?as:LibVersion, ?withHaxeLibDependencies:Bool):Promise<Noise> 
+  public function installArchive(a:Promise<ArchiveJob>, ?as:LibVersion, options = { alreadyInstalled: new Map() }):Promise<Noise> 
     return downloadArchive(a).next(function (a) {
       var extra =
         switch '${a.absRoot}/extraParams.hxml' {
@@ -116,7 +121,6 @@ using haxe.Json;
           default: null;  
         });
 
-      
       function exec(hook:String, cmd:Null<String>, ?cwd:String):Promise<Noise>
         return 
           if (cmd != null) {
@@ -169,15 +173,23 @@ using haxe.Json;
 
       saveHxml();
 
+      options.alreadyInstalled[name] = true;
+
       return 
         Future.ofMany(//TODO: this relies on the implementation being sequential (which it currently is, but that may change)
-          [for ({ name: lib, value: url } in infos.dependencies) 
-            Future.async(
+          [for ({ name: lib, value: dep } in infos.dependencies) 
+            Future.async(//TODO: it should probably be fine to skip this lazy wrapper
               function (done) 
-                if ('${scope.scopeLibDir}/$lib.hxml'.exists()) //TODO: this should be in some function
+                if ('${scope.scopeLibDir}/$lib.hxml'.exists() && options.alreadyInstalled[lib]) //TODO: this should be in some function
                   done(Success(Noise))
-                else
-                  installUrl(url, { name: Some(lib), version: None }).handle(done),
+                else switch dep {
+                  case FromUrl(url):
+                    installUrl(url, { name: Some(lib), version: None }, options).handle(done);
+                  case FromHxml(content): 
+                    installFromLibHxml(lib, content)
+                      .next(_ -> { options.alreadyInstalled[lib] = true; Noise; })
+                      .handle(done);
+                },
               true
             )
           ]

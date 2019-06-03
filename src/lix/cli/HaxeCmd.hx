@@ -1,17 +1,14 @@
 package lix.cli;
 
 class HaxeCmd {
-  static public function ensureScope() {
-    if (!Scope.exists(Scope.DEFAULT_ROOT)) {
-      Fs.ensureDir(Scope.DEFAULT_ROOT + '/');
-        
-      Scope.create(Scope.DEFAULT_ROOT, {
-        version: 'stable',
-        resolveLibs: Mixed,
-      });      
-    }
-    return Promise.lift(Noise);    
-  }
+  static public function ensureScope():Promise<Noise>
+    return 
+      if (Scope.exists(Scope.DEFAULT_ROOT)) Noise;
+      else 
+        Scope.create(Scope.DEFAULT_ROOT, {
+          version: 'stable',
+          resolveLibs: Mixed,
+        });      
 
   static public function ensure() 
     return ensureScope()
