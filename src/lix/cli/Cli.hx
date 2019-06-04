@@ -83,7 +83,7 @@ class Cli {
               }
       ),      
       new Command('install haxe', '<version>|<alias>', 'install specified haxe version', null),//this is never matched and is here purely for usage display
-      new Command('use', 'haxe <alias>|<version>', 'use specified haxe version', function (args) return switch args {
+      new Command('use', 'haxe <version>|<alias>', 'use specified haxe version', function (args) return switch args {
         case ['haxe', version]: hx.resolveInstalled(version).next(hx.switchTo);
         default: new Error('invalid arguments');
       }),
