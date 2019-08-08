@@ -26,7 +26,7 @@ class Switcher {
   }
   
   static var VERSION_INFO = 'version.json';  
-  static var NIGHTLIES = 'http://hxbuilds.s3-website-us-east-1.amazonaws.com/builds/haxe';
+  static var NIGHTLIES = 'https://build.haxe.org/builds/haxe';
   static var PLATFORM =
     switch Sys.systemName() {
       case 'Windows': 'windows';
@@ -50,7 +50,7 @@ class Switcher {
   }
     
   static public function officialOnline(kind:PickOfficial):Promise<Iterable<Official>>
-    return Download.text('https://raw.githubusercontent.com/HaxeFoundation/haxe.org/staging/downloads/versions.json')
+    return Download.text('https://haxe.org/website-content/downloads/versions.json')
       .next(function (s) {
         return sortedOfficial(kind, s.parse().versions.map(function (v) return v.version));
       });
@@ -179,7 +179,7 @@ class Switcher {
     
   function linkToOfficial(version)
     return 
-      'http://haxe.org/website-content/downloads/$version/downloads/haxe-$version-' + switch Sys.systemName() {
+      'https://haxe.org/website-content/downloads/$version/downloads/haxe-$version-' + switch Sys.systemName() {
         case 'Windows': 'win.zip';
         case 'Mac': 'osx.tar.gz';
         default: 
