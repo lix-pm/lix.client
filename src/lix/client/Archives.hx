@@ -35,14 +35,46 @@ enum ArchiveDependency {
   FromHxml(path:String);
 }
 
+typedef HxmlPath = String;
+
 @:structInit class ArchiveInfos {
   public var name(default, null):String;
   public var version(default, null):String;
   public var classPath(default, null):String;
   public var runAs(default, null):{ libRoot: String }->Option<String>;
-  public var dependencies(default, null):Array<Named<ArchiveDependency>>;
+  public var dependencies(default, null):ArchiveDependencies;
+  public var haxeshimDependencies(default, null):HaxeshimDependencies;
   @:optional public var postDownload(default, null):String;
   @:optional public var postInstall(default, null):String;
+}
+
+
+abstract HaxeshimDependencies(Null<Map<String, HxmlPath>>) from Map<String, HxmlPath> {
+  @:arrayAccess public inline function get(libName:String):Null<HxmlPath>
+    return switch this {
+      case null: null;
+      case v: v[libName];
+    }
+
+  public function keyValueIterator()
+    return switch this {
+      case null: [].iterator();
+      case v: v.keyValueIterator();
+    }
+}
+
+@:forward(iterator)
+abstract ArchiveDependencies(Array<Named<ArchiveDependency>>) {
+  inline function new(deps) {
+    this = deps;
+    this.sort((a, b) -> Reflect.compare(a.name, b.name));
+  }
+
+  @:from static function ofHaxeshim(d:HaxeshimDependencies)
+    return new ArchiveDependencies([for (lib => hxml in d) new Named(lib, FromHxml(hxml))]);
+
+  @:from static function ofMap(m:Map<String, ArchiveDependency>) 
+    return new ArchiveDependencies([for (lib => dep in m) new Named(lib, dep)]);
 }
 
 class DownloadedArchive {
@@ -148,15 +180,15 @@ class DownloadedArchive {
     if (lib == null)
       lib = LibVersion.UNDEFINED;
 
-    var haxeshimDependencies = 
+    var haxeshimDependencies:HaxeshimDependencies = 
       if (files.remove('.haxerc') && files.remove('haxe_libraries')) {
         var libs = '$root/haxe_libraries';
         [for (f in libs.readDirectory()) 
           if (f.extension() == 'hxml') 
-            new Named(f.withoutExtension(), FromHxml('$libs/$f'))
+            f.withoutExtension() => '$libs/$f'
         ];
       }
-      else [];
+      else null;
 
     var ret:ArchiveInfos =  
       if (files.indexOf('haxelib.json') != -1) {
@@ -187,23 +219,18 @@ class DownloadedArchive {
           dependencies: switch info.dependencies {
             case null: haxeshimDependencies;
             case deps: 
-              [for (name in deps.keys()) 
-                switch [for (d in haxeshimDependencies) if (d.name == name) d] {
-                  case [v]: v;
-                  case v:
-                    new Named(
-                      name, 
-                      FromUrl(switch deps[name] {
-                        case '' | '*': 'haxelib:$name';
-                        case version = (_:Url).scheme => null: 'haxelib:$name#$version';
-                        case (_:Url) => { scheme: 'git', payload: (_:Url) => url = { scheme: 'https', host: { name: 'github.com' | 'gitlab.com' }} }:
-                          url;
-                        case u: u;
-                      })
-                    );
-                }
+              [for (name => value in deps) 
+                name => FromUrl(
+                  switch value {
+                    case '' | '*': 'haxelib:$name';
+                    case version = (_:Url).scheme => null: 'haxelib:$name#$version';
+                    case (_:Url) => { scheme: 'git', payload: (_:Url) => url = { scheme: 'https', host: { name: 'github.com' | 'gitlab.com' }} }:
+                      url;
+                    case u: u;
+                  })
               ]; 
           },
+          haxeshimDependencies: haxeshimDependencies,
           postInstall: info.postInstall,
           postDownload: info.postDownload,
         }
@@ -216,6 +243,7 @@ class DownloadedArchive {
           classPath: guessClassPath(),
           runAs: function (_) return None,
           dependencies: haxeshimDependencies,
+          haxeshimDependencies: null,
         }
       }
       else {        
@@ -225,6 +253,7 @@ class DownloadedArchive {
           classPath: guessClassPath(),
           runAs: function (_) return None,
           dependencies: haxeshimDependencies,
+          haxeshimDependencies: null,
         }
       }
     return ret;
