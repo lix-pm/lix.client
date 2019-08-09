@@ -4,13 +4,12 @@ class Build {
   static function main() {
     cmd('haxe', ['haxeshim.hxml']);
     cmd('haxe', ['lix.cli.hxml']);
-    cmd('npm i');
+    // cmd('npm i');
     for (file in sys.FileSystem.readDirectory('bin')) {
       if(file.extension() == 'js') {
         var file = 'bin/$file';
-        var tmp = '$file.bundled';
-        cmd('npm run --silent noderify $file > $tmp');
-        sys.FileSystem.rename(tmp, file);
+        cmd('npm run -- ncc build $file -m');
+        sys.FileSystem.rename('dist/index.js', file);
       }
     }
   }

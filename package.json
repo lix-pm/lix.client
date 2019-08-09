@@ -1,39 +1,38 @@
 {
-  "name": "lix",
-  "version": "15.4.4",
-  "bin": {
-    "lix": "bin/lix.js",
-    "haxe": "bin/haxeshim.js",
-    "haxelib": "bin/haxelibshim.js",
-    "neko": "bin/nekoshim.js"
-  },
-  "scripts": {
-    "prepublishOnly": "haxe --run Build",
-    "noderify": "noderify",
-    "build": "haxe --run Build",
-    "postinstall": "node bin/postinstall.js"
-  },
-  "description": "lix - Libraries for Haxe",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lix-pm/lix.git"
-  },
-  "devDependencies": {
-    "graceful-fs": "^4.1.15",
-    "noderify": "=3.0.2",
-    "tar": "^4.4.8",
-    "yauzl": "=2.6.0"
-  },
-  "keywords": [
-    "haxe"
-  ],
-  "files": [
-    "bin"
-  ],
-  "author": "back2dos",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/lix-pm/lix/issues"
-  },
-  "homepage": "https://github.com/lix-pm/lix#readme"
+    "name": "lix",
+    "version": "15.4.4",
+    "bin": {
+        "lix": "bin/lix.js",
+        "haxe": "bin/haxeshim.js",
+        "haxelib": "bin/haxelibshim.js",
+        "neko": "bin/nekoshim.js"
+    },
+    "scripts": {
+        "prepublishOnly": "haxe --run Build",
+        "ncc": "ncc",
+        "build": "haxe --run Build",
+        "postinstall": "node bin/postinstall.js"
+    },
+    "description": "lix - Libraries for Haxe",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lix-pm/lix.git"
+    },
+    "devDependencies": {
+        "@zeit/ncc": "^0.20.4",
+        "tar": "^4.4.8",
+        "yauzl": "^2.6.0"
+    },
+    "keywords": [
+        "haxe"
+    ],
+    "files": [
+        "bin"
+    ],
+    "author": "back2dos",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/lix-pm/lix/issues"
+    },
+    "homepage": "https://github.com/lix-pm/lix#readme"
 }
