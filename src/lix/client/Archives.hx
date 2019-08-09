@@ -13,7 +13,7 @@ enum ArchiveKind {
 }
 
 typedef CustomLoader = CustomLoaderContext->Promise<String>;
-typedef CustomLoaderContext = { source:Url, dest:String, silent:Bool, scope:Scope };
+typedef CustomLoaderContext = { source:Url, dest:String, logger:Logger, scope:Scope };
 
 enum ArchiveDestination {
   Fixed(path:Array<String>);
@@ -217,7 +217,7 @@ class DownloadedArchive {
               None
           ,
           dependencies: switch info.dependencies {
-            case null: haxeshimDependencies;
+            case null: new Map();//haxeshimDependencies; - maybe the best default
             case deps: 
               [for (name => value in deps) 
                 name => FromUrl(

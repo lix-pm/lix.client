@@ -11,14 +11,12 @@ enum PickOfficial {
 class Switcher {
   
   public var scope(default, null):haxeshim.Scope;
-  public var silent(default, null):Bool;
-  public var log(default, null):String->Void;
+  public var logger(default, null):Logger;
   var downloads:String;
     
-  public function new(scope, silent, log) {
+  public function new(scope, logger) {
     this.scope = scope;
-    this.silent = silent;
-    this.log = log;
+    this.logger = logger;
     
     Fs.ensureDir(scope.versionDir.addTrailingSlash()).eager();//TODO: avoid these
     Fs.ensureDir(scope.haxelibRepo.addTrailingSlash()).eager();
@@ -225,15 +223,15 @@ class Switcher {
       default: 
         Promise.lift(new Error('$version needs to be resolved online'));
     }).tryRecover(function (_) {
-      log('Looking up Haxe version "$version" online');
+      logger.info('Looking up Haxe version "$version" online');
       return resolveOnline(version).next(function (r) {
-        log('  Resolved to $r. Downloading ...');
+        logger.info('  Resolved to $r. Downloading ...');
         return r;
       });
     }).next(function (r) {
       return download(r, options).next(function (wasDownloaded) {
         
-        log(
+        logger.success(
           if (!wasDownloaded)
             '  ... already downloaded!'
           else
@@ -249,7 +247,7 @@ class Switcher {
   public function download(version:ResolvedVersion, options:{ force: Bool }):Promise<Bool> {
     
     inline function download(url, into)
-      return Download.archive(url, 0, into, !silent);
+      return Download.archive(url, 0, into, logger);
     
     return switch version {
       case RCustom(_): 
@@ -285,7 +283,7 @@ class Switcher {
     }  
   }
 
-  static public function ensureNeko(echo:String->Void):Promise<String> {
+  static public function ensureNeko(logger:Logger):Promise<String> {
 
     var neko = Neko.PATH;
 
@@ -294,14 +292,14 @@ class Switcher {
         neko;
       else {
         
-        echo('Neko seems to be missing. Attempting download ...');
+        logger.info('Neko seems to be missing. Attempting download ...');
 
         (switch Sys.systemName() {
-          case 'Windows': Download.zip('https://github.com/HaxeFoundation/neko/releases/download/v2-2-0/neko-2.2.0-win.zip', 1, neko, true);
-          case 'Mac': Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-2-0/neko-2.2.0-osx64.tar.gz', 1, neko, true);
-          default: Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-2-0/neko-2.2.0-linux64.tar.gz', 1, neko, true);
+          case 'Windows': Download.zip('https://github.com/HaxeFoundation/neko/releases/download/v2-2-0/neko-2.2.0-win.zip', 1, neko, logger);
+          case 'Mac': Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-2-0/neko-2.2.0-osx64.tar.gz', 1, neko, logger);
+          default: Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-2-0/neko-2.2.0-linux64.tar.gz', 1, neko, logger);
         }).next(function (x) {
-          echo('done');
+          logger.success('done');
           return x;
         });
       }

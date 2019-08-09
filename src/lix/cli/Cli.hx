@@ -51,16 +51,15 @@ class Cli {
           v.processUrl(url);
       }
     
-    var log = if (silent) function (_) {} else Sys.println;
+    var logger = Logger.get(silent);
 
-    var hx = new lix.client.haxe.Switcher(scope, silent, log);    
+    var hx = new lix.client.haxe.Switcher(scope, logger);    
     var libs = new Libraries(
       scope, 
       resolve, 
       function (_) return new Error(NotImplemented, "not implemented"), 
-      log,
-      force,
-      silent
+      logger,
+      force
     );
 
     Command.dispatch(args, 'lix - Libraries for Haxe (v$version)', [
@@ -96,7 +95,7 @@ class Cli {
               version: scope.config.version,
               resolveLibs: if (scope.isGlobal) Scoped else scope.config.resolveLibs,
             }).next(_ -> {
-              log('created scope in ${scope.cwd}');
+              logger.success('created scope in ${scope.cwd}');
               Noise;
             });
           case ['delete']:
@@ -104,11 +103,11 @@ class Cli {
               new Error('Cannot delete global scope');
             else {
               scope.delete();
-              log('deleted scope in ${scope.scopeDir}');
+              logger.success('deleted scope in ${scope.scopeDir}');
               Noise;
             }
           case []: 
-            println(
+            logger.info(
               (if (scope.isGlobal) '[global]' else '[local]') + ' ${scope.scopeDir}'
             );
             Noise;
@@ -168,7 +167,7 @@ class Cli {
             if (absTarget.exists()) 
               new Error('`download <url> as <ver>` is no longer supported');
             else {
-              Sys.println('[WARN]: Processing obsolete `download ${args.map(shorten).join(" ")}`.\n        Please reinstall library in a timely manner!\n\n');
+              logger.warning('Warning: Processing obsolete `download ${args.map(shorten).join(" ")}`.\n        Please reinstall library in a timely manner!\n\n');
               libs.downloadUrl(url, { into: target })
                 .next(a -> Fs.ensureDir(absTarget).swap(a))
                 .next(a -> {
@@ -186,7 +185,7 @@ class Cli {
 
           case []: 
 
-            lix.client.haxe.Switcher.ensureNeko(println)
+            lix.client.haxe.Switcher.ensureNeko(logger)
               .next(function (_) return
                 hx.resolveOnline(scope.config.version)
                   .next(hx.download.bind(_, { force: false }))

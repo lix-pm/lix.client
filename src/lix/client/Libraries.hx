@@ -15,9 +15,8 @@ using haxe.Json;
   var urlToJob:Url->Promise<ArchiveJob> = _;
   var resolver:Array<Dependency>->Promise<Array<ArchiveJob>> = _;
 
-  public var log(default, null):String->Void = _;
+  public var logger(default, null):Logger = _;
   public var force(default, null):Bool = _;
-  public var silent(default, null):Bool = _;
   
   public function downloadUrl(url:Url, ?options) 
     return downloadArchive(urlToJob(url), options);
@@ -41,18 +40,18 @@ using haxe.Json;
         var exists = into != null && '${scope.libCache}/$into'.exists();
         return 
           if (exists && !force) {
-            log('already downloaded: ${a.normalized}');
+            logger.success('already downloaded: ${a.normalized}');
             DownloadedArchive.existent(into, scope.libCache, a);
           }
           else {
-            log('${if (exists) "forcedly redownloading" else "downloading"} ${a.normalized}');
+            logger.info('${if (exists) "forcedly redownloading" else "downloading"} ${a.normalized}');
             var dest = scope.haxeshimRoot + '/downloads/download@' + Date.now().getTime();
             (switch a.kind {
-              case null: Download.archive(a.url, 0, dest, !silent);
-              case Zip: Download.zip(a.url, 0, dest, !silent);
-              case Tar: Download.tar(a.url, 0, dest, !silent);
+              case null: Download.archive(a.url, 0, dest, logger);
+              case Zip: Download.zip(a.url, 0, dest, logger);
+              case Tar: Download.tar(a.url, 0, dest, logger);
               case Custom(load): 
-                load({ dest: dest, silent: silent, source: a.normalized, scope: scope });
+                load({ dest: dest, logger: logger, source: a.normalized, scope: scope });
             })
               .next(dir => DownloadedArchive.fresh(dir, scope.libCache, into, a))
               .next(arch => 
@@ -76,7 +75,7 @@ using haxe.Json;
         case directives: 
           Promise.inSequence([for (d in directives) 
             Promise.NOISE.next(_ -> {
-              if (!silent) log(d);
+              logger.info(d);
               Exec.shell(d, scope.scopeDir);
             })
           ]);
@@ -115,7 +114,7 @@ using haxe.Json;
 
       var hxml = Resolver.libHxml(scope.scopeLibDir, name);
       
-      log('mounting as $name#$version');  
+      logger.info('mounting as $name#$version');  
 
       var DOWNLOAD_LOCATION = '$${$LIBCACHE}/${a.relRoot}';
 
@@ -134,8 +133,8 @@ using haxe.Json;
             if (cwd == null)
               cwd = scope.cwd;
 
-            log('Running $hook hook:');
-            log('> $cmd');
+            logger.info('Running $hook hook:');
+            logger.info('> $cmd');
 
             Exec.shell(
               cmd, 

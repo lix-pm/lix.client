@@ -40,8 +40,8 @@ class Download {
       });      
     });
     
-  static public function archive(url:String, peel:Int, into:String, ?progress:Bool) {
-    return download(url, withProgress(progress, function (finalUrl:String, res, events) {
+  static public function archive(url:String, peel:Int, into:String, ?logger:Logger) {
+    return download(url, withLogger(logger, function (finalUrl:String, res, events) {
       if (res.headers['content-type'] == 'application/zip' || url.endsWith('.zip') || finalUrl.endsWith('.zip'))
         unzip(url, into, peel, res, events);
       else
@@ -181,22 +181,15 @@ class Download {
       });
     }).handle(events.done);
   
-  static public function tar(url:String, peel:Int, into:String, ?progress:Bool):Promise<Directory>
-    return download(url, withProgress(progress, untar.bind(_, into, peel)));
+  static public function tar(url:String, peel:Int, into:String, logger:Logger):Promise<Directory>
+    return download(url, withLogger(logger, untar.bind(_, into, peel)));
     
-  static public function zip(url:String, peel:Int, into:String, ?progress:Bool):Promise<Directory>
-    return download(url, withProgress(progress, unzip.bind(_, into, peel)));
+  static public function zip(url:String, peel:Int, into:String, logger:Logger):Promise<Directory>
+    return download(url, withLogger(logger, unzip.bind(_, into, peel)));
 
-  static function withProgress<T>(?progress:Bool, handler:ProgressHandler<T>):Handler<T> {
+  static function withLogger<T>(logger:Logger, handler:ProgressHandler<T>):Handler<T> {
     return 
       function (url:String, msg:IncomingMessage, cb:Outcome<T, Error>->Void) {
-        if (progress != true || !process.stdout.isTTY) {
-          handler(url, msg, {
-            onProgress: function (_, _, _) {},
-            done: cb,
-          });          
-          return;
-        }
         
         var size = Std.parseInt(msg.headers.get('content-length')),
             loaded = 0,
@@ -208,11 +201,7 @@ class Download {
         function progress(s:String) {
           if (s == last) return;
           last = s;
-          untyped {
-            process.stdout.clearLine(0);
-            process.stdout.cursorTo(0);
-          }
-          process.stdout.write(s);
+          logger.progress(s);
         }
 
         function pct(f:Float) {
@@ -227,7 +216,7 @@ class Download {
         var lastUpdate = Date.fromTime(0).getTime();
 
         function update() {
-          if (saved == total || (saved / total) >= 1.0) progress('Done!\n');
+          if (saved == total || (saved / total) >= 1.0) logger.success('Done!');
           else {
             var now = Date.now().getTime();
             if (now > lastUpdate + 137) {

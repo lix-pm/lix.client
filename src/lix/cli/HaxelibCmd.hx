@@ -1,11 +1,11 @@
 package lix.cli;
 
 class HaxelibCmd {
-  static public function ensure()
-    return NekoCmd.ensure().next(
-      function (_) return HaxeCmd.ensure()
+  static public function ensure(logger)
+    return NekoCmd.ensure(logger).next(
+      function (_) return HaxeCmd.ensure(logger)
     );
 
   static function main() 
-    Command.attempt(ensure(), @:privateAccess HaxelibCli.main);
+    Command.attempt(ensure(Logger.get()), @:privateAccess HaxelibCli.main);
 }
