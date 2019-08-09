@@ -181,7 +181,7 @@ class DownloadedArchive {
       lib = LibVersion.UNDEFINED;
 
     var haxeshimDependencies:HaxeshimDependencies = 
-      if (files.remove('.haxerc') && files.remove('haxe_libraries')) {
+      if (files.contains('.haxerc') && files.contains('haxe_libraries')) {
         var libs = '$root/haxe_libraries';
         [for (f in libs.readDirectory()) 
           if (f.extension() == 'hxml') 
@@ -191,7 +191,7 @@ class DownloadedArchive {
       else null;
 
     var ret:ArchiveInfos =  
-      if (files.indexOf('haxelib.json') != -1) {
+      if (files.contains('haxelib.json')) {
         //TODO: there's a lot of errors to be caught here
         var info:{ 
           name: String, 
@@ -235,7 +235,7 @@ class DownloadedArchive {
           postDownload: info.postDownload,
         }
       }
-      else if (files.indexOf('package.json') != -1) {
+      else if (files.contains('package.json')) {
         var info:{ name: String, version:String, } = '$root/package.json'.getContent().parse();
         {
           name: info.name,

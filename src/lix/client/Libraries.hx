@@ -72,7 +72,7 @@ using haxe.Json;
   public function installUrl(url:Url, ?as:LibVersion, ?options):Promise<Noise> 
     return installArchive(urlToJob(url), as, options);
 
-  function installFromLibHxml(lib:String, srcPath:String):Promise<Noise>
+  function installFromLibHxml(lib:String, srcPath:String):Promise<Array<String>>
     return Fs.copy(srcPath, '${scope.scopeLibDir}/$lib.hxml')
       .next(_ -> scope.getDirectives(lib))
       .next(d -> switch d['install'] {
@@ -85,9 +85,16 @@ using haxe.Json;
               Exec.shell(d, scope.scopeDir);
             })
           ]);
-      });
+      })
+      .next(_ -> Fs.get(srcPath))
+      .next(Resolver.parseLines.bind())
+      .next(args -> [for (i => a in args) if (a == '-lib') args[i+1]]);
     
-  public function installArchive(a:Promise<ArchiveJob>, ?as:LibVersion, options = { alreadyInstalled: new Map() }):Promise<Noise> 
+  public function installArchive(
+      a:Promise<ArchiveJob>, 
+      ?as:LibVersion, 
+      options = { alreadyInstalled: new Map(), flat: false }
+    ):Promise<Noise> 
     return downloadArchive(a).next(function (a) {
       var extra =
         switch '${a.absRoot}/extraParams.hxml' {
@@ -174,33 +181,50 @@ using haxe.Json;
       saveHxml();
 
       options.alreadyInstalled[name] = true;
+      
+      function installDependencies() 
+        return 
+          if (options.flat) Promise.NOISE;
+          else
+            Future.ofMany(//TODO: this relies on the implementation being sequential (which it currently is, but that may change)
+              [for ({ name: lib, value: dep } in infos.dependencies) 
+                Future.async(//TODO: it should probably be fine to skip this lazy wrapper
+                  function (done) 
+                    if ('${scope.scopeLibDir}/$lib.hxml'.exists() && options.alreadyInstalled[lib]) //TODO: this should be in some function
+                      done(Success(Noise))
+                    else switch dep {
+                      case FromUrl(url):
+                        installUrl(url, { name: Some(lib), version: None }, options).handle(done);
+                      case FromHxml(path): 
+                        function install(lib, path)
+                          return
+                            installFromLibHxml(lib, path)
+                              .next(deps -> { 
+                                options.alreadyInstalled[lib] = true;
+                                Future.ofMany(
+                                  [for (name in deps)
+                                    install(name, infos.haxeshimDependencies[name])
+                                  ]
+                                );
+                              });
 
-      return 
-        Future.ofMany(//TODO: this relies on the implementation being sequential (which it currently is, but that may change)
-          [for ({ name: lib, value: dep } in infos.dependencies) 
-            Future.async(//TODO: it should probably be fine to skip this lazy wrapper
-              function (done) 
-                if ('${scope.scopeLibDir}/$lib.hxml'.exists() && options.alreadyInstalled[lib]) //TODO: this should be in some function
-                  done(Success(Noise))
-                else switch dep {
-                  case FromUrl(url):
-                    installUrl(url, { name: Some(lib), version: None }, options).handle(done);
-                  case FromHxml(content): 
-                    installFromLibHxml(lib, content)
-                      .next(_ -> { options.alreadyInstalled[lib] = true; Noise; })
-                      .handle(done);
-                },
-              true
+                        install(lib, path);
+                    },
+                  true
+                )
+              ]
             )
-          ]
-        )
-        .next(results => switch [for (Failure(e) in results) e] {
-          case []: Noise;
-          case errors: Error.withData('Failed to install dependencies:\n  ' + errors.map(e => e.message).join('\n  '), errors);
-        })
-        .next(_ => 
-          if (!a.alreadyDownloaded) exec('post download', infos.postDownload, DOWNLOAD_LOCATION)
-          else Noise
-        ).next(saveHxml).next(_ => exec('post install', infos.postInstall));
+            .next(results => switch [for (Failure(e) in results) e] {
+              case []: Noise;
+              case errors: Error.withData('Failed to install dependencies:\n  ' + errors.map(e => e.message).join('\n  '), errors);
+            });              
+      
+      return 
+        installDependencies()
+          .next(_ => 
+            if (!a.alreadyDownloaded) exec('post download', infos.postDownload, DOWNLOAD_LOCATION)
+            else Noise
+          )
+          .next(saveHxml).next(_ => exec('post install', infos.postInstall));
     });  
 }
