@@ -14,7 +14,8 @@ class Cli {
     var version = CompileTime.parseJsonFile("./package.json").version;
     var silent = args.remove('--silent'),
         force = args.remove('--force'),
-        global = args.remove('--global') || args.remove('-g');
+        global = args.remove('--global') || args.remove('-g'),
+        flat = args.remove('--flat');
 
     var scope = Scope.seek({ cwd: if (global) Scope.DEFAULT_ROOT else null });
 
@@ -73,11 +74,11 @@ class Cli {
                 case ['haxe', version]:
                   hx.install(version, { force: force });
                 case [url, 'as', alias]: 
-                  libs.installUrl(url, LibVersion.parse(alias));
+                  libs.installUrl(url, LibVersion.parse(alias), { flat: flat });
                 case [library, _] | [library] if ((library:Url).scheme == null): 
                   new Error('Did you mean `lix install haxelib:$library`?');
                 case [url]:
-                  libs.installUrl(url);
+                  libs.installUrl(url, { flat: flat });
                 case []: new Error('Missing url');
                 case v: new Error('too many arguments');
               }

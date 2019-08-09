@@ -93,7 +93,10 @@ using haxe.Json;
   public function installArchive(
       a:Promise<ArchiveJob>, 
       ?as:LibVersion, 
-      options = { alreadyInstalled: new Map(), flat: false }
+      options = { 
+        alreadyInstalled: new Map(), 
+        flat: false,
+      }
     ):Promise<Noise> 
     return downloadArchive(a).next(function (a) {
       var extra =
