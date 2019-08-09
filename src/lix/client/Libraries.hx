@@ -186,10 +186,10 @@ using haxe.Json;
                   function (done) 
                     if ('${scope.scopeLibDir}/$lib.hxml'.exists() && options.alreadyInstalled[lib]) //TODO: this should be in some function
                       done(Success(Noise))
-                    else switch dep {
-                      case FromUrl(url):
+                    else switch [dep, infos.haxeshimDependencies[lib]] {
+                      case [FromUrl(url), null]:
                         installUrl(url, { name: Some(lib), version: None }, options).handle(done);
-                      case FromHxml(path): 
+                      case [FromHxml(path), _] | [_, path]: 
                         function install(lib, path)
                           return
                             installFromLibHxml(lib, path)
@@ -202,7 +202,7 @@ using haxe.Json;
                                 );
                               });
 
-                        install(lib, path);
+                        install(lib, path).handle(done);
                     },
                   true
                 )
