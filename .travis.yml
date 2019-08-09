@@ -13,8 +13,8 @@ install:
   - npm i --ignore-scripts
   - lix download
   - npm run build
-  - rm -rf ./node_modules
-  - npm install . -g
+  # - rm -rf ./node_modules
+  # - npm install . -g
 
 script:
   - lix run travix neko
