@@ -8,7 +8,6 @@
         "neko": "bin/nekoshim.js"
     },
     "scripts": {
-        "prepublishOnly": "haxe --run Build",
         "ncc": "ncc",
         "build": "haxe --run Build",
         "postinstall": "node bin/postinstall.js"
