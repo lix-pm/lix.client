@@ -9,10 +9,10 @@ cache:
   - "$HOME/haxe"
 
 install:
-  - npm i -g lix@15.3.6
-  - npm i --ignore-scripts
-  - lix download
+  - npm install
   - npm run build
+  - rm -rf ./node_modules
+  - npm install . -g
 
 script:
   - lix run travix neko
