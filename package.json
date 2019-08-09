@@ -21,7 +21,8 @@
     "devDependencies": {
         "@zeit/ncc": "^0.20.4",
         "tar": "^4.4.8",
-        "yauzl": "^2.10.0"
+        "yauzl": "^2.10.0",
+        "graceful-fs": "^4.1.15"
     },
     "keywords": [
         "haxe"
@@ -34,8 +35,5 @@
     "bugs": {
         "url": "https://github.com/lix-pm/lix/issues"
     },
-    "homepage": "https://github.com/lix-pm/lix#readme",
-    "dependencies": {
-        "graceful-fs": "^4.1.15"
-    }
+    "homepage": "https://github.com/lix-pm/lix#readme"
 }
