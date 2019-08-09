@@ -17,6 +17,7 @@ install:
   - npm install . -g
 
 script:
+  - haxe lix.cli.hxml
   - lix run travix neko
 
 deploy:
