@@ -6,9 +6,6 @@ import lix.client.Archives;
 import lix.api.Api;
 import haxeshim.Scope.*;
 
-using sys.FileSystem;
-using sys.io.File;
-
 using haxe.Json;
 
 @:tink class Libraries {
@@ -58,13 +55,11 @@ using haxe.Json;
                 load({ dest: dest, silent: silent, source: a.normalized, scope: scope });
             })
               .next(dir => DownloadedArchive.fresh(dir, scope.libCache, into, a))
-              .next(arch => {
-                if (cacheFile != null) {
-                  Fs.ensureDir(cacheFile);
-                  cacheFile.saveContent(arch.relRoot);
-                }
-                arch;
-              });
+              .next(arch => 
+                if (cacheFile != null) 
+                  Fs.save(cacheFile, arch.relRoot).swap(arch)
+                else arch
+              );
           }
       }
     );     
@@ -98,6 +93,7 @@ using haxe.Json;
         flat: false,
       }
     ):Promise<Noise> 
+
     return downloadArchive(a).next(function (a) {
       var extra =
         switch '${a.absRoot}/extraParams.hxml' {
@@ -119,8 +115,6 @@ using haxe.Json;
 
       var hxml = Resolver.libHxml(scope.scopeLibDir, name);
       
-      Fs.ensureDir(hxml);
-
       log('mounting as $name#$version');  
 
       var DOWNLOAD_LOCATION = '$${$LIBCACHE}/${a.relRoot}';
@@ -152,39 +146,36 @@ using haxe.Json;
           else
             Noise;
 
-      function saveHxml<T>(?value:T):Promise<T> 
-        return (function () {
-          var directives = [
-            '-D $name=$version',
-            '# @$INSTALL: lix --silent download "${a.job.normalized}" into ${a.relRoot}',            
-          ];
+      function saveHxml<T>(?value:T):Promise<T> {
+        var directives = [
+          '-D $name=$version',
+          '# @$INSTALL: lix --silent download "${a.job.normalized}" into ${a.relRoot}',            
+        ];
 
-          switch infos.postDownload {
-            case null:
-            case v: directives.push('# @$POST_INSTALL: cd $DOWNLOAD_LOCATION && ${interpolate(v)}');
-          }
+        switch infos.postDownload {
+          case null:
+          case v: directives.push('# @$POST_INSTALL: cd $DOWNLOAD_LOCATION && ${interpolate(v)}');
+        }
 
-          switch infos.runAs({ libRoot: scope.interpolate(DOWNLOAD_LOCATION) }) {
-            case None:
-            case Some(v): directives.push('# @run: ${interpolate(v)}');
-          }
+        switch infos.runAs({ libRoot: scope.interpolate(DOWNLOAD_LOCATION) }) {
+          case None:
+          case Some(v): directives.push('# @run: ${interpolate(v)}');
+        }
 
-          hxml.saveContent(
-            directives
-              .concat([for (lib in infos.dependencies) '-lib ${lib.name}'])
-              .concat([
-                '-cp $DOWNLOAD_LOCATION/${infos.classPath}',
-                extra,
-              ]).join('\n')
-          );
+        return Fs.save(
+          hxml,
+          directives
+            .concat([for (lib in infos.dependencies) '-lib ${lib.name}'])
+            .concat([
+              '-cp $DOWNLOAD_LOCATION/${infos.classPath}',
+              extra,
+            ]).join('\n')
+        ).next(_ -> {
+          options.alreadyInstalled[name] = true;
+          value;
+        });
+      };
 
-          return value;
-        }).catchExceptions();
-
-      saveHxml();
-
-      options.alreadyInstalled[name] = true;
-      
       function installDependencies() 
         return 
           if (options.flat) Promise.NOISE;
@@ -219,11 +210,12 @@ using haxe.Json;
             )
             .next(results => switch [for (Failure(e) in results) e] {
               case []: Noise;
-              case errors: Error.withData('Failed to install dependencies:\n  ' + errors.map(e => e.message).join('\n  '), errors);
+              case errors: Error.withData('Failed to install dependencies of $name :\n  ' + errors.map(e => e.message).join('\n  '), errors);
             });              
       
       return 
-        installDependencies()
+        saveHxml()
+          .next(_ -> installDependencies())
           .next(_ => 
             if (!a.alreadyDownloaded) exec('post download', infos.postDownload, DOWNLOAD_LOCATION)
             else Noise

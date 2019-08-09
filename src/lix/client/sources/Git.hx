@@ -26,7 +26,7 @@ class Git {
     }  
 
   static function cli(cwd:String) {
-    Fs.ensureDir(cwd.addTrailingSlash());
+    Fs.ensureDir(cwd.addTrailingSlash()).eager();//TODO: avoid this
     return {
       call: function (args:Array<String>) {
         return Promise.lift(Exec.sync('git', cwd, args)).next(

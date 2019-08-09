@@ -89,7 +89,7 @@ class Download {
               if (path.endsWith('/')) 
                 done();
               else {
-                Fs.ensureDir(path).eager();
+                Fs.ensureDir(path).eager();//TODO: avoid this
                 zip.openReadStream(entry, function (e, stream) { 
                   var out:js.node.fs.WriteStream = js.Lib.require('graceful-fs').createWriteStream(path);
                   stream.pipe(out, { end: true } );

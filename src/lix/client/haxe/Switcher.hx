@@ -20,9 +20,9 @@ class Switcher {
     this.silent = silent;
     this.log = log;
     
-    Fs.ensureDir(scope.versionDir.addTrailingSlash());
-    Fs.ensureDir(scope.haxelibRepo.addTrailingSlash());
-    Fs.ensureDir(this.downloads = scope.haxeshimRoot + '/downloads/');
+    Fs.ensureDir(scope.versionDir.addTrailingSlash()).eager();//TODO: avoid these
+    Fs.ensureDir(scope.haxelibRepo.addTrailingSlash()).eager();
+    Fs.ensureDir(this.downloads = scope.haxeshimRoot + '/downloads/').eager();
   }
   
   static var VERSION_INFO = 'version.json';  

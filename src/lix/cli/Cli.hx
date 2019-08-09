@@ -170,7 +170,7 @@ class Cli {
             else {
               Sys.println('[WARN]: Processing obsolete `download ${args.map(shorten).join(" ")}`.\n        Please reinstall library in a timely manner!\n\n');
               libs.downloadUrl(url, { into: target })
-                .next(a -> { Fs.ensureDir(absTarget); a; })
+                .next(a -> Fs.ensureDir(absTarget).swap(a))
                 .next(a -> {
                   a.absRoot.rename(absTarget);
                   a;
