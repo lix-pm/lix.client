@@ -114,7 +114,7 @@ using haxe.Json;
 
       var hxml = Resolver.libHxml(scope.scopeLibDir, name);
       
-      logger.info('mounting as $name#$version');  
+      // logger.info('mounting as $name#$version');  
 
       var DOWNLOAD_LOCATION = '$${$LIBCACHE}/${a.relRoot}';
 
@@ -212,6 +212,7 @@ using haxe.Json;
               case errors: Error.withData('Failed to install dependencies of $name :\n  ' + errors.map(e => e.message).join('\n  '), errors);
             });              
       
+      logger.progress('...mounting as $name#$version');
       return 
         saveHxml()
           .next(_ -> installDependencies())
@@ -219,6 +220,11 @@ using haxe.Json;
             if (!a.alreadyDownloaded) exec('post download', infos.postDownload, DOWNLOAD_LOCATION)
             else Noise
           )
-          .next(saveHxml).next(_ => exec('post install', infos.postInstall));
+          .next(saveHxml)
+          .next(_ -> {
+            logger.success('-> mounted as $name#$version');
+            Noise;
+          })
+          .next(_ => exec('post install', infos.postInstall));
     });  
 }

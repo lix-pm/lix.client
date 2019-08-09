@@ -205,8 +205,7 @@ class Download {
         }
 
         function pct(f:Float) {
-          if (!(f <= 1.0))
-            f = 1;
+          f = Math.min(1, Math.max(0, f));
           return (switch Std.string(Math.round(1000 * f) / 10) {
             case whole = _.indexOf('.') => -1: '$whole.0';
             case v: v;
@@ -216,7 +215,7 @@ class Download {
         var lastUpdate = Date.fromTime(0).getTime();
 
         function update() {
-          if (saved == total || (saved / total) >= 1.0) logger.success('Done!');
+          if (saved == total || (saved / total) >= 1.0) {}
           else {
             var now = Date.now().getTime();
             if (now > lastUpdate + 137) {
@@ -225,7 +224,7 @@ class Download {
               var messages = [];
               if (loaded < size) messages.push('Downloaded: ${pct(loaded / size)}');
               if (saved > 0) messages.push('Saved: ${pct(saved / total)}');
-              progress(messages.join('   '));
+              progress('   ' + messages.join('   '));
             }
           }
         }
@@ -261,8 +260,7 @@ class Download {
             update();
           },
           done: function (r) {
-            saved = total;
-            update();
+            logger.success('-> Done!');
             cb(r);
           },
         });
