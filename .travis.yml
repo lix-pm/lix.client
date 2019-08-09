@@ -9,7 +9,9 @@ cache:
   - "$HOME/haxe"
 
 install:
-  - npm install
+  - npm install -g lix@15.3.6
+  - npm i --ignore-scripts
+  - lix download
   - npm run build
   - rm -rf ./node_modules
   - npm install . -g
