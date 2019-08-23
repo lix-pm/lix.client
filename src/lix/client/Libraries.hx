@@ -187,7 +187,11 @@ using haxe.Json;
                       done(Success(Noise))
                     else switch [dep, infos.haxeshimDependencies[lib]] {
                       case [FromUrl(url), null]:
-                        installUrl(url, { name: Some(lib), version: None }, options).handle(done);
+                        installUrl(url, { name: Some(lib), version: None }, options)
+                          .next(n -> {
+                            options.alreadyInstalled[lib] = true;
+                            n;
+                          }).handle(done);
                       case [FromHxml(path), _] | [_, path]: 
                         function install(lib, path)
                           return
@@ -212,19 +216,18 @@ using haxe.Json;
               case errors: Error.withData('Failed to install dependencies of $name :\n  ' + errors.map(e => e.message).join('\n  '), errors);
             });              
       
-      logger.progress('...mounting as $name#$version');
       return 
         saveHxml()
+          .next(_ -> {
+            logger.success('-> mounted as $name#$version');
+            Noise;
+          })
           .next(_ -> installDependencies())
           .next(_ => 
             if (!a.alreadyDownloaded) exec('post download', infos.postDownload, DOWNLOAD_LOCATION)
             else Noise
           )
           .next(saveHxml)
-          .next(_ -> {
-            logger.success('-> mounted as $name#$version');
-            Noise;
-          })
           .next(_ => exec('post install', infos.postInstall));
     });  
 }
