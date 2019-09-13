@@ -28,6 +28,7 @@ typedef ArchiveJob = {
   var dest(default, null):ArchiveDestination;
 
   @:optional var kind(default, null):Null<ArchiveKind>;
+  @:optional var arguments(default, null):Array<String>;
 }
 
 enum ArchiveDependency {

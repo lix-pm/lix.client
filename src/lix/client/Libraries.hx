@@ -7,6 +7,7 @@ import lix.api.Api;
 import haxeshim.Scope.*;
 
 using haxe.Json;
+using Lambda;
 
 @:tink class Libraries {
   
@@ -33,6 +34,8 @@ using haxe.Json;
               into = DownloadedArchive.path(path);
             case Computed(_):
               cacheFile = '${scope.libCache}/.cache/libNames/${DownloadedArchive.escape(a.url)}';
+              if (a.arguments != null && a.arguments.has('--flat'))
+                cacheFile += '_flat';
               if (cacheFile.exists()) 
                 into = cacheFile.getContent();
           }
@@ -144,11 +147,14 @@ using haxe.Json;
           }
           else
             Noise;
-
+            
       function saveHxml<T>(?value:T):Promise<T> {
+        var arguments = a.job.arguments == null ? [] : a.job.arguments.copy();
+        arguments.push('--silent');
+
         var directives = [
           '-D $name=$version',
-          '# @$INSTALL: lix --silent download "${a.job.normalized}" into ${a.relRoot}',            
+          '# @$INSTALL: lix ${arguments.join(' ')} download "${a.job.normalized}" into ${a.relRoot}',            
         ];
 
         switch infos.postDownload {

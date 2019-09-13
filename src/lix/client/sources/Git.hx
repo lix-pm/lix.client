@@ -3,11 +3,14 @@ package lix.client.sources;
 class Git {
   
   var scope:Scope;
+  var flat:Bool;
 
   public function schemes() return ['git'];
 
-  public function new(scope) 
+  public function new(scope, flat) {
     this.scope = scope;
+    this.flat = flat;
+  }
 
   static public function strip(name:String)
     return 
@@ -69,19 +72,29 @@ class Git {
           sha.next(function (sha):ArchiveJob return {
             url: raw,
             normalized: raw.scheme + ':' + url.resolve('#$sha'),
-            dest: Computed(l -> return [l.name, l.version, 'git', sha]),
+            arguments : flat ? [ '--flat' ] : [],
+            dest: Computed(function (l) {
+              var path = [l.name, l.version, 'git'];
+              if (flat) path.push('flat');
+              path.push(sha);
+
+              return path;
+            }),
             lib: { name: None, version: None },
             kind: Custom(function (ctx) return {
               var repo = Path.join([scope.libCache, '.gitrepos', DownloadedArchive.escape(origin)]);
+              if (flat) repo += '_flat';
+              
               var git = cli(repo);
               git.call(
                 if ('$repo/.git'.exists()) ['fetch', origin]
                 else ['clone', origin, '.']
               )
-                .next(_ -> git.call(['checkout', sha]))
+                .next(_ -> git.call(['checkout', '-b', sha]))
+                .next(_ -> flat ? Noise : git.call([ 'submodule', 'update', '--init', '--recursive' ]))
                 .next(_ -> Fs.copy(repo, ctx.dest, function (name) return name != '$repo/.git'))
                 .next(_ -> ctx.dest);
-            })          
+              })
           });
       }    
 }
