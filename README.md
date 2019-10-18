@@ -80,6 +80,7 @@ The schemes you can use include haxelib, github, gitlab, and http/https:
 - `github:<owner>/<repo>[#<branch|tag|sha>]` - will get the library from GitHub, either master or a specific branch/tag/commit.
 - `gh:...` an alias for `github`
 - `gitlab:<owner>/<repo>[#<branch|tag|sha>]` - will get the library from GitLab. Use `gitlab://custom.server/<owner>/<repo>[#<branch|tag|sha>]` to get it from a server of your choice.
+- `git:<host>:/path/to/repo` - where `<host>` is an ip, a qualified domain or even a name in your system's `hosts` file. 
 - `http:<url>` or `https:<url>` - will get the library from an arbitrary URL, pointing to a haxelib zip file... you MUST BE reasonably sure that the targeted resource NEVER changes. (For example, if the filename is "mylib-latest.zip", it will probably change. If it is "mylib-v1.0.0.zip", it is reasonably likely to not change).
 
 Note that for github and gitlab you can specify credentials using the `--gh-credentials` and `--gl-private-token` parameters respectively. Be warned though that these credentials are then baked into the hxmls as well. Be very careful about using this option.
