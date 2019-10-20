@@ -237,7 +237,7 @@ Unlike either, lix does not make a local copy of each library inside a folder in
 
 ### How to use non-minimized versions of the shims?
 
-By default the shims are minimized to accelerate loading. 
+By default the shims generated as a jsnode target by this project are minimized to accelerate loading. 
 For developing or debugging lix that can be a problem, here is how to unminimize them:
 
 1. In `Build.hx` find a line with ncc like `cmd('npm run -- ncc -m build $file');`,
