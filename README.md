@@ -241,7 +241,7 @@ By default the shims are minimized to accelerate loading.
 For developing or debugging lix that can be a problem, here is how to unminimize them:
 
 1. In `Build.hx` find a line with ncc like `cmd('npm run -- ncc -m build $file');`,
-2. Remove the `-m` option as seen in [https://github.com/zeit/ncc][ncc documentation] and save the file,
+2. Remove the `-m` option as seen in [ncc documentation](https://github.com/zeit/ncc) and save the file,
 3. Reinstall using e.g. `npm -g install .` in the lix.client folder (possibly `sudo` is needed).
 
 ### Can I use these tools without installing them globally?
