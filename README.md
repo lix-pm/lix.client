@@ -235,6 +235,15 @@ Like yarn, lix will cache the exact versions installed, including the exact vers
 
 Unlike either, lix does not make a local copy of each library inside a folder in your project, preferring instead to keep the source code in a global folder, to save install time and disk space.
 
+### How to use non-minimized versions of the shims?
+
+By default the shims generated as a jsnode target by this project are minimized to accelerate loading. 
+For developing or debugging lix that can be a problem, here is how to unminimize them:
+
+1. In `Build.hx` find a line with ncc like `cmd('npm run -- ncc -m build $file');`,
+2. Remove the `-m` option as seen in [ncc documentation](https://github.com/zeit/ncc) and save the file,
+3. Reinstall using e.g. `npm -g install .` in the lix.client folder (possibly `sudo` is needed).
+
 ### Can I use these tools without installing them globally?
 
 Yes, assuming your project has a `package.json`. If not, you can create it by:
