@@ -21,7 +21,7 @@ enum ArchiveDestination {
 }
 
 typedef ArchiveJob = {
-  
+
   var normalized(default, null):Url;
   var url(default, null):Url;
   var lib(default, null):LibVersion;
@@ -127,9 +127,27 @@ class DownloadedArchive {
               case Computed(f): f(infos);
             });
           else targetLoc;
-        
+
         var ret = new DownloadedArchive(relRoot, storageRoot, job, infos);
         ret.alreadyDownloaded = false;
+
+        var absRoot = ret.absRoot;
+        if (infos.haxeshimDependencies != null) {
+          var curRootLength = curRoot.removeTrailingSlashes().length;
+          ret.infos = {
+            name: infos.name,
+            version: infos.version,
+            classPath: infos.classPath,
+            runAs: infos.runAs,
+            dependencies: infos.dependencies,
+            haxeshimDependencies:
+              [for (dep in infos.dependencies)
+                dep.name => absRoot + infos.haxeshimDependencies[dep.name].substr(curRootLength)
+              ],
+            postDownload: infos.postDownload,
+            postInstall: infos.postInstall
+          };
+        }
 
         var archive = null,
             old = ret.absRoot;
