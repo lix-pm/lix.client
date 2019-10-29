@@ -22,7 +22,7 @@ private class Proxy extends haxe.remoting.AsyncProxy<lix.client.sources.haxelib.
     return getBaseUrl(options).resolve(url);
 
   public function schemes():Array<String>
-    return ['haxelib'];
+    return ['haxelib', 'hl'];
 
   public function processUrl(url:Url):Promise<ArchiveJob> 
     return 
