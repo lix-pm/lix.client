@@ -6,12 +6,12 @@ import lix.api.Api;
 import lix.client.*;
 
 class Cli {
-  
-  static function main() 
+
+  static function main()
     Command.attempt(HaxeCmd.ensureScope(), dispatch.bind(Sys.args()));
-  
+
   static function dispatch(args:Array<String>) {
-    var version = CompileTime.parseJsonFile("./package.json").version;
+    var version = CompileTime.parseJsonFile("package.json").version;
     var silent = args.remove('--silent'),
         force = args.remove('--force'),
         global = args.remove('--global') || args.remove('-g'),
@@ -30,7 +30,7 @@ class Cli {
         case -1: null;
         case v: args.splice(v, 2)[1];
       }
-    
+
     var gitlab = new GitLab(grab('--gl-private-token')),
         github = new GitHub(switch grab('--gh-credentials') {
           case null: null;
@@ -50,38 +50,38 @@ class Cli {
         case v:
           v.processUrl(url);
       }
-    
+
     var logger = Logger.get(silent);
 
-    var hx = new lix.client.haxe.Switcher(scope, logger);    
+    var hx = new lix.client.haxe.Switcher(scope, logger);
     var libs = new Libraries(
-      scope, 
-      resolve, 
-      function (_) return new Error(NotImplemented, "not implemented"), 
+      scope,
+      resolve,
+      function (_) return new Error(NotImplemented, "not implemented"),
       logger,
       force
     );
 
     Command.dispatch(args, 'lix - Libraries for Haxe (v$version)', [
       new Command('install', '<url> [as <lib[#ver]>]', 'install lib from specified url',
-        function (args) 
-          return 
+        function (args)
+          return
             if (scope.isGlobal && !global)
               new Error('Current scope is global. Please use --global if you intend to install globally, or create a local scope with `lix scope create`.');
             else
               switch args {
                 case ['haxe', version]:
                   hx.install(version, { force: force });
-                case [url, 'as', alias]: 
+                case [url, 'as', alias]:
                   libs.installUrl(url, LibVersion.parse(alias), { flat: flat });
-                case [library, _] | [library] if ((library:Url).scheme == null): 
+                case [library, _] | [library] if ((library:Url).scheme == null):
                   new Error('Did you mean `lix install haxelib:$library`?');
                 case [url]:
                   libs.installUrl(url, { flat: flat });
                 case []: new Error('Missing url');
                 case v: new Error('too many arguments');
               }
-      ),      
+      ),
       new Command('install haxe', '<version>|<alias>', 'install specified haxe version', null),//this is never matched and is here purely for usage display
       new Command('use', 'haxe <version>|<alias>', 'use specified haxe version', function (args) return switch args {
         case ['haxe', version]: hx.resolveInstalled(version).next(hx.switchTo);
@@ -106,12 +106,12 @@ class Cli {
               logger.success('deleted scope in ${scope.scopeDir}');
               Noise;
             }
-          case []: 
+          case []:
             logger.info(
               (if (scope.isGlobal) '[global]' else '[local]') + ' ${scope.scopeDir}'
             );
             Noise;
-          case v: 
+          case v:
             new Error('Invalid arguments');
         }
       ),
@@ -126,25 +126,25 @@ class Cli {
                       ' -> $s';
                     else
                       '    $s';
-                
+
                 println('');
                 println('Official releases:');
                 println('');
-                
-                for (v in o) 
+
+                for (v in o)
                   println(highlight(v));
-                
+
                 if (n.iterator().hasNext()) {
                   println('');
                   println('Nightly builds:');
                   println('');
-                  
-                  for (v in n) 
+
+                  for (v in n)
                     println(highlight(v.hash) + v.published.format('  (%Y-%m-%d %H:%M)'));
                 }
-                
+
                 println('');
-                
+
                 return Noise;
               });
             });
@@ -152,7 +152,7 @@ class Cli {
             new Error('command `list` does expect arguments');
         }
       ),
-      new Command('download', '[<url[#lib[#ver]]>]', 'download lib from url if specified,\notherwise download missing libs', 
+      new Command('download', '[<url[#lib[#ver]]>]', 'download lib from url if specified,\notherwise download missing libs',
         function (args) return switch args {
           case ['haxe', version]:
             hx.resolveAndDownload(version, { force: force });
@@ -160,11 +160,11 @@ class Cli {
             var target = legacy.replace('#', '/');
             var absTarget = scope.libCache + '/$target';
             function shorten(s:String)
-              return 
+              return
                 if (s.length > 40) s.substr(0, 37)+ '...';
                 else s;
 
-            if (absTarget.exists()) 
+            if (absTarget.exists())
               new Error('`download <url> as <ver>` is no longer supported');
             else {
               logger.warning('Warning: Processing obsolete `download ${args.map(shorten).join(" ")}`.\n        Please reinstall library in a timely manner!\n\n');
@@ -175,15 +175,15 @@ class Cli {
                   a;
                 });
             }
-          case [url, 'into', dir]: 
+          case [url, 'into', dir]:
 
             libs.downloadUrl(url, { into: dir });
 
-          case [(_:Url) => url]: 
+          case [(_:Url) => url]:
 
             libs.downloadUrl(url);
 
-          case []: 
+          case []:
 
             lix.client.haxe.Switcher.ensureNeko(logger)
               .next(function (_) return
@@ -211,14 +211,14 @@ class Cli {
           Noise;
         }
       ),
-      new Command('run-haxelib', 'path ...args', 'invoke a haxelib at a given path following haxelib\'s conventions', function (args) return 
+      new Command('run-haxelib', 'path ...args', 'invoke a haxelib at a given path following haxelib\'s conventions', function (args) return
         switch args {
           case []: new Error('no path supplied');
-          default: 
+          default:
             new haxeshim.HaxelibCli(scope).run(args.slice(1));
             Noise;
         }
-      ),             
+      ),
     ], []).handle(Command.reportOutcome);
-  }       
+  }
 }
