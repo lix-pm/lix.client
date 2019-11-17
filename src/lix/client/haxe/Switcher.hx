@@ -116,7 +116,8 @@ class Switcher {
 
   public function switchTo(version:ResolvedVersion):Promise<Noise>
     return
-      scope.reconfigure({
+      if (version.id == scope.config.version) Noise;
+      else scope.reconfigure({
         version: version.id,
         resolveLibs: scope.config.resolveLibs,
       });
