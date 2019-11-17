@@ -295,9 +295,9 @@ class Switcher {
         logger.info('Neko seems to be missing. Attempting download ...');
 
         (switch Sys.systemName() {
-          case 'Windows': Download.zip('https://github.com/HaxeFoundation/neko/releases/download/v2-2-0/neko-2.2.0-win.zip', 1, neko, logger);
-          case 'Mac': Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-2-0/neko-2.2.0-osx64.tar.gz', 1, neko, logger);
-          default: Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-2-0/neko-2.2.0-linux64.tar.gz', 1, neko, logger);
+          case 'Windows': Download.zip('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-win.zip', 1, neko, logger);
+          case 'Mac': Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-osx64.tar.gz', 1, neko, logger);
+          default: Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-linux64.tar.gz', 1, neko, logger);
         }).next(function (x) {
           logger.success('done');
           return x;
