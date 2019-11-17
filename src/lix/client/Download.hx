@@ -27,19 +27,19 @@ class Download {
 
   static public function text(url:String):Promise<String>
     return bytes(url).next(function (b) return b.toString());
-    
-  static public function bytes(url:String):Promise<Bytes> 
+
+  static public function bytes(url:String):Promise<Bytes>
     return download(url, function (_, r, cb) buffered(r).handle(cb));
-    
-  static function buffered(r:IncomingMessage):Promise<Bytes> 
+
+  static function buffered(r:IncomingMessage):Promise<Bytes>
     return Future.async(function (cb) {
       var ret = [];
       r.on('data', ret.push);
       r.on('end', function () {
         cb(Success(Buffer.concat(ret).hxToBytes()));
-      });      
+      });
     });
-    
+
   static public function archive(url:String, peel:Int, into:String, ?logger:Logger) {
     return download(url, withLogger(logger, function (finalUrl:String, res, events) {
       if (res.headers['content-type'] == 'application/zip' || url.endsWith('.zip') || finalUrl.endsWith('.zip'))
@@ -48,17 +48,17 @@ class Download {
         untar(url, into, peel, res, events);
     }));
   }
-    
+
   static function unzip(src:String, into:String, peel:Int, res:IncomingMessage, events:Events<String>) {
     buffered(res).next(function (bytes)
       return Future.async(function (cb) {
         var pos = bytes.length - 4;
         while (pos --> 0) {
           if (
-            bytes.get(pos) == 0x50 
-            && bytes.get(pos+1) == 0x4b 
-            && bytes.get(pos+2) == 0x05 
-            && bytes.get(pos+3) == 0x06 
+            bytes.get(pos) == 0x50
+            && bytes.get(pos+1) == 0x4b
+            && bytes.get(pos+2) == 0x05
+            && bytes.get(pos+3) == 0x06
           ) {
             bytes.set(pos + 20, 0);
             bytes.set(pos + 21, 0);
@@ -78,34 +78,46 @@ class Download {
             if (saved == zip.entryCount)
               haxe.Timer.delay(cb.bind(Success(into)), 100);
           }
-          
+
           if (err != null)
             cb(Failure(new Error(UnprocessableEntity, 'Failed to unzip $src because $err')));
-          
-          zip.on("entry", function (entry) switch Fs.peel(entry.fileName, peel) {
+
+          zip.on("entry", function (entry) switch Fs.peel(stripLeadingSlashes(entry.fileName), peel) {
             case None:
             case Some(f):
               var path = '$into/$f';
-              if (path.endsWith('/')) 
+              if (path.endsWith('/'))
                 done();
               else {
                 Fs.ensureDir(path).eager();//TODO: avoid this
-                zip.openReadStream(entry, function (e, stream) { 
+                zip.openReadStream(entry, function (e, stream) {
                   var out:js.node.fs.WriteStream = js.Lib.require('graceful-fs').createWriteStream(path);
                   stream.pipe(out, { end: true } );
                   out.on('close', done);
                 });
               }
-              
+
           });
           zip.on("end", function () {
             zip.close();
             done();
           });
-        });            
-      })).handle(events.done); 
+        });
+      })).handle(events.done);
   }
-  static public function untar(src:String, into:String, peel:Int, res:IReadable, events:Events<String>) 
+
+  @:keep static var initZip = {
+    var old = Yauzl.validateFileName;
+    Yauzl.validateFileName = function (s) return null;//old(stripLeadingSlashes(s));
+    true;
+  }
+
+  static function stripLeadingSlashes(path:String)
+    return
+      if (path.charAt(0) == '/') stripLeadingSlashes(path.substr(1));
+      else path;
+
+  static public function untar(src:String, into:String, peel:Int, res:IReadable, events:Events<String>)
     return Future.async(function (cb) {
       var total = 0,
           written = 0;
@@ -122,9 +134,9 @@ class Download {
         haxe.Timer.delay(function () {
           if (--pending <= 0) {
             events.onProgress(total, total, true);
-            Promise.inParallel([for (link in symlinks) 
-              Future.async(function (cb) 
-                js.node.Fs.unlink(link.to, function (_) 
+            Promise.inParallel([for (link in symlinks)
+              Future.async(function (cb)
+                js.node.Fs.unlink(link.to, function (_)
                   js.node.Fs.symlink(link.from, link.to, function (e:js.Error) cb(//TODO: figure out if mode needs to be set
                     if (e == null) Success(Noise)
                     else Failure(new Error(e.message))
@@ -137,7 +149,7 @@ class Download {
       }
 
       var error:Error = null;
-      
+
       function fail(message:String)
         cb(Failure(error = new Error(message)));
 
@@ -149,12 +161,12 @@ class Download {
         function skip() {
           entry.on('data', function () {});
         }
-        switch Fs.peel(entry.path, peel) {
+        switch Fs.peel(stripLeadingSlashes(entry.path), peel) {
           case None:
             skip();
           case Some(f):
             var path = '$into/$f';
-            if (path.endsWith('/')) 
+            if (path.endsWith('/'))
               skip();
             else {
               Fs.ensureDir(path).handle(function (o) switch o {
@@ -174,28 +186,28 @@ class Download {
                   }
               });
             }
-        }      
+        }
       }).handle(function (o) switch o {
         case Failure(e): cb(Failure(e));
         default: done();
       });
     }).handle(events.done);
-  
+
   static public function tar(url:String, peel:Int, into:String, logger:Logger):Promise<Directory>
     return download(url, withLogger(logger, untar.bind(_, into, peel)));
-    
+
   static public function zip(url:String, peel:Int, into:String, logger:Logger):Promise<Directory>
     return download(url, withLogger(logger, unzip.bind(_, into, peel)));
 
   static function withLogger<T>(logger:Logger, handler:ProgressHandler<T>):Handler<T> {
-    return 
+    return
       function (url:String, msg:IncomingMessage, cb:Outcome<T, Error>->Void) {
-        
+
         var size = Std.parseInt(msg.headers.get('content-length')),
             loaded = 0,
             saved = 0,
             total = 1;
-        
+
         var last = null;
 
         function progress(s:String) {
@@ -219,7 +231,7 @@ class Download {
           else {
             var now = Date.now().getTime();
             if (now > lastUpdate + 137) {
-              
+
               lastUpdate = now;
               var messages = [];
               if (loaded < size) messages.push('Downloaded: ${pct(loaded / size)}');
@@ -240,7 +252,7 @@ class Download {
             saved = _saved;
             total = _total;
             /**
-              The following is truly hideous, but there's no easy way 
+              The following is truly hideous, but there's no easy way
               to actually KNOW how much of a .tar.gz you have unpacked, because apparently:
 
               - tar was made for freaking TAPE WRITERS and is just a stream of entries, with no real
@@ -266,35 +278,35 @@ class Download {
         });
       }
   }
-      
+
   static function download<T>(url:String, handler:Handler<T>):Promise<T>
     return Future.async(function (cb) {
-      
+
       var options:HttpRequestOptions = cast Url.parse(url);
-      
+
       options.agent = false;
       if (options.headers == null)
         options.headers = {};
       options.headers['user-agent'] = Download.USER_AGENT;
-      
+
       function fail(e:js.Error)
         cb(Failure(tink.core.Error.withData('Failed to download $url because ${e.message}', e)));
-        
-      var req = 
+
+      var req =
         if (url.startsWith('https:')) js.node.Https.get(cast options);
         else js.node.Http.get(options);
-      
+
       req.setTimeout(30000);
       req.on('error', fail);
-      
+
       req.on(ClientRequestEvent.Response, function (res) {
-        if (res.statusCode >= 400) 
+        if (res.statusCode >= 400)
           cb(Failure(Error.withData(res.statusCode, res.statusMessage, res)));
         else
           switch res.headers['location'] {
             case null:
               res.on('error', fail);
-              
+
               handler(url, res, function (v) {
                 switch v {
                   case Success(x): cb(Success(x));
@@ -302,7 +314,7 @@ class Download {
                 }
               });
             case v:
-              
+
               download(switch Url.parse(v) {
                 case { protocol: null }:
                   options.protocol + '//' + options.host + v;
@@ -311,6 +323,6 @@ class Download {
           }
         });
     });
-    
+
   static public var USER_AGENT = 'switchx';
 }

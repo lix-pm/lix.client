@@ -6,8 +6,9 @@ import js.node.stream.Readable.IReadable;
 @:jsRequire("yauzl")
 extern class Yauzl {
 
+  dynamic static function validateFileName(path:String):Null<String>;
   static function fromBuffer(buf:Buffer, cb:js.Error->YauzlArchive->Void):Void;
-  
+
 }
 
 extern interface YauzlArchive extends js.node.events.EventEmitter.IEventEmitter {

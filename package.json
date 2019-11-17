@@ -19,9 +19,9 @@
     },
     "devDependencies": {
         "@zeit/ncc": "^0.20.4",
+        "graceful-fs": "^4.1.15",
         "tar": "^4.4.8",
-        "yauzl": "^2.10.0",
-        "graceful-fs": "^4.1.15"
+        "yauzl": "github:lix-pm/yauzl"
     },
     "keywords": [
         "haxe"
