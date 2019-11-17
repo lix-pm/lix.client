@@ -250,13 +250,13 @@ class Switcher {
       return Download.archive(url, 0, into, logger);
 
     return switch version {
-      case RCustom(_):
-
-        new Error('Cannot download custom version');
-
       case isDownloaded(_) => true if (options.force != true):
 
         false;
+
+      case RCustom(_):
+
+        new Error('Cannot download custom version');
 
       case RNightly({ hash: hash, published: date }):
 
