@@ -152,7 +152,6 @@ using haxe.Json;
 
       function saveHxml<T>(?value:T):Promise<T> {
         var directives = [
-          '-D $name=$version',
           '# @$INSTALL: lix --silent download "${a.job.normalized}" into ${a.relRoot}',
         ];
 
@@ -172,6 +171,7 @@ using haxe.Json;
             .concat([for (lib in infos.dependencies) '-lib ${lib.name}'])
             .concat([
               '-cp $DOWNLOAD_LOCATION/${infos.classPath}',
+              '-D $name=$version',
               extra,
             ]).join('\n')
         ).next(_ -> {
