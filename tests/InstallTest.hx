@@ -9,7 +9,7 @@ using StringTools;
 @:asserts
 class InstallTest extends TestBase {
 	var dir:String;
-	
+
 	@:before
 	public function mkdir() {
 		dir = 'test_' + Date.now().getTime() + '_' + Std.random(1<<24); // fancy way to make a random folder name
@@ -18,14 +18,14 @@ class InstallTest extends TestBase {
 		runLix(['scope', 'create']);
 		return Noise;
 	}
-	
+
 	@:after
 	public function rmrf() {
 		Sys.setCwd(TestBase.CWD);
 		deleteDirectory(dir);
 		return Noise;
 	}
-	
+
 	@:variant('tink_core',      'install haxelib:tink_core',                                 v -> this.regex('tink_core', Haxelib(None)).match(v))
 	@:variant('tink_core',      'install haxelib:tink_core#1.13.1',                          v -> this.regex('tink_core', Haxelib(Some('1.13.1'))).match(v))
 	@:variant('tink_core',      '+lib tink_core',                                            v -> this.regex('tink_core', Haxelib(None)).match(v))
@@ -34,7 +34,7 @@ class InstallTest extends TestBase {
 	@:variant('tink_core',      'install gh:haxetink/tink_core#93227943',                    v -> this.regex('tink_core', Github(Some('93227943'))).match(v))
 	@:variant('tink_core',      '+tink core',                                                v -> this.regex('tink_core', Github(None)).match(v))
 	@:variant('tink_core',      '+tink core#93227943',                                       v -> this.regex('tink_core', Github(Some('93227943'))).match(v))
-	@:variant('react-native',   'install gh:haxe-react/haxe-react-native as react-native',   v -> this.regex('react-native', Github(None)).match(v))
+	// @:variant('react-native',   'install gh:haxe-react/haxe-react-native as react-native',   v -> this.regex('react-native', Github(None)).match(v))
 	public function install(lib:String, args:Args, check:String->Bool) {
 		switch runLix(args).exitCode {
 			case 0:
@@ -45,10 +45,10 @@ class InstallTest extends TestBase {
 		}
 		return asserts.done();
 	}
-	
+
 	function resolve(lib:String, debug = false)
 		return runHaxe(['--run', 'resolve-args', '-lib', lib], debug).stdout;
-	
+
 	function regex(lib:String, type:SourceType) {
 		var pattern = '-cp .*/haxe_libraries/$lib/';
 		pattern += switch type {
