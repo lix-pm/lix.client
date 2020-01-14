@@ -145,7 +145,7 @@ class Switcher {
     return switch version {
       case UEdge:
 
-        getNightlies().next(pickFirst('nightly', RNightly, v -> v.development));
+        getNightlies().next(pickFirst('nightly', RNightly, v -> v.development != false));
 
       case ULatest:
 
@@ -225,7 +225,7 @@ class Switcher {
 
   public function resolveAndDownload(version:String, options:{ force: Bool }) {
     return (switch ((version : UserVersion) : UserVersionData) {
-      case UNightly(_) | UOfficial(_):
+      case UOfficial(_):
         resolveInstalled(version);
       default:
         Promise.lift(new Error('$version needs to be resolved online'));
