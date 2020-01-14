@@ -73,7 +73,7 @@ class Switcher {
       for (l in lines)
         switch l.trim().split('<a href="') {
           case [parseDate(_.split('  ')[0]) => Some(published), _.split('"')[0] => file]:
-            switch file.withoutExtension().split('_').pop() {
+            switch file.split('.')[0].split('_').pop() {
               case 'latest':
               case hash:
                 ret.push({
