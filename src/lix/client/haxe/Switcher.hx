@@ -253,8 +253,10 @@ class Switcher {
 
   public function download(version:ResolvedVersion, options:{ force: Bool }):Promise<Bool> {
 
-    inline function download(url, into)
+    inline function download(url, into) {
+      logger.info('Downloading Haxe: $version');
       return Download.archive(url, 0, into, logger);
+    }
 
     return switch version {
       case isDownloaded(_) => true if (options.force != true):
@@ -266,7 +268,7 @@ class Switcher {
         new Error('Cannot download custom version');
 
       case RNightly({ hash: hash, published: date, file: file }):
-        // trace(linkToNightly(hash, date));
+
         download(linkToNightly(hash, date, file), '$downloads/$hash@${Math.floor(Date.now().getTime())}').next(function (dir) {
           replace(versionDir(hash), dir, hash, function (dir) {
             '$dir/$VERSION_INFO'.saveContent(haxe.Json.stringify({
