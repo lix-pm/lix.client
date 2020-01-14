@@ -32,12 +32,15 @@ class Switcher {
       default: 'linux64';
     }
 
-  static function linkToNightly(hash:String, date:Date) {
-    var extension =
-      // Windows builds are distributed as a zip file since 2017-05-11
-      if (PLATFORM == 'windows' && date.getTime() > 1494460800000) 'zip'
-      else 'tar.gz';
-    return date.format('$NIGHTLIES/$PLATFORM/haxe_%Y-%m-%d_development_$hash.$extension');
+  static function linkToNightly(hash:String, date:Date, ?file:String) {
+    if (file == null) {
+      var extension =
+        // Windows builds are distributed as a zip file since 2017-05-11
+        if (PLATFORM == 'windows' && date.getTime() > 1494460800000) 'zip'
+        else 'tar.gz';
+      file = date.format('haxe_%Y-%m-%d_development_$hash.$extension');
+    }
+    return date.format('$NIGHTLIES/$PLATFORM/$file');
   }
 
   static function sortedOfficial(kind:PickOfficial, versions:Array<Official>):Iterable<Official> {
@@ -58,31 +61,29 @@ class Switcher {
     return raw;
   }
 
+
   static public function nightliesOnline():Promise<Iterable<Nightly>> {
     return Download.text('$NIGHTLIES/$PLATFORM/').next(function (s:String):Iterable<Nightly> {
-      var lines = s.split('------------------\n').pop().split('\n');
-      var ret = [];
+      var lines = s.split('------------------\n').pop().split('\n'),
+          ret = new Array<Nightly>();
+
+      function parseDate(date:String)
+        return try Some(Date.fromString(date)) catch (e:Dynamic) None;
+
       for (l in lines)
-        switch l.trim() {
-          case '':
-          case v:
-            if (v.indexOf('_development_') != -1)
-              switch v.indexOf('   ') {
-                case -1: //whatever
-                case v.substr(0, _).split(' ') => [
-                  _.split('-').map(Std.parseInt) => [y, m, d],
-                  _.split(':').map(Std.parseInt) => [hh, mm, ss]
-                ]:
-
-                  ret.push({
-                    hash: v.split('_development_').pop().split('.').shift(),
-                    published: new Date(y, m - 1, d, hh, mm, ss),
-                  });
-
-                default:
-
-              }
-
+        switch l.trim().split('<a href="') {
+          case [parseDate(_.split('  ')[0]) => Some(published), _.split('"')[0] => file]:
+            switch file.withoutExtension().split('_').pop() {
+              case 'latest':
+              case hash:
+                ret.push({
+                  hash: hash,
+                  file: file,
+                  development: file.indexOf('_development_') != -1,
+                  published: published
+                });
+            }
+          default:
         }
       return sortedNightlies(ret);
     });
@@ -109,7 +110,7 @@ class Switcher {
       attempt(
         'get installed Haxe versions',
         sortedNightlies([for (v in scope.versionDir.readDirectory().filter(UserVersion.isHash)) {
-          hash:v,
+          hash: v,
           published: Date.fromString('${versionDir(v)}/$VERSION_INFO'.getContent().parse().published)
         }])
       );
@@ -128,18 +129,23 @@ class Switcher {
   public function resolveOnline(version:UserVersion):Promise<ResolvedVersion>
     return resolve(version, officialOnline, nightliesOnline);
 
-  static function pickFirst<A>(kind:String, make:A->ResolvedVersion):Next<Iterable<A>, ResolvedVersion>
-    return function (i:Iterable<A>)
-      return switch i.iterator().next() {
-        case null: new Error(NotFound, 'No $kind build found');
-        case v: make(v);
-      }
+  static function pickFirst<A>(kind:String, make:A->ResolvedVersion, ?filter:A->Bool):Next<Iterable<A>, ResolvedVersion>
+    return switch filter {
+      case null:
+        pickFirst(kind, make, _ -> true);
+      default:
+        function (i:Iterable<A>) {
+          for (v in i)
+            if (filter(v)) return make(v);
+          return new Error(NotFound, 'No $kind build found');
+        }
+    }
 
   function resolve(version:UserVersion, getOfficial:PickOfficial->Promise<Iterable<Official>>, getNightlies:Void->Promise<Iterable<Nightly>>):Promise<ResolvedVersion>
     return switch version {
       case UEdge:
 
-        getNightlies().next(pickFirst('nightly', RNightly));
+        getNightlies().next(pickFirst('nightly', RNightly, v -> v.development));
 
       case ULatest:
 
@@ -259,9 +265,9 @@ class Switcher {
 
         new Error('Cannot download custom version');
 
-      case RNightly({ hash: hash, published: date }):
-
-        download(linkToNightly(hash, date), '$downloads/$hash@${Math.floor(Date.now().getTime())}').next(function (dir) {
+      case RNightly({ hash: hash, published: date, file: file }):
+        // trace(linkToNightly(hash, date));
+        download(linkToNightly(hash, date, file), '$downloads/$hash@${Math.floor(Date.now().getTime())}').next(function (dir) {
           replace(versionDir(hash), dir, hash, function (dir) {
             '$dir/$VERSION_INFO'.saveContent(haxe.Json.stringify({
               published: date.toString(),

@@ -1,6 +1,8 @@
 package lix.client.haxe;
 
 typedef Nightly = {
-  var hash(default, null):String;
-  var published(default, null):Date;
+  final hash:String;
+  final published:Date;
+  final ?file:String;
+  final ?development:Bool;
 }
