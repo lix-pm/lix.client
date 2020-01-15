@@ -1,6 +1,6 @@
-# @install: lix --silent download "gh://github.com/lix-pm/haxeshim#701d628c4839f7e28725afac2ddc8570bd349aa3" into haxeshim/0.0.0/github/701d628c4839f7e28725afac2ddc8570bd349aa3
+# @install: lix --silent download "gh://github.com/lix-pm/haxeshim#41d3a8b63fd992f25bbb1dc54fbec1e175c16cff" into haxeshim/0.0.0/github/41d3a8b63fd992f25bbb1dc54fbec1e175c16cff
 -lib ansi
 -lib hxnodejs
 -lib tink_core
--cp ${HAXE_LIBCACHE}/haxeshim/0.0.0/github/701d628c4839f7e28725afac2ddc8570bd349aa3/src
+-cp ${HAXE_LIBCACHE}/haxeshim/0.0.0/github/41d3a8b63fd992f25bbb1dc54fbec1e175c16cff/src
 -D haxeshim=0.0.0
