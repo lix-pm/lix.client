@@ -89,6 +89,47 @@ using haxe.Json;
       })
       .next(args -> [for (i => a in args) if (a == '-lib') args[i++]]);
   }
+
+  public function dev(lib:String, path:String):Promise<Noise>
+    return switch path.readDirectory.catchExceptions() {
+      case Success(files) if (files.indexOf('haxelib.json') != -1):
+
+        var manifest = '$path/haxelib.json';
+        Fs.get(manifest)
+          .next(s ->
+            try (haxe.Json.parse(s):{ ?version:String, ?classPath:String, ?dependencies:haxe.DynamicAccess<String> })
+            catch (e:Dynamic) new Error('cannot parse $manifest')
+          )
+          .next(
+            info -> {
+              var lines = [];
+              if (info.dependencies != null)
+                for (k => v in info.dependencies)
+                  lines.push('-lib $k');
+              lines.push('-D $lib='+ switch info.version {
+                case null: 'dev';
+                case v: v;
+              });
+              lines.push('-cp ' + switch info.classPath {
+                case null: path;
+                case v: Path.join([path, v]);
+              });
+
+              var line = lines.length;
+
+              if (files.indexOf('extraParams.hxml') != -1)
+                lines.push('$path/extraParams.hxml');
+
+              lines.push('--macro Sys.println("haxe_libraries/$lib.hxml:$line: [Warning] Using dev version of library $lib")');
+              Fs.save(scope.libHxml(lib), lines.join('\n'));
+            }
+          );
+      case Success(_):
+        new Error('$path does not contain haxelib.json');
+      default:
+        new Error('$path is not a readable directory');
+    }
+
   public function installArchive(
       a:Promise<ArchiveJob>,
       ?as:LibVersion,

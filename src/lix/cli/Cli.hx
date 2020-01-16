@@ -87,6 +87,10 @@ class Cli {
         case ['haxe', version]: hx.resolveInstalled(version).next(hx.switchTo);
         default: new Error('invalid arguments');
       }),
+      new Command('dev', '<lib> <path>', 'use dev version of library', args -> switch args {
+        case [lib, path]: libs.dev(lib, path);
+        default: new Error('invalid arguments');
+      }),
       new Command('download haxe', '<version>|<alias>', 'download specified haxe version', null),//this is never matched and is here purely for usage display
       new Command('scope', '[create|delete]', 'creates or deletes the current scope or\ninspects it if no argument is supplied',
         function (args) return switch args {
