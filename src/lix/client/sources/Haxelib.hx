@@ -1,14 +1,13 @@
 package lix.client.sources;
 
+import lix.client.sources.haxelib.*;
 import tink.url.Host;
 
 using tink.CoreApi;
 
-private class Proxy extends haxe.remoting.AsyncProxy<lix.client.sources.haxelib.Repo> {}
-
 @:tink class Haxelib {
   static var OFFICIAL = 'https://lib.haxe.org/';
-  
+
   @:lazy var isOfficial:Bool = OFFICIAL == baseURL;
   var baseURL:String = @byDefault OFFICIAL;
 
@@ -18,14 +17,14 @@ private class Proxy extends haxe.remoting.AsyncProxy<lix.client.sources.haxelib.
       case { host: h }: '${if (h.port == null) 'https' else 'http'}://$h/';
     }
 
-  function resolve(url, ?options:{ host: tink.url.Host }):Url 
+  function resolve(url, ?options:{ host: tink.url.Host }):Url
     return getBaseUrl(options).resolve(url);
 
   public function schemes():Array<String>
     return ['haxelib'];
 
-  public function processUrl(url:Url):Promise<ArchiveJob> 
-    return 
+  public function processUrl(url:Url):Promise<ArchiveJob>
+    return
       switch url.query.toMap()['url'].toString() {
         case _ == null || _ == baseURL => true:
           switch url.path {
@@ -36,24 +35,49 @@ private class Proxy extends haxe.remoting.AsyncProxy<lix.client.sources.haxelib.
         case v:
           new Haxelib(v).processUrl(url);
       }
-  
-  static inline function esc(s:String) 
+
+  static inline function esc(s:String)
     return s.replace('.', ',');
 
   function getArchive(name:String, ?version:String, ?options):Promise<ArchiveJob>
-    return 
-      switch version {
-        case null:
-          resolveVersion(name, options).next(getArchive.bind(name, _, options));
-        case v:
+    return
+      getInfos(name, options)
+        .next(function (infos) {
           var host = switch options {
             case null | { host: null }: None;
             case { host: h }: Some(h);
           }
-          
-          var isCustom = !(host == None && isOfficial);
 
-          ({
+          var isCustom = !(host == None && isOfficial);
+          var name = infos.name;
+          if (version == null) {
+            function getVersions(?filter) {
+              var ret = [for (v in infos.versions) switch tink.semver.Version.parse(v.name) {
+                case Success(v) if (filter == null || filter(v)): v;
+                default: continue;
+              }];
+              ret.sort((a, b) -> b.compare(a));
+              return ret;
+            }
+
+            version =
+              switch getVersions(v -> v.preview == null) {
+                case []:
+                  getVersions()[0];
+                case v: v[0];
+              }
+          }
+          else {
+            var found = false;
+            for (v in infos.versions)
+              if (v.name == version) {
+                found = true;
+                break;
+              }
+            if (!found)
+              return new Error('Library $name has no version $version');
+          }
+          return ({
             url: resolve('/files/3.0/${esc(name)}-${esc(version)}.zip', options),
             normalized: Url.make({
               scheme: 'haxelib',
@@ -66,14 +90,15 @@ private class Proxy extends haxe.remoting.AsyncProxy<lix.client.sources.haxelib.
             kind: Zip,
             lib: { name: Some(name), version: Some(version) }
           } : ArchiveJob);
-      }
+        }
+      );
 
-  function resolveVersion(name:String, ?options):Promise<String> 
+  function getInfos(name:String, ?options):Promise<ProjectInfos>
     return Future.async(function (cb) {
       var cnx = haxe.remoting.HttpAsyncConnection.urlConnect(resolve('/api/3.0/index.n', options));
-      cnx.setErrorHandler(function (e) cb(Failure(Error.withData('Failed to get version information from haxelib because $e', e))));  
+      cnx.setErrorHandler(function (e) cb(Failure(Error.withData('Failed to get version information from haxelib because $e', e))));
       var repo = new Proxy(cnx.resolve('api'));
-      repo.getLatestVersion(name, function (s) cb(Success(s)));
+      repo.infos(name, function (s) cb(Success(s)));
     });
 
 }
