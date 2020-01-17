@@ -7,6 +7,6 @@ class Publish {
       case v: v;
     }
     cmd('npm version $version');
-    cmd('git push origin --tags');
+    cmd('git push origin --follow-tags');
   }
 }
