@@ -29,6 +29,7 @@ You can depend on lix to manage your haxe dependencies.
     - [HXML files](#hxml-files)
     - [Version control](#version-control)
     - [Local development](#local-development)
+    - [Scripting](#scripting)
 - [Concepts](#concepts)
 - [FAQ](#faq)
 - [Help and support](#help-and-support)
@@ -76,11 +77,11 @@ You should use this after using `git clone`, `git pull`, `git checkout` and simi
 
 The schemes you can use include haxelib, github, gitlab, and http/https:
 
-- `haxelib:<name>[#<version>]` - will get the library from haxelib, either the specific version or the latest. Use `--haxelib-url <url>` (either an https or http url) to use a different server consistently. You may also use `haxelib://custom.server[:<port>]/<name>[#<version>]`, but in that case further dependencies will again be resolved against the official haxelib. If you leave the port unspecified, https assumed, otherwise http. 
+- `haxelib:<name>[#<version>]` - will get the library from haxelib, either the specific version or the latest. Use `--haxelib-url <url>` (either an https or http url) to use a different server consistently. You may also use `haxelib://custom.server[:<port>]/<name>[#<version>]`, but in that case further dependencies will again be resolved against the official haxelib. If you leave the port unspecified, https assumed, otherwise http.
 - `github:<owner>/<repo>[#<branch|tag|sha>]` - will get the library from GitHub, either master or a specific branch/tag/commit.
 - `gh:...` an alias for `github`
 - `gitlab:<owner>/<repo>[#<branch|tag|sha>]` - will get the library from GitLab. Use `gitlab://custom.server/<owner>/<repo>[#<branch|tag|sha>]` to get it from a server of your choice.
-- `git:<host>:/path/to/repo` - where `<host>` is an ip, a qualified domain or even a name in your system's `hosts` file. 
+- `git:<host>:/path/to/repo` - where `<host>` is an ip, a qualified domain or even a name in your system's `hosts` file.
 - `http:<url>` or `https:<url>` - will get the library from an arbitrary URL, pointing to a haxelib zip file... you MUST BE reasonably sure that the targeted resource NEVER changes. (For example, if the filename is "mylib-latest.zip", it will probably change. If it is "mylib-v1.0.0.zip", it is reasonably likely to not change).
 
 Note that for github and gitlab you can specify credentials using the `--gh-credentials` and `--gl-private-token` parameters respectively. Be warned though that these credentials are then baked into the hxmls as well. Be very careful about using this option.
@@ -161,6 +162,75 @@ Instead, once you've finished the work on your dependency, (even if it's a work 
 
 This way if anyone else wants to use your work-in-progress, they'll be able to.
 
+### Scripting
+
+Lix supports running "haxe scripts" on either the interpreter or nodejs. The first argument must be something that looks like a class name (i.e. a dot path where the last part starts with an upper case letter, e.g. `ExportAssets` or `tasks.export.Assets`).
+
+The class name resolution is as follows:
+
+- attempt to find the class in the current scope's root (e.g. `ExportAssets.hx` or `tasks/export/Assets/hx`)
+- attempt to find the class in the `scripts` sub directory of the current scope's root (e.g. `scripts/ExportAssets.hx` or `scripts/tasks/export/Assets/hx`) while using `scripts` as a class path
+- if your project has a `haxelib.json` that defines a `classPath`, it is looked up therein. If there's a corresponding `haxe_libraries/<libname>.hxml` then the project is compiled with `-lib <libname>`, otherwise the classPath and dependencies are taken from the `haxelib.json`
+
+With the file and class paths being established, lix will read the file. A leading `#!`-line will be ignored. It will scan lines so long as they are empty or start with `//!`, the latter ones being allowed to pass additional args to the compiler.
+
+Example:
+
+```haxe
+//! -lib foo -D something=somevalue
+class ExportAssets {
+  static function main() {
+    trace('Look at me, I am exporting ${Sys.args().join(', ')}!');
+  }
+}
+```
+
+Any additional arguments are passed to the script. Suppose `ExportAssets` were in the `scripts` directory, then the invokation would look like this:
+
+```
+Input:
+
+  lix ExportAssets sword shield axe
+
+Becomes:
+
+  haxe -lib foo -D something=somevalue -cp scripts --run ExportAssets sword shield axe
+
+Outputs:
+
+  ExportAssets.hx:4: Look at me, I am exporting sword, shield, axe!
+```
+
+#### NodeJS scripting
+
+A special case occurs when compiling with `-lib hxnodejs`. Let's slightly adjust the above example:
+
+```haxe
+//! -lib hxnodejs
+class ExportAssets {
+  static function main() {
+    js.Node.console.log('Look at me, I am import ${Sys.args().join(', ')}!');
+  }
+}
+```
+
+```
+Input:
+
+  lix ExportAssets sword shield axe
+
+Becomes:
+
+  haxe -lib hxnodejs -cp scripts -main ExportAssets -js scripts/ExportAssets.js
+  node scripts/ExportAssets.js sword shield axe
+
+Outputs:
+
+  Look at me, I am exporting sword, shield, axe!
+```
+
+Note that the JS script will attempt to delete itself when run.
+
 ## Concepts
 
 lix was designed based on a few key concepts that we believe have helped package managers for other languages be successful. Understanding these concepts can help you understand the way lix works.
@@ -239,7 +309,7 @@ Unlike either, lix does not make a local copy of each library inside a folder in
 
 ### How to use non-minimized versions of the shims?
 
-By default the shims generated as a jsnode target by this project are minimized to accelerate loading. 
+By default the shims generated as a jsnode target by this project are minimized to accelerate loading.
 For developing or debugging lix that can be a problem, here is how to unminimize them:
 
 1. In `Build.hx` find a line with ncc like `cmd('npm run -- ncc -m build $file');`,

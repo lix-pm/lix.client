@@ -1,9 +1,12 @@
 package lix.cli;
 
+import haxe.DynamicAccess;
 import lix.client.Archives;
 import lix.client.sources.*;
 import lix.api.Api;
 import lix.client.*;
+
+using haxe.io.Path;
 
 class Cli {
 
@@ -223,6 +226,169 @@ class Cli {
             Noise;
         }
       ),
-    ], []).handle(Command.reportOutcome);
+    ], [],
+      args -> switch args[0] {
+        case null: None;
+        case '-lib' | '--library' | '-L' | '--run' | (_.endsWith('.hxml') => true):
+          Some(() -> {
+            @:privateAccess new haxeshim.HaxeCli(scope).dispatch(args);
+            Noise;
+          });
+        case lib if (scope.libHxml(lib).exists()):
+          Some(() -> {
+            new haxeshim.HaxelibCli(scope).run(args);
+            Noise;
+          });
+        case cls if (isClassName(cls)):
+          Some(() -> {
+            function absolute(path:String)
+              return Path.join([scope.scopeDir, path]);
+
+            Fs.get(absolute('haxelib.json'))
+              .next(s -> haxe.Json.parse.bind(s).catchExceptions())
+              .recover(_ -> {
+                classPath: '',
+                name: scope.scopeDir.removeTrailingSlashes().withoutDirectory(),
+                dependencies: new DynamicAccess<String>()
+              })
+              .next(
+                function (info) {
+
+                  var file = cls.replace('.', '/') + '.hx';
+
+                  var candidates = [
+                    { file: file, args: ['-cp', absolute('')] },
+                    { file: 'scripts/$file', args: ['-cp', absolute('scripts')] }
+                  ];
+
+                  switch info.classPath {
+                    case null | '':
+                    case cp:
+                      candidates.push({
+                        file: '$cp/$file',
+                        args:
+                          if (scope.libHxml(info.name).exists()) ['-lib', info.name]
+                          else {
+                            var ret = [];
+                            switch info.dependencies {
+                              case null: [];
+                              case deps:
+                                for (k => v in deps) {
+                                  ret.push('-lib');
+                                  ret.push(k);
+                                }
+                            }
+                            ret.concat(['-cp', absolute(cp)]);
+                          }
+                      });
+                    }
+
+                  for (c in candidates)
+                    switch Path.join([scope.scopeDir, c.file]) {
+                      case _.exists() => false:
+                      case found:
+                        return Fs.get(found)
+                          .next(function (content) {
+                            var buildArgs = [];
+                            {
+                              var lines = content.split('\n'),
+                                  pos = 0;
+                              if (lines[0].startsWith('#!'))
+                                pos++;
+                              while (true)
+                                switch lines[pos++].trim() {
+                                  case '':
+                                  case content:
+                                    if (content.startsWith('//!')) {
+                                      for (v in content.substr(3).split(' '))
+                                        switch v.trim() {
+                                          case '':
+                                          case v: buildArgs.push(v);
+                                        }
+                                    }
+                                    else break;
+                                }
+                            }
+
+                            buildArgs = buildArgs.concat(c.args);
+                            var runArgs = args.slice(1);
+
+                            return
+                              switch scope.getBuilds(buildArgs) {
+                                case Failure({ errors: errors }) | Success([Failure({ errors: errors }) | Success(_.checkClassPaths() => Failure({ errors: errors }))]):
+                                  var e = errors[0];
+                                  new Error(e.code, e.pos.toString() + ': ' + e.message);
+                                case Success([Success({ cwd: cwd, args: args })]):
+                                  var args = [for (a in args) a.val];
+                                  var nodeFile = null;
+
+                                  for (i in 0...args.length - 1)
+                                    switch args[i] {
+                                      case '-D' | '--define':
+                                        switch args[i + 1] {
+                                          case 'hxnodejs', _.startsWith('hxnodejs=') => true:
+                                            nodeFile = switch args.indexOf('-js') {
+                                              case -1:
+                                                var ret = found.withoutExtension().withExtension('js');
+                                                args = args.concat(['-js', ret]);
+                                                ret;
+                                              case v:
+                                                args[v + 1];//could be null ... perhaps should be forbidden altogether
+                                            }
+                                            break;
+                                          default:
+                                        }
+                                      default:
+                                    }
+
+                                  args = args.concat(switch nodeFile {
+                                    case null: ['--run', cls].concat(runArgs);
+                                    default: ['-main', cls];
+                                  });
+
+                                  switch Exec.sync(scope.haxeInstallation.compiler, cwd, args, scope.haxeInstallation.env()) {
+                                    case Success(0):
+                                      switch nodeFile {
+                                        case null: Noise;
+                                        default:
+                                          Fs.get(nodeFile)
+                                            .next(script ->
+                                              Fs.save(nodeFile, [
+                                                'try { require("fs").unlinkSync(__filename); } catch (e) {}',
+                                                script,
+                                              ].join('\n'))
+                                            )
+                                            .next(_ ->
+                                              switch Exec.sync('node', cwd, [nodeFile].concat(runArgs)) {
+                                                case Success(0): Noise;
+                                                case Success(v): new Error(v, 'node exited with code $v');
+                                                case Failure(e): e;
+                                              }
+                                            );
+                                      }
+                                    case Success(v): new Error(v, 'haxe exited with code $v');
+                                    case Failure(e): e;
+                                  }
+                                case Success(_):
+                                  new Error('multiple builds defined');
+                              }
+
+                            // @:privateAccess new haxeshim.HaxeCli(scope).dispatch(c.args.concat(['--run', cls]).concat(args.slice(1)));//This always exits
+                            return Noise;
+                          });
+                    }
+
+                  return new Error(NotFound, 'Class not found: $cls');
+                }
+              );
+          });
+        default: None;
+      }
+    ).handle(Command.reportOutcome);
+  }
+
+  static function isClassName(s:String) {
+    var last = s.split('.').pop();
+    return last.charAt(0).toUpperCase() == last.charAt(0);
   }
 }
