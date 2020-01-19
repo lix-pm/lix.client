@@ -1,20 +1,20 @@
 package lix.client.sources;
 
 class Git {
-  
+
   var scope:Scope;
 
   public function schemes() return ['git'];
 
-  public function new(scope) 
+  public function new(scope)
     this.scope = scope;
 
   static public function strip(name:String)
-    return 
+    return
       if (name.endsWith('.git')) name.withoutExtension();
       else name;
 
-  static function eval(cmd:String, cwd:String, args:Array<String>, ?env:Env) 
+  static function eval(cmd:String, cwd:String, args:Array<String>, ?env:Env)
     return switch js.node.ChildProcess.spawnSync(cmd, args, { cwd: cwd, stdio:['inherit', 'pipe', 'inherit'], env: Exec.mergeEnv(env) } ) {
       case x if (x.error == null):
         Success({
@@ -23,7 +23,7 @@ class Git {
         });
       case { error: e }:
         Failure(new Error('Failed to call $cmd because $e'));
-    }  
+    }
 
   static function cli(cwd:String) {
     Fs.ensureDir(cwd.addTrailingSlash()).eager();//TODO: avoid this
@@ -39,13 +39,13 @@ class Git {
             case { status: 0 }: o.stdout.toString();
             default: new Error(o.status, 'git ${args[0]} failed');
           }
-        );  
+        );
       }
     }
   }
-    
-  public function processUrl(raw:Url):Promise<ArchiveJob> 
-    return 
+
+  public function processUrl(raw:Url):Promise<ArchiveJob>
+    return
       switch raw.payload {
         case (_:Url) => url:
           var origin = url.resolve(''),
@@ -55,17 +55,17 @@ class Git {
               };
 
           var git = cli('.');
-              
-          var sha = 
-            if (version.length != 40) 
+
+          var sha =
+            if (version.length != 40)
               git.eval(['ls-remote', origin, version])
                 .next(function (s) return switch s.trim() {
                   case '': new Error('Cannot resolve version $version');
-                  case v: v.substr(0, 40); 
+                  case v: v.substr(0, 40);
                 })
-            else 
+            else
               Promise.lift(version);
-          
+
           sha.next(function (sha):ArchiveJob return {
             url: raw,
             normalized: raw.scheme + ':' + url.resolve('#$sha'),
@@ -78,10 +78,10 @@ class Git {
                 if ('$repo/.git'.exists()) ['fetch', origin]
                 else ['clone', origin, '.']
               )
-                .next(_ -> git.call(['checkout', sha]))
+                .next(_ -> git.call(['-c', 'advice.detachedHead=false', 'checkout', sha]))
                 .next(_ -> Fs.copy(repo, ctx.dest, function (name) return name != '$repo/.git'))
                 .next(_ -> ctx.dest);
-            })          
+            })
           });
-      }    
+      }
 }
