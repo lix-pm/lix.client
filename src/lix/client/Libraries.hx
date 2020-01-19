@@ -160,8 +160,6 @@ using haxe.Json;
 
       var hxml = scope.libHxml(name);
 
-      // logger.info('mounting as $name#$version');
-
       var DOWNLOAD_LOCATION = '$${$LIBCACHE}/${a.relRoot}';
 
       function interpolate(s)
@@ -203,7 +201,11 @@ using haxe.Json;
 
         switch infos.runAs({ libRoot: scope.interpolate(DOWNLOAD_LOCATION) }) {
           case None:
-          case Some(v): directives.push('# @run: ${interpolate(v)}');
+          case Some(v):
+            directives.push('# @run: ' + Args.interpolate(v, switch _ {
+              case 'DOWNLOAD_LOCATION': DOWNLOAD_LOCATION;
+              case v: '$${$v}';
+            }).sure());
         }
 
         return Fs.save(
