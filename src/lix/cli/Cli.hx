@@ -373,7 +373,6 @@ class Cli {
                                   new Error('multiple builds defined');
                               }
 
-                            // @:privateAccess new haxeshim.HaxeCli(scope).dispatch(c.args.concat(['--run', cls]).concat(args.slice(1)));//This always exits
                             return Noise;
                           });
                     }
