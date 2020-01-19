@@ -388,7 +388,8 @@ class Cli {
   }
 
   static function isClassName(s:String) {
-    var last = s.split('.').pop();
-    return last.charAt(0).toUpperCase() == last.charAt(0);
+    var char = s.split('.').pop().charCodeAt(0);
+    return char >= 'A'.code && char <= 'Z'.code;
   }
+
 }
