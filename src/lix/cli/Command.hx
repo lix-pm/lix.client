@@ -101,7 +101,7 @@ class Command {
     return new Command(alias, args, if (doc == null) this.doc else doc, exec);
 
   static public function reportError(e:Error):Dynamic {
-    stderr().writeString(e.message + '\n\n');
+    Logger.get().error(e.message);
     Sys.exit(e.code);
     return null;
   }
@@ -198,6 +198,6 @@ class Command {
             }
           }
 
-          return new Error(NotFound, 'Unknown command $command. Try `lix help`');
+          return new Error(NotFound, 'Unknown command $command. Try `lix help`.');
       }
 }
