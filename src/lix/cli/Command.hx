@@ -131,7 +131,7 @@ class Command {
   static public function dispatch(args:Array<String>, title:String, commands:Array<Command>, extras:Array<Named<Array<Named<String>>>>, ?fallback:Array<String>->Option<() -> Promise<Noise>>):Promise<Noise>
     return
       switch args.shift() {
-        case null | '--help':
+        case null | '--help' | 'help' | '-help' | '?' | '/?':
           println(title);
           println('');
           var prefix = 0;
@@ -198,6 +198,6 @@ class Command {
             }
           }
 
-          return new Error(NotFound, 'unknown command $command');
+          return new Error(NotFound, 'Unknown command $command. Try `lix help`');
       }
 }
