@@ -1,6 +1,7 @@
 package haxe;
 
 using tink.CoreApi;
+using StringTools;
 
 class Http {
   var url:tink.Url;
@@ -9,11 +10,11 @@ class Http {
   var rawPostData:String;
 
   public var responseHeaders:Map<String, String>;
-  
+
   public function new(url:String) {
     this.url = url;
   }
-  
+
   public function setHeader(header:String, value:String):Http {
     switch headers[header] {
       case null: headers[header] = [value];
@@ -29,22 +30,22 @@ class Http {
     params.add(header, value);
     return this;
   }
-  
+
   dynamic public function onData(s:String) {}
   dynamic public function onError(s:String) {}
-  
+
   public function request(?post:Bool) {
     if (rawPostData != null)
       post = true;
-    if (post == null) 
+    if (post == null)
       post = false;
 
     var params = params.toString();
-    
+
     (switch url.scheme {
       case 'https':
         js.node.Https.request;
-      default:   
+      default:
         js.node.Http.request;
     })(
       {
@@ -58,15 +59,18 @@ class Http {
             (if (url.query == null) '?' else '&') + v;
         },
         headers: headers,
-      }, 
+      },
       function (res) {
         var parts = [];
-        res.on('end', function () onData(js.node.Buffer.concat(parts).toString()));
+        res.on('end', function () {
+          var data = js.node.Buffer.concat(parts).toString().replace('%F6', '%6f');//Fix for invalid char in buddy 0.3.1
+          onData(data);
+        });
         res.on('data', parts.push);
         res.on('error', function (e) onError(Std.string(e)));
       }
     ).on('error', function (e) onError(Std.string(e))).end(switch rawPostData {
-      case null: 
+      case null:
         if (post) params else null;
       case v: v;
     });
