@@ -73,12 +73,12 @@ abstract ArchiveDependencies(Array<Named<ArchiveDependency>>) {
   @:from static function ofHaxeshim(d:HaxeshimDependencies)
     return new ArchiveDependencies([for (lib => hxml in d) new Named(lib, FromHxml(hxml))]);
 
-  @:from static function ofMap(m:Map<String, ArchiveDependency>) 
+  @:from static function ofMap(m:Map<String, ArchiveDependency>)
     return new ArchiveDependencies([for (lib => dep in m) new Named(lib, dep)]);
 }
 
 class DownloadedArchive {
-  
+
   /**
    * The job the archive originated from
    */
@@ -98,7 +98,7 @@ class DownloadedArchive {
   public var absRoot(get, never):String;
     inline function get_absRoot()
       return getAbsRoot(storageRoot, relRoot);
-     
+
   static function getAbsRoot(storageRoot, relRoot)
     return '$storageRoot/$relRoot'.removeTrailingSlashes();
 
@@ -113,15 +113,15 @@ class DownloadedArchive {
 
   static public function path(parts:Array<String>)
     return parts.map(escape).join('/');
-    
+
   public var infos(default, null):ArchiveInfos;
 
   static public function fresh(tmpLoc:String, storageRoot:String, targetLoc:String, job:ArchiveJob) {
     var curRoot = '$tmpLoc/${seekRoot(tmpLoc)}';
     return readInfos(curRoot, job.lib)
       .next(infos -> {
-        var relRoot = 
-          if (targetLoc == null) 
+        var relRoot =
+          if (targetLoc == null)
             path(switch job.dest {
               case Fixed(path): path;
               case Computed(f): f(infos);
@@ -140,10 +140,9 @@ class DownloadedArchive {
             classPath: infos.classPath,
             runAs: infos.runAs,
             dependencies: infos.dependencies,
-            haxeshimDependencies:
-              [for (dep in infos.dependencies)
-                dep.name => absRoot + infos.haxeshimDependencies[dep.name].substr(curRootLength)
-              ],
+            haxeshimDependencies: [for (name => path in infos.haxeshimDependencies)
+              name => path.substr(curRootLength)
+            ],
             postDownload: infos.postDownload,
             postInstall: infos.postInstall
           };
@@ -163,34 +162,34 @@ class DownloadedArchive {
       });
   }
 
-  static public function existent(path:String, storageRoot:String, job:ArchiveJob) 
-    return 
+  static public function existent(path:String, storageRoot:String, job:ArchiveJob)
+    return
       readInfos(getAbsRoot(storageRoot, path), job.lib)
         .next(infos -> new DownloadedArchive(path, storageRoot, job, infos));
 
   function new(relRoot, storageRoot, job, infos) {
-    
+
     this.storageRoot = storageRoot;
     this.relRoot = relRoot;
-    
+
     this.job = job;
     this.infos = infos;
   }
-  
-  static function seekRoot(path:String) 
+
+  static function seekRoot(path:String)
     return switch path.readDirectory() {
       case [v] if ('$path/$v'.isDirectory()):
         '$v/' + seekRoot('$path/$v');
       default:
         '';
     }
-  
+
   static function readInfos(root:String, lib:LibVersion):Promise<ArchiveInfos> {
-    
+
     var files = root.readDirectory();
-    
-    function guessClassPath() 
-      return 
+
+    function guessClassPath()
+      return
         if (files.indexOf('src') != -1) 'src';
         else if (files.indexOf('hx') != -1) 'hx';
         else '';
@@ -198,29 +197,29 @@ class DownloadedArchive {
     if (lib == null)
       lib = LibVersion.UNDEFINED;
 
-    var haxeshimDependencies:HaxeshimDependencies = 
+    var haxeshimDependencies:HaxeshimDependencies =
       if (files.contains('.haxerc') && files.contains('haxe_libraries')) {
         var libs = '$root/haxe_libraries';
-        [for (f in libs.readDirectory()) 
-          if (f.extension() == 'hxml') 
+        [for (f in libs.readDirectory())
+          if (f.extension() == 'hxml')
             f.withoutExtension() => '$libs/$f'
         ];
       }
       else null;
 
-    var ret:ArchiveInfos =  
+    var ret:ArchiveInfos =
       if (files.contains('haxelib.json')) {
         //TODO: there's a lot of errors to be caught here
-        var info:{ 
-          name: String, 
-          version:String, 
+        var info:{
+          name: String,
+          version:String,
           ?dependencies:haxe.DynamicAccess<String>,
-          ?classPath:String, 
+          ?classPath:String,
           ?mainClass:String,
-          ?postInstall: String, 
-          ?postDownload: String, 
+          ?postInstall: String,
+          ?postDownload: String,
         } = '$root/haxelib.json'.getContent().parse();
-        
+
         {
           name: info.name,
           version: info.version,
@@ -228,16 +227,16 @@ class DownloadedArchive {
             case null: '';
             case v: v;
           },
-          runAs: function (ctx) return 
+          runAs: function (ctx) return
             if ('${ctx.libRoot}/run.n'.exists() || info.mainClass != null)
               Some('haxelib run-dir ${info.name} $${DOWNLOAD_LOCATION}');
-            else 
+            else
               None
           ,
           dependencies: switch info.dependencies {
             case null: new Map();//haxeshimDependencies; - maybe the best default
-            case deps: 
-              [for (name => value in deps) 
+            case deps:
+              [for (name => value in deps)
                 name => FromUrl(
                   switch value {
                     case '' | '*': 'haxelib:$name';
@@ -246,7 +245,7 @@ class DownloadedArchive {
                       url;
                     case u: u;
                   })
-              ]; 
+              ];
           },
           haxeshimDependencies: haxeshimDependencies,
           postInstall: info.postInstall,
@@ -264,7 +263,7 @@ class DownloadedArchive {
           haxeshimDependencies: null,
         }
       }
-      else {        
+      else {
         {
           name: lib.name.or('untitled'),
           version: lib.version.or('0.0.0'),
@@ -275,5 +274,5 @@ class DownloadedArchive {
         }
       }
     return ret;
-  }    
+  }
 }
