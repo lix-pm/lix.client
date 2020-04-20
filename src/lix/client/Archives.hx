@@ -141,7 +141,7 @@ class DownloadedArchive {
             runAs: infos.runAs,
             dependencies: infos.dependencies,
             haxeshimDependencies: [for (name => path in infos.haxeshimDependencies)
-              name => path.substr(curRootLength)
+              name => absRoot + path.substr(curRootLength)
             ],
             postDownload: infos.postDownload,
             postInstall: infos.postInstall
