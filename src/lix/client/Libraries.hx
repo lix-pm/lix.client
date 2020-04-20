@@ -87,7 +87,7 @@ using haxe.Json;
         case Success(args): [for (a in args) a.val];
         case Failure(_.errors[0] => e): new Error(e.code, e.message);
       })
-      .next(args -> [for (i => a in args) if (a == '-lib') args[i++]]);
+      .next(args -> [for (i => a in args) if (a == '-lib') args[i + 1]]);
   }
 
   public function dev(lib:String, path:String):Promise<Noise>
@@ -246,7 +246,7 @@ using haxe.Json;
                             installFromLibHxml(lib, path)
                               .next(deps -> {
                                 options.alreadyInstalled[lib] = true;
-                                Future.ofMany(
+                                Promise.inSequence(
                                   [for (name in deps)
                                     install(name, infos.haxeshimDependencies[name])
                                   ]
