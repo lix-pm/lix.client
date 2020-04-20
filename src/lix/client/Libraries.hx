@@ -32,7 +32,7 @@ using haxe.Json;
             case Fixed(path):
               into = DownloadedArchive.path(path);
             case Computed(_):
-              cacheFile = '${scope.libCache}/.cache/libNames/${DownloadedArchive.escape(a.url)}';
+              cacheFile = '${scope.libCache}/.cache/libNames/${DownloadedArchive.escape(a.normalized)}';
               if (cacheFile.exists())
                 into = cacheFile.getContent();
           }
