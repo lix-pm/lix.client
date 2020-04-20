@@ -90,11 +90,23 @@ using haxe.Json;
       .next(args -> [for (i => a in args) if (a == '-lib') args[i + 1]]);
   }
 
-  public function dev(lib:String, path:String):Promise<Noise>
-    return switch path.readDirectory.catchExceptions() {
+
+  public function dev(lib:String, path:String):Promise<Noise> {
+
+    var isAbsolute = path.isAbsolute();
+
+    var absPath =
+      if (isAbsolute) path;
+      else Path.join([scope.scopeDir, path]);
+
+    var usedPath =
+      if (isAbsolute) path;
+      else '$${SCOPE_DIR}/$path';
+
+    return switch absPath.readDirectory.catchExceptions() {
       case Success(files) if (files.indexOf('haxelib.json') != -1):
 
-        var manifest = '$path/haxelib.json';
+        var manifest = '$absPath/haxelib.json';
         Fs.get(manifest)
           .next(s ->
             try (haxe.Json.parse(s):{ ?version:String, ?classPath:String, ?dependencies:haxe.DynamicAccess<String> })
@@ -112,23 +124,24 @@ using haxe.Json;
               });
               lines.push('-cp ' + switch info.classPath {
                 case null: path;
-                case v: Path.join([path, v]);
+                case v: '$usedPath/$v';
               });
 
               var line = lines.length;
 
               if (files.indexOf('extraParams.hxml') != -1)
-                lines.push('$path/extraParams.hxml');
+                lines.push('$usedPath/extraParams.hxml');
 
               lines.push('--macro Sys.println("haxe_libraries/$lib.hxml:$line: [Warning] Using dev version of library $lib")');
               Fs.save(scope.libHxml(lib), lines.join('\n'));
             }
           );
       case Success(_):
-        new Error('$path does not contain haxelib.json');
+        new Error('$absPath does not contain haxelib.json');
       default:
-        new Error('$path is not a readable directory');
+        new Error('$absPath is not a readable directory');
     }
+  }
 
   public function installArchive(
       a:Promise<ArchiveJob>,
