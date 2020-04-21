@@ -25,6 +25,7 @@ You can depend on lix to manage your haxe dependencies.
 - [Usage](#usage)
     - [Downloading all dependencies](#downloading-all-dependencies)
     - [Adding a new dependency](#adding-a-new-dependency)
+    - [Removing a dependency](#removing-a-dependency)
     - [Aliasing](#aliasing)
     - [HXML files](#hxml-files)
     - [Version control](#version-control)
@@ -87,6 +88,12 @@ The schemes you can use include haxelib, github, gitlab, and http/https:
 Note that for github and gitlab you can specify credentials using the `--gh-credentials` and `--gl-private-token` parameters respectively. Be warned though that these credentials are then baked into the hxmls as well. Be very careful about using this option.
 
 Because **haxelib** is a prominent source for stable versions, a **shortcut** is available: `lix +lib <libname>`. e.g. `lix +lib hxcpp#3.4.188` is equivalent for `lix install haxelib:hxcpp#3.4.188`.
+
+### Removing a dependency
+
+To remove a dependency simply delete the related .hxml file from your haxe_libraries folder. 
+
+This however won't remove the dependency from your local machine. To do that you would have to delete it from `~/haxe/haxe_libraries` or `%AppData%\haxe\haxe_libraries`. This is not recommended as other projects or other dependencies might depend on the library. Only remove dependency locally only if you are sure it isn't being used anywhere else.
 
 ### Aliasing
 
