@@ -93,7 +93,7 @@ Because **haxelib** is a prominent source for stable versions, a **shortcut** is
 
 To remove a dependency simply delete the related .hxml file from your haxe_libraries folder. 
 
-This however won't remove the dependency from your local machine. To do that you would have to delete it from `~/haxe/haxe_libraries` or `%AppData%\haxe\haxe_libraries`.
+This however won't remove the downloaded sources from the global cache. To do that you would have to delete it from `~/haxe/haxe_libraries` or `%AppData%\haxe\haxe_libraries`.
 
 ### Aliasing
 
