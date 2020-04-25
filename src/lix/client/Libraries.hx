@@ -257,7 +257,8 @@ using haxe.Json;
                       case [FromHxml(path), _] | [_, path]:
                         function install(lib, path)
                           return
-                            installFromLibHxml(lib, path)
+                            if (options.alreadyInstalled[lib]) Noise;
+                            else installFromLibHxml(lib, path)
                               .next(deps -> {
                                 options.alreadyInstalled[lib] = true;
                                 Promise.inSequence(
