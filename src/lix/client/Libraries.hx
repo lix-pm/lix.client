@@ -118,13 +118,14 @@ using haxe.Json;
               if (info.dependencies != null)
                 for (k => v in info.dependencies)
                   lines.push('-lib $k');
-              lines.push('-D $lib='+ switch info.version {
-                case null: 'dev';
-                case v: v;
-              });
+
               lines.push('-cp ' + switch info.classPath {
                 case null: path;
                 case v: '$usedPath/$v';
+              });
+              lines.push('-D $lib='+ switch info.version {
+                case null: 'dev';
+                case v: v;
               });
 
               var line = lines.length;
