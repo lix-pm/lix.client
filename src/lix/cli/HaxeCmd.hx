@@ -36,5 +36,5 @@ class HaxeCmd {
       });
 
   static function main()
-    Command.attempt(ensure(Logger.get()), @:privateAccess HaxeCli.main);
+    HaxeCli.withArgs(args -> Command.attempt(ensure(Logger.get()), () -> HaxeCli.run(args)));
 }
