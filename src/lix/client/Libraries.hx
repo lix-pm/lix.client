@@ -158,7 +158,7 @@ using haxe.Json;
         switch '${a.absRoot}/extraParams.hxml' {
           case found if (found.exists()):
             found.getContent();
-          default: '';
+          default: null;
         }
 
       if (as == null)
@@ -222,15 +222,21 @@ using haxe.Json;
             }).sure());
         }
 
+        function lines(a:Array<String>)
+          return [for (l in a) if (l != null) l].join('\n');
+
         return Fs.save(
           hxml,
-          directives
-            .concat([for (lib in infos.dependencies) '-lib ${lib.name}'])
-            .concat([
-              '-cp $DOWNLOAD_LOCATION/${infos.classPath}',
-              '-D $name=$version',
-              extra,
-            ]).join('\n')
+          lines(
+            directives
+              .concat([for (lib in infos.dependencies) '-lib ${lib.name}'])
+              .concat([
+                '-cp $DOWNLOAD_LOCATION/${infos.classPath}',
+                '-D $name=$version',
+                extra,
+                if (infos.hasNdll) '-lib ' + Args.makeNdll('$DOWNLOAD_LOCATION/ndll/') else null,
+              ])
+          )
         ).next(_ -> {
           options.alreadyInstalled[name] = true;
           value;

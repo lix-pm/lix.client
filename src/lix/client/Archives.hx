@@ -41,6 +41,7 @@ typedef HxmlPath = String;
   public var name(default, null):String;
   public var version(default, null):String;
   public var classPath(default, null):String;
+  public var hasNdll(default, null):Bool;
   public var runAs(default, null):{ libRoot: String }->Option<String>;
   public var dependencies(default, null):ArchiveDependencies;
   public var haxeshimDependencies(default, null):HaxeshimDependencies;
@@ -138,6 +139,7 @@ class DownloadedArchive {
             name: infos.name,
             version: infos.version,
             classPath: infos.classPath,
+            hasNdll: infos.hasNdll,
             runAs: infos.runAs,
             dependencies: infos.dependencies,
             haxeshimDependencies: [for (name => path in infos.haxeshimDependencies)
@@ -207,6 +209,8 @@ class DownloadedArchive {
       }
       else null;
 
+    var hasNdll = files.contains('ndll');
+
     var ret:ArchiveInfos =
       if (files.contains('haxelib.json')) {
         //TODO: there's a lot of errors to be caught here
@@ -247,6 +251,7 @@ class DownloadedArchive {
                   })
               ];
           },
+          hasNdll: hasNdll,
           haxeshimDependencies: haxeshimDependencies,
           postInstall: info.postInstall,
           postDownload: info.postDownload,
@@ -258,6 +263,7 @@ class DownloadedArchive {
           name: info.name,
           version: info.version,
           classPath: guessClassPath(),
+          hasNdll: hasNdll,
           runAs: function (_) return None,
           dependencies: haxeshimDependencies,
           haxeshimDependencies: null,
@@ -268,6 +274,7 @@ class DownloadedArchive {
           name: lib.name.or('untitled'),
           version: lib.version.or('0.0.0'),
           classPath: guessClassPath(),
+          hasNdll: hasNdll,
           runAs: function (_) return None,
           dependencies: haxeshimDependencies,
           haxeshimDependencies: null,
