@@ -30,6 +30,12 @@ import tink.url.Path;
     return switch credentials {
       case null if (version == '' || !lix.client.haxe.UserVersion.isHash(version)): // short hashes will have to be resolved via API
         Download.bytes('https://github.com/$owner/$project.git/info/refs?service=git-upload-pack')
+          .mapError(e -> switch e.code {
+            case Unauthorized:
+              new Error(e.code, e.message + ' - Possible typo in "$owner/$project"');
+            default:
+              e;
+          })
           .next(function (s) {
             if (version == '')
               return s.toString().split(' HEAD')[0].substr(-40);
