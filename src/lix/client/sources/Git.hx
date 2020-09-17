@@ -75,7 +75,7 @@ class Git {
               var repo = Path.join([scope.libCache, '.gitrepos', DownloadedArchive.escape(origin)]);
               var git = cli(repo);
               git.call(
-                if ('$repo/.git'.exists()) ['fetch', origin]
+                if ('$repo/.git'.exists()) ['fetch']
                 else ['clone', origin, '.']
               )
                 .next(_ -> git.call(['-c', 'advice.detachedHead=false', 'checkout', sha]))
