@@ -162,7 +162,7 @@ class Switcher {
             if (n.hash == hash)
               return RNightly(n);
 
-          return new Error(NotFound, 'Unable to resolve nightly version $version locally, install it first with `lix install haxe $version`');
+          return new Error(NotFound, 'Unable to resolve nightly version $hash locally, install it first with `lix install haxe $hash`');
         });
 
       case UOfficial(version):
