@@ -79,6 +79,7 @@ class Git {
                 else ['clone', origin, '.']
               )
                 .next(_ -> git.call(['-c', 'advice.detachedHead=false', 'checkout', sha]))
+                .next(_ -> git.call(['submodule', 'update', '--init', '--recursive']))
                 .next(_ -> Fs.copy(repo, ctx.dest, function (name) return name != '$repo/.git'))
                 .next(_ -> ctx.dest);
             })
