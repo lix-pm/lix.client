@@ -219,7 +219,7 @@ class DownloadedArchive {
           version:String,
           ?dependencies:haxe.DynamicAccess<String>,
           ?classPath:String,
-          ?mainClass:String,
+          ?main:String,
           ?postInstall: String,
           ?postDownload: String,
         } = '$root/haxelib.json'.getContent().parse();
@@ -232,7 +232,7 @@ class DownloadedArchive {
             case v: v;
           },
           runAs: function (ctx) return
-            if ('${ctx.libRoot}/run.n'.exists() || info.mainClass != null)
+            if ('${ctx.libRoot}/run.n'.exists() || info.main != null)
               Some('haxelib run-dir ${info.name} $${DOWNLOAD_LOCATION}');
             else
               None
