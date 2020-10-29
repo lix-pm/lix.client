@@ -193,6 +193,7 @@ class DownloadedArchive {
     function guessClassPath()
       return
         if (files.indexOf('src') != -1) 'src';
+        else if (files.indexOf('Sources') != -1) 'Sources';
         else if (files.indexOf('hx') != -1) 'hx';
         else '';
 
