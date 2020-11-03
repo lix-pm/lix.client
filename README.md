@@ -51,7 +51,7 @@ lix is installed through npm (or yarn). If you don't have one of these installed
 
 To install lix:
 
-    npm install --global lix
+    npm install -g lix
 
 After this you will have the commands `lix`, `haxe`, `haxelib` and `neko` available.
 
