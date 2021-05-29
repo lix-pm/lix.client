@@ -185,7 +185,20 @@ class Switcher {
   function linkToOfficial(version)
     return
       'https://haxe.org/website-content/downloads/$version/downloads/haxe-$version-' + switch Sys.systemName() {
-        case 'Windows': 'win.zip';
+        case 'Windows':
+          var arch = '';
+          if (version > "3.4.3" && version != "4.0.0-preview.1") {
+            var wmic = new sys.io.Process('WMIC OS GET osarchitecture /value');
+            try
+              switch wmic.stdout.readAll().toString() {
+                case v if (v.indexOf('64') >= 0):
+                  arch = '64';
+                case _:
+              }
+            catch(_:Any) {}
+            wmic.close();
+          }
+          'win$arch.zip';
         case 'Mac': 'osx.tar.gz';
         default:
           if (version < "3")
