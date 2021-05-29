@@ -195,7 +195,7 @@ class Switcher {
                   arch = '64';
                 case _:
               }
-            catch(_) {}
+            catch(_:Any) {}
             wmic.close();
           }
           'win$arch.zip';
