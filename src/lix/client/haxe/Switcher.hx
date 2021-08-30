@@ -187,17 +187,23 @@ class Switcher {
       'https://haxe.org/website-content/downloads/$version/downloads/haxe-$version-' + switch Sys.systemName() {
         case 'Windows':
           var arch = '';
-          if (version > "3.4.3" && version != "4.0.0-preview.1") {
-            var wmic = new sys.io.Process('WMIC OS GET osarchitecture /value');
-            try
-              switch wmic.stdout.readAll().toString() {
-                case v if (v.indexOf('64') >= 0):
-                  arch = '64';
-                case _:
-              }
-            catch(_:Any) {}
-            wmic.close();
-          }
+          #if nodejs
+            if (js.node.Os.arch().contains('64')) arch = '64';
+          #elseif sys
+            if (version > "3.4.3" && version != "4.0.0-preview.1") {
+              var wmic = new sys.io.Process('WMIC OS GET osarchitecture /value');
+              try
+                switch wmic.stdout.readAll().toString() {
+                  case v if (v.indexOf('64') >= 0):
+                    arch = '64';
+                  case _:
+                }
+              catch(_:Any) {}
+              wmic.close();
+            }
+          #else
+            #error
+          #end
           'win$arch.zip';
         case 'Mac': 'osx.tar.gz';
         default:
