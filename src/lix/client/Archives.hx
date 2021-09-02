@@ -234,7 +234,7 @@ class DownloadedArchive {
           },
           runAs: function (ctx) return
             if ('${ctx.libRoot}/run.n'.exists() || info.main != null)
-              Some('haxelib run-dir ${info.name} $${DOWNLOAD_LOCATION}');
+              Some('haxelib run-dir ${info.name} "$${DOWNLOAD_LOCATION}"');
             else
               None
           ,
