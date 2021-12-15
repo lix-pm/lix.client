@@ -174,7 +174,7 @@ class Download {
                 default:
                   if (entry.type == SymbolicLink) {
                     skip();
-                    symlinks.push({ from: Path.join([Path.directory(path), entry.linkpath]), to: path });
+                    symlinks.push({ from: entry.linkpath, to: path });
                   }
                   else {
                     pending++;
