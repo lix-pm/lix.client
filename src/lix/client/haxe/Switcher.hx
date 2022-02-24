@@ -26,10 +26,11 @@ class Switcher {
   static var VERSION_INFO = 'version.json';
   static var NIGHTLIES = 'https://build.haxe.org/builds/haxe';
   static var PLATFORM =
-    switch Sys.systemName() {
-      case 'Windows': 'windows';
-      case 'Mac': 'mac';
-      default: 'linux64';
+    switch [Sys.systemName(), js.Node.process.arch] {
+      case ['Windows', _]: 'windows';
+      case ['Mac', _]: 'mac';
+      case [_, 'arm64']: 'linux-arm64';
+      case _: 'linux64';
     }
 
   static function linkToNightly(hash:String, date:Date, ?file:String) {
@@ -322,9 +323,11 @@ class Switcher {
 
         logger.info('Neko seems to be missing. Attempting download ...');
 
-        (switch Sys.systemName() {
-          case 'Windows': Download.zip('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-win.zip', 1, neko, logger);
-          case 'Mac': Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-osx64.tar.gz', 1, neko, logger);
+        trace(js.Node.process.arch);
+        (switch [Sys.systemName(), js.Node.process.arch] {
+          case ['Windows', _]: Download.zip('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-win.zip', 1, neko, logger);
+          case ['Mac', _]: Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-osx64.tar.gz', 1, neko, logger);
+          case [_, 'arm64']: Download.tar('https://build.haxe.org/builds/neko/linux-arm64/neko_latest.tar.gz', 1, neko, logger);
           default: Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-linux64.tar.gz', 1, neko, logger);
         }).next(function (x) {
           logger.success('done');
