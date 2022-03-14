@@ -187,24 +187,7 @@ class Switcher {
     return
       'https://haxe.org/website-content/downloads/$version/downloads/haxe-$version-' + switch Sys.systemName() {
         case 'Windows':
-          var arch = '';
-          // #if nodejs
-          //   if (js.node.Os.arch().contains('64')) arch = '64';
-          // #elseif sys
-          //   if (version > "3.4.3" && version != "4.0.0-preview.1") {
-          //     var wmic = new sys.io.Process('WMIC OS GET osarchitecture /value');
-          //     try
-          //       switch wmic.stdout.readAll().toString() {
-          //         case v if (v.indexOf('64') >= 0):
-          //           arch = '64';
-          //         case _:
-          //       }
-          //     catch(_:Any) {}
-          //     wmic.close();
-          //   }
-          // #else
-          //   #error
-          // #end
+          final arch = version > "3.4.3" && version != "4.0.0-preview.1" && isWin64Platform() ? "64" : "";
           'win$arch.zip';
         case 'Mac': 'osx.tar.gz';
         default:
@@ -324,7 +307,7 @@ class Switcher {
         logger.info('Neko seems to be missing. Attempting download ...');
 
         (switch [Sys.systemName(), js.Node.process.arch] {
-          case ['Windows', _]: Download.zip('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-win.zip', 1, neko, logger);
+          case ['Windows', _]: Download.zip('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-win${isWin64Platform() ? "64" : ""}.zip', 1, neko, logger);
           case ['Mac', _]: Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-osx64.tar.gz', 1, neko, logger);
           case [_, 'arm64']: Download.tar('https://build.haxe.org/builds/neko/linux-arm64/neko_latest.tar.gz', 1, neko, logger);
           default: Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-linux64.tar.gz', 1, neko, logger);
@@ -335,4 +318,13 @@ class Switcher {
       }
   }
 
+  // https://docs.microsoft.com/en-us/archive/blogs/david.wang/howto-detect-process-bitness
+  static function isWin64Platform() {
+    for (environmentVariable in ["PROCESSOR_ARCHITECTURE", "PROCESSOR_ARCHITEW6432"]) {
+      final processorArchitecture = Sys.getEnv(environmentVariable);
+      if (processorArchitecture != null && processorArchitecture.contains("64")) return true;
+    }
+
+    return false;
+  }
 }
