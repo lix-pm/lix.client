@@ -323,7 +323,6 @@ class Switcher {
 
         logger.info('Neko seems to be missing. Attempting download ...');
 
-        trace(js.Node.process.arch);
         (switch [Sys.systemName(), js.Node.process.arch] {
           case ['Windows', _]: Download.zip('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-win.zip', 1, neko, logger);
           case ['Mac', _]: Download.tar('https://github.com/HaxeFoundation/neko/releases/download/v2-3-0/neko-2.3.0-osx64.tar.gz', 1, neko, logger);
