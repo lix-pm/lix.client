@@ -1,7 +1,7 @@
 package lix.client.haxe;
 
-using lix.client.haxe.UserVersion;
 using lix.client.haxe.ResolvedVersion;
+using lix.client.haxe.UserVersion;
 
 enum PickOfficial {
   StableOnly;
@@ -278,6 +278,8 @@ class Switcher {
       return Download.archive(url, 0, into, logger);
     }
 
+    final getDownloadDir = name -> '$downloads/$name@${Math.floor(Date.now().getTime())}_${js.Node.process.pid}';
+
     return switch version {
       case isDownloaded(_) => true if (options.force != true):
 
@@ -289,25 +291,20 @@ class Switcher {
 
       case RNightly({ hash: hash, published: date, file: file }):
 
-        download(linkToNightly(hash, date, file), '$downloads/$hash@${Math.floor(Date.now().getTime())}').next(function (dir) {
+        download(linkToNightly(hash, date, file), getDownloadDir(hash)).next(dir -> {
           replace(versionDir(hash), dir, hash, function (dir) {
             '$dir/$VERSION_INFO'.saveContent(haxe.Json.stringify({
               published: date.toString(),
             }));
           });
-          return true;
+          true;
         });
 
       case ROfficial(version):
 
-        var url = linkToOfficial(version),
-            tmp = '$downloads/$version@${Math.floor(Date.now().getTime())}';
-
-        var ret = download(url, tmp);
-
-        ret.next(function (v) {
-          replace(versionDir(version), v, version);
-          return true;
+        download(linkToOfficial(version), getDownloadDir(version)).next(dir -> {
+          replace(versionDir(version), dir, version);
+          true;
         });
     }
   }
