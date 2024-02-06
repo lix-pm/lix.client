@@ -87,7 +87,7 @@ using haxe.Json;
         case Success(args): [for (a in args) a.val];
         case Failure(_.errors[0] => e): new Error(e.code, e.message);
       })
-      .next(args -> [for (i => a in args) if (a == '-lib') args[i + 1]]);
+      .next(args -> [for (i => a in args) if (a == '-lib' && Args.getNdll(args[i + 1]) == None) args[i + 1]]);
   }
 
 
