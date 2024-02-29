@@ -97,6 +97,7 @@ using tink.CoreApi;
     return Future.async(function (cb) {
       var cnx = haxe.remoting.HttpAsyncConnection.urlConnect(resolve('/api/3.0/index.n', options));
       cnx.setErrorHandler(function (e) cb(Failure(Error.withData('Failed to get version information from haxelib because $e', e))));
+
       var repo = new Proxy(cnx.resolve('api'));
       repo.infos(name, function (s) cb(Success(s)));
     });
