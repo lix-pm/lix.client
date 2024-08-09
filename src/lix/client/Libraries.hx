@@ -1,10 +1,9 @@
 package lix.client;
 
-import lix.client.sources.*;
 import haxe.DynamicAccess;
-import lix.client.Archives;
-import lix.api.Api;
 import haxeshim.Scope.*;
+import lix.api.Api;
+import lix.client.Archives;
 
 using haxe.Json;
 
@@ -45,7 +44,7 @@ using haxe.Json;
           }
           else {
             logger.info('${if (exists) "forcedly redownloading" else "downloading"} ${a.normalized}');
-            var dest = scope.haxeshimRoot + '/downloads/download@' + Date.now().getTime();
+            final dest = '${scope.haxeshimRoot}/downloads/download@${Math.floor(Date.now().getTime())}_${js.Node.process.pid}';
             (switch a.kind {
               case null: Download.archive(a.url, 0, dest, logger);
               case Zip: Download.zip(a.url, 0, dest, logger);
