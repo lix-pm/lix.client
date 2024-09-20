@@ -18,7 +18,7 @@
         "url": "git+https://github.com/lix-pm/lix.git"
     },
     "devDependencies": {
-        "@zeit/ncc": "^0.20.4",
+        "@vercel/ncc": "^0.38.1",
         "graceful-fs": "^4.1.15",
         "tar": "^6.0.1",
         "yauzl": "github:lix-pm/yauzl"
