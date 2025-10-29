@@ -2,6 +2,7 @@ package lix.client;
 
 import haxe.Timer;
 import lix.client.uncompress.*;
+import lix.client.Auth;
 import js.node.Buffer;
 import js.node.Url;
 import js.node.Http;
@@ -288,6 +289,12 @@ class Download {
       if (options.headers == null)
         options.headers = {};
       options.headers['user-agent'] = Download.USER_AGENT;
+
+      // Add authentication headers from .netrc if available
+      var authHeaders = Auth.getAuthHeaders(url);
+      for (key in Reflect.fields(authHeaders)) {
+        Reflect.setField(options.headers, key, Reflect.field(authHeaders, key));
+      }
 
       function fail(e:js.Error)
         cb(Failure(tink.core.Error.withData('Failed to download $url because ${e.message}', e)));
