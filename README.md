@@ -87,6 +87,9 @@ The schemes you can use include haxelib, github, gitlab, and http/https:
 
 Note that for github and gitlab you can specify credentials using the `--gh-credentials` and `--gl-private-token` parameters respectively. Be warned though that these credentials are then baked into the hxmls as well. Be very careful about using this option.
 
+Note: authentication via .netrc file is supported! If present, a .netrc / ~.netrc will be used for URLs that require authentication.
+See [the curl .netrc documentation](https://everything.curl.dev/usingcurl/netrc.html) for more information.
+
 Because **haxelib** is a prominent source for stable versions, a **shortcut** is available: `lix +lib <libname>`. e.g. `lix +lib hxcpp#3.4.188` is equivalent for `lix install haxelib:hxcpp#3.4.188`.
 
 ### Removing a dependency
