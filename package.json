@@ -20,7 +20,7 @@
     "devDependencies": {
         "@vercel/ncc": "^0.38.1",
         "graceful-fs": "^4.1.15",
-        "tar": "^6.0.1",
+        "tar": "^7.5.3",
         "yauzl": "github:lix-pm/yauzl"
     },
     "keywords": [
