@@ -60,7 +60,7 @@ class GitHub {
             return new Error('Failed to lookup sha for github:$owner/$project$s');
           });
       default:
-        Download.text('https://${credentials}api.github.com/repos/$owner/$project/commits?sha=$version')
+        Download.text('https://${credentials.toString()}api.github.com/repos/$owner/$project/commits?sha=$version')
           .next(function (s)
             try
               return(s.parse()[0].sha:String)
