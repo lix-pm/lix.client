@@ -1,6 +1,6 @@
 {
 	"name": "lix",
-	"version": "17.0.2-alpha.0",
+	"version": "17.0.2",
 	"bin": {
 		"lix": "bin/lix.js",
 		"haxe": "bin/haxeshim.js",
