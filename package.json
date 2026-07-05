@@ -10,6 +10,7 @@
 	"scripts": {
 		"ncc": "ncc",
 		"build": "haxe --run Build",
+		"prepare": "npm run build",
 		"postinstall": "node bin/postinstall.js"
 	},
 	"description": "lix - Libraries for Haxe",

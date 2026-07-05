@@ -222,7 +222,8 @@ class Cli {
         switch args {
           case []: new Error('no path supplied');
           default:
-            new HaxelibCli(scope).run(args.slice(1));
+            var sliced = args.slice(1);
+            new HaxelibCli(scope).run(sliced, sliced); // TODO: should we handle flags (e.g. --cwd/--global) as in HaxelibShimCli?
             Noise;
         }
       ),
@@ -236,7 +237,7 @@ class Cli {
           });
         case lib if (scope.libHxml(lib).exists()):
           Some(() -> {
-            new HaxelibCli(scope).run(args);
+            new HaxelibCli(scope).run(args, args); // TODO: should we handle flags (e.g. --cwd/--global) as in HaxelibShimCli?
             Noise;
           });
         case cls if (isClassName(cls)):
