@@ -115,12 +115,21 @@ class Libraries {
         var manifest = '$absPath/haxelib.json';
         Fs.get(manifest)
           .next(s ->
-            try (haxe.Json.parse(s):{ ?version:String, ?classPath:String, ?dependencies:haxe.DynamicAccess<String> })
+            try (haxe.Json.parse(s):{ ?name:String, ?version:String, ?classPath:String, ?main:String, ?dependencies:haxe.DynamicAccess<String> })
             catch (e:Dynamic) new Error('cannot parse $manifest')
           )
           .next(
             info -> {
               var lines = [];
+
+              if (info.main != null || '$absPath/run.n'.exists()) {
+                var runName = switch info.name {
+                  case null | '': lib;
+                  case name: name;
+                };
+                lines.push('# @run: haxelib run-dir $runName "$usedPath"');
+              }
+
               if (info.dependencies != null)
                 for (k => v in info.dependencies)
                   lines.push('-lib $k');
