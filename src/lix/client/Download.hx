@@ -304,6 +304,8 @@ class Download {
         else js.node.Http.get(options);
 
       req.setTimeout(30000);
+      // the timeout event only notifies; without this a stalled socket hangs forever
+      req.on('timeout', () -> req.destroy(new js.Error('no data received for 30s')));
       req.on('error', fail);
 
       req.on(ClientRequestEvent.Response, function (res) {
