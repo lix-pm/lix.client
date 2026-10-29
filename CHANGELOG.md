@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Downloads that stall with the connection open now fail after 30s idle instead of hanging forever
+
 ## 17.0.3 - 2026-07-18
 
 ### Added
