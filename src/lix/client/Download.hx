@@ -281,7 +281,8 @@ class Download {
         var u = new URL(url);
         var ret:HttpRequestOptions = {
           protocol: u.protocol,
-          host: u.host,
+          hostname: u.hostname,
+          port: Std.parseInt(u.port),
           path: '${u.pathname}${u.search ?? ""}',
         }
 

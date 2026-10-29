@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- Downloads from URLs with an explicit port (e.g. `haxelib:/foo?url=http://1.2.3.4:2000`) no longer fail with `getaddrinfo ENOTFOUND host:port` (regression from 16.0.0)
 - Downloads that stall with the connection open now fail after 30s idle instead of hanging forever
 
 ## 17.0.3 - 2026-07-18
