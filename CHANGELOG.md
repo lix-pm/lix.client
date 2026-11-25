@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Haxe versions `hxmc-<version>`: pinned builds of [hxmc](https://github.com/benmerckx/hxmc) (the Haxe compiler ported to Haxe) from npm's registry, read directly (no npm client needed). `hxmc-<dist-tag>` (e.g. `hxmc-next`), `hxmc-<commit>` and `hxmc` (`latest`) resolve to the exact version, which `.haxerc` records; `lix haxe-versions` lists them apart
+
 ### Fixed
 
 - Downloads from URLs with an explicit port (e.g. `haxelib:/foo?url=http://1.2.3.4:2000`) no longer fail with `getaddrinfo ENOTFOUND host:port` (regression from 16.0.0)

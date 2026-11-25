@@ -13,6 +13,7 @@ abstract UserVersion(UserVersionData) from UserVersionData to UserVersionData {
       case ROfficial(version): UOfficial(version);
       case RNightly({ hash: version }): UNightly(version);
       case RCustom(v): UCustom(v);
+      case RHxmc(v): UHxmc(v);
     }
   
   static public function isHash(version:String) {
@@ -32,6 +33,7 @@ abstract UserVersion(UserVersionData) from UserVersionData to UserVersionData {
       case UNightly(v): 'nightly build $v';
       case UOfficial(v): 'official release $v';
       case UCustom(v): 'custom version at `$v`';
+      case UHxmc(v): 'hxmc build $v';
     }
 
   static public function isPath(v:String)
@@ -45,6 +47,7 @@ abstract UserVersion(UserVersionData) from UserVersionData to UserVersionData {
         case 'edge' | 'nightly': UEdge;
         case 'latest': ULatest;
         case 'stable': UStable;
+        case Hxmc.isHxmc(_) => true: UHxmc(Hxmc.spec(s));
         case isHash(_) => true: UNightly(s);
         case isPath(_) => true: UCustom(s);
         default: UOfficial(s);//TODO: check if this is valid?
@@ -59,4 +62,6 @@ enum UserVersionData {
   UNightly(hash:String);
   UOfficial(version:Official);
   UCustom(path:String);
+  // (hxmc's build: an npm version, a dist-tag or a commit, Hxmc)
+  UHxmc(spec:String);
 }

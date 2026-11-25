@@ -152,7 +152,16 @@ class Cli {
 
                 println('');
 
-                return Noise;
+                return hx.hxmcInstalled().next(function (h) {
+                  if (h.length > 0) {
+                    println('hxmc builds:');
+                    println('');
+                    for (v in h)
+                      println(highlight(v));
+                    println('');
+                  }
+                  return Noise;
+                });
               });
             });
           default:
