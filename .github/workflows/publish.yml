@@ -1,0 +1,52 @@
+# Builds lix on every pull request and push to master; publishes it to npm on a
+# version tag (`npm version <x.y.z> && git push --follow-tags`).
+#
+# Publishing uses npm's trusted publishing: npm accepts this workflow's OIDC
+# token for `lix` (configured on npmjs.com), so there is no npm token. Versions
+# with a `-` (e.g. 17.1.0-alpha.0) go to the `next` dist-tag, others to `latest`.
+name: Publish
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write # (only used on a tag, by npm publish)
+    steps:
+      - uses: actions/checkout@v7
+      # (npm 11.5.1 or later for trusted publishing: node 24 ships it)
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      # lix builds with lix: the released one provides Haxe and the libraries of
+      # haxe_libraries/
+      - name: Bootstrap
+        run: |
+          npm install -g lix
+          lix download
+      - name: Build
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+      - name: Publish
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          case "$version" in *-*) tag=next ;; *) tag=latest ;; esac
+          if [ "$GITHUB_REF" = "refs/tags/v$version" ]; then
+            npm publish --provenance --access public --tag $tag --ignore-scripts
+          elif [ "${GITHUB_REF#refs/tags/}" != "$GITHUB_REF" ]; then
+            echo "::error::tag ${GITHUB_REF#refs/tags/} does not match package.json's version $version"
+            exit 1
+          else
+            npm pack --dry-run --ignore-scripts
+          fi
