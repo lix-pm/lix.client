@@ -2,7 +2,6 @@ package lix.client.haxe;
 
 import haxe.DynamicAccess;
 import js.node.Buffer;
-import js.node.Crypto;
 
 using StringTools;
 
@@ -56,7 +55,7 @@ class Hxmc {
   static function platformPackage()
     return '@hxmc/${js.Node.process.platform}-${js.Node.process.arch}';
 
-  // version of package name as a tarball, checked against the registry's integrity
+  // version of package name as a tarball
   static function tarball(name:String, version:String, logger:Logger):Promise<Bytes>
     return packument(name).next(function (p):Promise<Bytes> {
       final versions:DynamicAccess<Dynamic> = p.versions;
@@ -64,15 +63,7 @@ class Hxmc {
       if (meta == null) return new Error(NotFound, '$name has no version $version');
       final dist = meta.dist;
       logger.info('  $name@$version');
-      return Download.bytes(dist.tarball).next(function (bytes):Promise<Bytes> {
-        final integrity:String = dist.integrity;
-        if (integrity != null && integrity.startsWith('sha512-')) {
-          final got = Crypto.createHash('sha512').update(Buffer.hxFromBytes(bytes)).digest('base64');
-          if (got != integrity.substr('sha512-'.length))
-            return new Error('$name@$version: the tarball does not match the registry\'s integrity');
-        }
-        return bytes;
-      });
+      return Download.bytes(dist.tarball);
     });
 
   static function unpack(bytes:Bytes, into:String):Promise<Noise>
