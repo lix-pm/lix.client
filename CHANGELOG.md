@@ -4,7 +4,7 @@
 
 ### Added
 
-- Haxe versions `hxmc-<version>`: pinned builds of [hxmc](https://github.com/benmerckx/hxmc) (the Haxe compiler ported to Haxe) from npm's registry, read directly (no npm client needed). `hxmc-<dist-tag>` (e.g. `hxmc-next`), `hxmc-<commit>` and `hxmc` (`latest`) resolve to the exact version, which `.haxerc` records; `lix haxe-versions` lists them apart
+- Haxe versions `hxmc-<version>`: pinned builds of [hxmc](https://github.com/benmerckx/hxmc) (the Haxe compiler ported to Haxe) from npm's registry, read directly (no npm client needed). `hxmc-<dist-tag>` (e.g. `hxmc-next`), `hxmc-<commit>` and `hxmc` (`next`, the newest nightly, until hxmc has releases) resolve to the exact version, which `.haxerc` records; `lix haxe-versions` lists them apart
 
 ### Fixed
 

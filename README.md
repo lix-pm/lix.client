@@ -64,11 +64,11 @@ This will create a ".haxerc" in the cwd, saying we should use the current stable
 
 Besides official releases (`stable`, `latest`, a version like `4.3.7`) and nightly builds (`nightly`, a commit hash), lix installs builds of [hxmc](https://github.com/benmerckx/hxmc), the Haxe compiler ported to Haxe, from npm:
 
-    lix use haxe hxmc-next          # the newest nightly
-    lix use haxe hxmc-a5a73c2       # the build of a commit
-    lix use haxe hxmc-0.1.0-nightly.20261125.a5a73c2
+    lix install haxe hxmc               # the newest nightly (same as hxmc-next)
+    lix install haxe hxmc-a5a73c2       # the build of a commit
+    lix install haxe hxmc-0.1.0-nightly.20261125.a5a73c2
 
-These resolve to an exact version, which ".haxerc" records (`hxmc-0.1.0-nightly.20261125.a5a73c2`), so every machine gets the same build. lix reads npm's registry itself (no npm client needed), fetches `@hxmc/cli` and the package of this machine's platform, checks them against the registry's integrity and lays them out as npm would, under `~/haxe/hxmc/<version>`.
+These resolve to an exact version, which ".haxerc" records (`hxmc-0.1.0-nightly.20261125.a5a73c2`), so every machine gets the same build. lix reads npm's registry itself (no npm client needed), fetches `@hxmc/cli` and the package of this machine's platform and lays them out as npm would, under `~/haxe/hxmc/<version>`.
 
 ## Usage
 
