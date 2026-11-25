@@ -34,6 +34,14 @@ class InstallHaxeTest extends TestBase {
 		return asserts.done();
 	}
 	
+	// an hxmc build by its commit: pinned to its npm version in .haxerc, the compiler answering as Haxe 5
+	public function installHxmc() {
+		runLix('install haxe hxmc-a5a73c2');
+		asserts.assert(haxe.Json.parse(sys.io.File.getContent('.haxerc')).version == 'hxmc-0.1.0-nightly.20261125.a5a73c2');
+		asserts.assert(getVersion().startsWith('5.'));
+		return asserts.done();
+	}
+
 	function getVersion(debug = false) {
 		var proc = runHaxe(['-version'], debug);
 		

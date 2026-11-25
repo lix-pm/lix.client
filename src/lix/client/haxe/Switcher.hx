@@ -91,7 +91,7 @@ class Switcher {
       attempt(
         'Get installed Haxe versions',
         sortedOfficial(kind, [for (v in scope.versionDir.readDirectory())
-          if (!v.isHash() && versionDir(v).isDirectory()) v
+          if (!v.isHash() && !Hxmc.isHxmc(v) && versionDir(v).isDirectory()) v
         ])
       );
 
@@ -101,6 +101,18 @@ class Switcher {
         Success(l.get())
       catch (e:Dynamic)
         Failure(new Error('Failed to $what because $e'));
+
+  // the installed hxmc builds, by their versions (`hxmc-<version>`)
+  public function hxmcInstalled():Promise<Array<String>>
+    return
+      attempt(
+        'get installed hxmc builds',
+        {
+          final l = [for (v in scope.versionDir.readDirectory()) if (v.startsWith(Hxmc.PREFIX)) v];
+          l.sort(Reflect.compare);
+          l;
+        }
+      );
 
   public function nightliesInstalled()
     return
@@ -121,10 +133,19 @@ class Switcher {
       }).next(_ -> ensureNeko(scope.haxeInstallation.neko, logger));
 
   public function resolveInstalled(version:UserVersion):Promise<ResolvedVersion>
-    return resolve(version, officialInstalled, nightliesInstalled);
+    return resolve(version, officialInstalled, nightliesInstalled, hxmcResolveInstalled);
 
   public function resolveOnline(version:UserVersion):Promise<ResolvedVersion>
-    return resolve(version, officialOnline, nightliesOnline);
+    return resolve(version, officialOnline, nightliesOnline, hxmcOnline);
+
+  // (an hxmc build: installed by its exact version, online by any spec, Hxmc)
+  function hxmcResolveInstalled(spec:String):Promise<ResolvedVersion>
+    return
+      if (versionDir(Hxmc.PREFIX + spec).exists()) RHxmc(spec)
+      else new Error(NotFound, 'Unable to resolve hxmc build $spec locally, install it first with `lix install haxe ${Hxmc.PREFIX}$spec`');
+
+  static function hxmcOnline(spec:String):Promise<ResolvedVersion>
+    return Hxmc.resolve(spec).next(v -> RHxmc(v));
 
   static function pickFirst<A>(kind:String, make:A->ResolvedVersion, ?filter:A->Bool):Next<Iterable<A>, ResolvedVersion>
     return switch filter {
@@ -138,7 +159,7 @@ class Switcher {
         }
     }
 
-  function resolve(version:UserVersion, getOfficial:PickOfficial->Promise<Iterable<Official>>, getNightlies:Void->Promise<Iterable<Nightly>>):Promise<ResolvedVersion>
+  function resolve(version:UserVersion, getOfficial:PickOfficial->Promise<Iterable<Official>>, getNightlies:Void->Promise<Iterable<Nightly>>, getHxmc:String->Promise<ResolvedVersion>):Promise<ResolvedVersion>
     return switch version {
       case UEdge:
 
@@ -171,6 +192,8 @@ class Switcher {
         );
 
       case UCustom(path): RCustom(path);
+
+      case UHxmc(spec): getHxmc(spec);
     }
 
   function versionDir(name:String)
@@ -220,7 +243,7 @@ class Switcher {
 
   public function resolveAndDownload(version:String, options:{ force: Bool }) {
     return (switch ((version : UserVersion) : UserVersionData) {
-      case UOfficial(_):
+      case UOfficial(_) | UHxmc(_):
         resolveInstalled(version);
       default:
         Promise.lift(new Error('$version needs to be resolved online'));
@@ -281,6 +304,11 @@ class Switcher {
           replace(versionDir(version), dir, version);
           true;
         });
+
+      case RHxmc(v):
+
+        logger.info('Downloading hxmc: $v');
+        Hxmc.install(v, scope.haxeshimRoot, versionDir(version.id), logger).next(_ -> true);
     }
   }
 
