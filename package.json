@@ -16,7 +16,7 @@
 	"description": "lix - Libraries for Haxe",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/lix-pm/lix.git"
+		"url": "git+https://github.com/lix-pm/lix.client.git"
 	},
 	"devDependencies": {
 		"@vercel/ncc": "^0.38.1",
